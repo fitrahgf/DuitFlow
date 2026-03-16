@@ -542,7 +542,19 @@ export const dictionaries = {
         budgetWarningHint: 'Notify me when spending is close to the monthly limit.',
         budgetExceeded: 'Budget exceeded',
         budgetExceededHint: 'Notify me when spending goes past the monthly budget.',
-      }
+      },
+      telegram: {
+        title: 'Telegram',
+        connect: 'Connect bot',
+        reconnect: 'Reconnect',
+        disconnect: 'Disconnect',
+        connected: 'Connected',
+        disconnected: 'Not connected',
+        connectStarted: 'Telegram opened. Finish the connect flow in the bot chat.',
+        connectError: 'Failed to create the Telegram connect link.',
+        disconnectSuccess: 'Telegram bot disconnected.',
+        disconnectError: 'Failed to disconnect the Telegram bot.',
+      },
     },
     notifications: {
       title: 'Notifications',
@@ -1302,7 +1314,19 @@ export const dictionaries = {
         budgetWarningHint: 'Beri tahu saya saat pengeluaran mendekati batas bulanan.',
         budgetExceeded: 'Anggaran terlampaui',
         budgetExceededHint: 'Beri tahu saya saat pengeluaran melewati anggaran bulanan.',
-      }
+      },
+      telegram: {
+        title: 'Telegram',
+        connect: 'Hubungkan bot',
+        reconnect: 'Hubungkan ulang',
+        disconnect: 'Lepas bot',
+        connected: 'Terhubung',
+        disconnected: 'Belum terhubung',
+        connectStarted: 'Telegram dibuka. Lanjutkan koneksi di chat bot.',
+        connectError: 'Gagal membuat link koneksi Telegram.',
+        disconnectSuccess: 'Bot Telegram berhasil dilepas.',
+        disconnectError: 'Gagal melepas bot Telegram.',
+      },
     },
     notifications: {
       title: 'Notifikasi',

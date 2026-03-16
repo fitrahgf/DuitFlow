@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { Moon, Palette, Save, Sun } from 'lucide-react';
+import { Bot, Link2, Moon, Palette, Save, Sun, Unlink } from 'lucide-react';
 import { toast } from 'sonner';
 import { FieldError } from '@/components/shared/FieldError';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -32,6 +32,11 @@ import {
 import { getErrorMessage } from '@/lib/errors';
 import { queryKeys } from '@/lib/queries/keys';
 import { fetchCurrentProfile, type ProfileQueryResult } from '@/lib/queries/profile';
+import {
+  createTelegramConnectLink,
+  disconnectTelegramConnection,
+  fetchTelegramConnection,
+} from '@/lib/queries/telegram';
 import { createClient } from '@/lib/supabase/client';
 import {
   profileSettingsSchema,
@@ -45,15 +50,21 @@ const nativeSelectClassName =
   'flex min-h-[3rem] w-full rounded-[var(--radius-control)] border border-border-subtle bg-surface-1 px-4 py-3 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70';
 
 type SettingsTab = 'profile' | 'regional' | 'appearance' | 'notifications';
+type ExtendedSettingsTab = SettingsTab | 'integrations';
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [activeTab, setActiveTab] = useState<ExtendedSettingsTab>('profile');
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.me,
     queryFn: fetchCurrentProfile,
+    retry: false,
+  });
+  const telegramQuery = useQuery({
+    queryKey: queryKeys.telegram.connection,
+    queryFn: fetchTelegramConnection,
     retry: false,
   });
 
@@ -183,6 +194,26 @@ export default function SettingsPage() {
       toast.error(getErrorMessage(error, t('settings.saveError')));
     },
   });
+  const telegramConnectMutation = useMutation({
+    mutationFn: createTelegramConnectLink,
+    onSuccess: (result) => {
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      toast.success(t('settings.telegram.connectStarted'));
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, t('settings.telegram.connectError')));
+    },
+  });
+  const telegramDisconnectMutation = useMutation({
+    mutationFn: async () => disconnectTelegramConnection(profileQuery.data?.profile.id ?? ''),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.telegram.connection });
+      toast.success(t('settings.telegram.disconnectSuccess'));
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, t('settings.telegram.disconnectError')));
+    },
+  });
 
   const themeOptions: { value: Theme; label: string; icon: React.ReactNode }[] = [
     { value: 'light', label: t('settings.appearance.light'), icon: <Sun size={18} /> },
@@ -195,11 +226,12 @@ export default function SettingsPage() {
     { value: 'en', label: t('settings.language.english'), code: 'EN' },
   ];
 
-  const tabs: { value: SettingsTab; label: string }[] = [
+  const tabs: { value: ExtendedSettingsTab; label: string }[] = [
     { value: 'profile', label: t('settings.profile.title') },
     { value: 'regional', label: t('settings.language.title') },
     { value: 'appearance', label: t('settings.appearance.title') },
     { value: 'notifications', label: t('settings.notifications.title') },
+    { value: 'integrations', label: t('settings.telegram.title') },
   ];
   const currencyOptions = supportedCurrencyCodes.map((currencyCode) => ({
     value: currencyCode,
@@ -263,7 +295,7 @@ export default function SettingsPage() {
       >
         <Tabs
           value={activeTab}
-          onValueChange={(value) => setActiveTab(value as SettingsTab)}
+          onValueChange={(value) => setActiveTab(value as ExtendedSettingsTab)}
           className="grid gap-5"
         >
           <div className="overflow-x-auto pb-1">
@@ -485,6 +517,60 @@ export default function SettingsPage() {
                       )}
                     />
                   </ToggleField>
+                </div>
+              </div>
+            </SurfaceCard>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="mt-0">
+            <SurfaceCard>
+              <div className="grid gap-5">
+                <SectionHeading title={t('settings.telegram.title')} />
+
+                <div className="flex flex-col gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-2 text-text-1">
+                      <Bot size={18} />
+                    </span>
+                    <div className="grid gap-1">
+                      <strong className="text-sm font-semibold text-text-1">
+                        @{telegramQuery.data?.botUsername || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'DuitFlowMoneyTrack_Bot'}
+                      </strong>
+                      <span className="text-sm text-text-2">
+                        {telegramQuery.data?.connected
+                          ? t('settings.telegram.connected')
+                          : t('settings.telegram.disconnected')}
+                      </span>
+                      {telegramQuery.data?.connected && telegramQuery.data.username ? (
+                        <span className="text-sm text-text-3">@{telegramQuery.data.username}</span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      disabled={telegramConnectMutation.isPending || !telegramQuery.data?.botUsername}
+                      onClick={() => telegramConnectMutation.mutate()}
+                    >
+                      <Link2 size={16} />
+                      {telegramQuery.data?.connected
+                        ? t('settings.telegram.reconnect')
+                        : t('settings.telegram.connect')}
+                    </Button>
+                    {telegramQuery.data?.connected ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={telegramDisconnectMutation.isPending}
+                        onClick={() => telegramDisconnectMutation.mutate()}
+                      >
+                        <Unlink size={16} />
+                        {t('settings.telegram.disconnect')}
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </SurfaceCard>

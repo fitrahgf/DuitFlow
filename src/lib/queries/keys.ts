@@ -5,6 +5,9 @@ export const queryKeys = {
   profile: {
     me: ['profile', 'me'] as const,
   },
+  telegram: {
+    connection: ['telegram', 'connection'] as const,
+  },
   notifications: {
     all: ['notifications'] as const,
     list: (scope: 'all' | 'unread' | 'read' = 'all', type: string = 'all') =>

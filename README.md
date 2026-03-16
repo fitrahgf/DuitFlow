@@ -25,6 +25,10 @@ npm install
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=DuitFlowMoneyTrack_Bot
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_WEBHOOK_SECRET=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
 3. Jalankan app:
@@ -93,3 +97,36 @@ Jika `E2E_USER_EMAIL` atau `E2E_USER_PASSWORD` belum di-set, test akan di-skip a
 ## Manual QA
 
 Checklist manual QA ada di [docs/qa/stability-daily-use.md](docs/qa/stability-daily-use.md).
+
+## Telegram Bot
+
+Telegram bot memakai webhook Vercel di `/api/telegram/webhook`.
+
+Environment yang dibutuhkan:
+
+```bash
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=DuitFlowMoneyTrack_Bot
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_WEBHOOK_SECRET=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+Setelah deploy ke Vercel, set webhook Telegram:
+
+```bash
+https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://duit-flow.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
+```
+
+Flow koneksi user:
+
+- buka `Settings > Telegram`
+- klik `Connect bot`
+- Telegram akan membuka chat bot dengan token sekali pakai
+- setelah terhubung, user bisa kirim pesan seperti `kopi 25rb cash`
+
+Command awal yang tersedia:
+
+- `/help`
+- `/balance`
+- `/wallets`
+- `/unlink`
