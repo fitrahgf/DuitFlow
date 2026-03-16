@@ -24,7 +24,7 @@ Sebelum masuk ke fitur "manis", ini adalah pondasi wajib yang harus beres pertam
 Ini adalah daftar fitur unik yang membuat aplikasimu berbeda dari aplikasi di pasaran, dieksekusi secara bertahap:
 
 * **Smart Input (CLI-Style):** Kolom teks tunggal di halaman depan. Ketik `Bensin Pertamax 35k`, sistem otomatis memecahnya menjadi Kategori: Transportasi, Catatan: Bensin Pertamax, Nominal: 35.000.
-* **Project-Based Budgeting:** Tombol "Buat Proyek" yang otomatis men-generate struktur folder/sub-kategori khusus (mirip fitur aplikasi *note* buatanmu). Contoh: Proyek "Liburan" otomatis membuat sub-kategori Tiket, Hotel, dan Makan.
+* **Project-Based Budgeting:** Tombol "Buat Proyek" yang otomatis men-generate struktur folder/sub-kategori khusus. Contoh: Proyek "Liburan" otomatis membuat sub-kategori Tiket, Hotel, dan Makan.
 * **Cooling-Off Wishlist:** Halaman khusus untuk menempelkan *link* barang incaran. Terdapat *timer* mundur (misal 7 hari) sebelum tombol "Beli" atau "Batalkan" aktif.
 * **Subscription Kill-Switch:** *Reminder* otomatis (di *dashboard* atau via email) H-3 sebelum tagihan langganan bulanan jatuh tempo.
 * **Telegram/WhatsApp Bot Sync:** Bot sederhana untuk mencatat pengeluaran via *chat* saat sedang di luar, yang otomatis terkirim ke *database* Supabase.

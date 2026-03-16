@@ -40,11 +40,21 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.local
+.env.*
+.env*.local
 .env.test
 
 # next.js build output
 .next
+playwright-report/
+test-results/
 
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Local editor / temp output
+.vscode/
+eslint-output*.txt
+qa-server.log
