@@ -286,7 +286,7 @@ function buildSearchSummary(
 }
 
 function getSourceLabel(
-  source: 'manual' | 'quick_add' | 'system_transfer' | 'wishlist_conversion',
+  source: 'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion',
   t: (path: string) => string
 ) {
   return t(`transactions.sources.${source}`);
@@ -805,6 +805,7 @@ function TransactionsPageContent() {
                 <option value="all">{t('transactions.sources.all')}</option>
                 <option value="manual">{t('transactions.sources.manual')}</option>
                 <option value="quick_add">{t('transactions.sources.quick_add')}</option>
+                <option value="telegram_bot">{t('transactions.sources.telegram_bot')}</option>
                 <option value="system_transfer">{t('transactions.sources.system_transfer')}</option>
                 <option value="wishlist_conversion">{t('transactions.sources.wishlist_conversion')}</option>
               </select>

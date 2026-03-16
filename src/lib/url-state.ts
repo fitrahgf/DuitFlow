@@ -41,6 +41,7 @@ const transactionSourceValues = new Set<TransactionSourceFilter>([
   'all',
   'manual',
   'quick_add',
+  'telegram_bot',
   'system_transfer',
   'wishlist_conversion',
 ]);

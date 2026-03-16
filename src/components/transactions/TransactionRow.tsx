@@ -8,17 +8,18 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const sourceBadgeVariant: Record<
-  'manual' | 'quick_add' | 'system_transfer' | 'wishlist_conversion',
+  'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion',
   'default' | 'accent' | 'warning'
 > = {
   manual: 'default',
   quick_add: 'accent',
+  telegram_bot: 'accent',
   system_transfer: 'accent',
   wishlist_conversion: 'warning',
 };
 
 function getSourceLabel(
-  source: 'manual' | 'quick_add' | 'system_transfer' | 'wishlist_conversion',
+  source: 'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion',
   t: (path: string) => string
 ) {
   return t(`transactions.sources.${source}`);

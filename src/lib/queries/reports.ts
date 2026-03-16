@@ -11,7 +11,7 @@ export interface ReportTransaction {
   transaction_date?: string | null;
   transfer_group_id?: string | null;
   transfer_entry_kind?: 'out' | 'in' | 'fee' | null;
-  source: 'manual' | 'quick_add' | 'system_transfer' | 'wishlist_conversion';
+  source: 'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion';
   category_id: string | null;
   wallet_id: string | null;
   categories?: { name: string; icon: string | null; color: string | null } | null;

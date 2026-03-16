@@ -497,12 +497,12 @@ async function sendSavedTelegramTransactionMessage(
         draft.amount,
         profile.preferred_language,
         profile.currency_code
-      )} - ${draft.walletName}`,
+      )} - ${draft.walletName} - ${draft.transactionDate}`,
       en: `${sourceLabel}: ${draft.title} - ${formatCurrencyAmount(
         draft.amount,
         profile.preferred_language,
         profile.currency_code
-      )} - ${draft.walletName}`,
+      )} - ${draft.walletName} - ${draft.transactionDate}`,
     })
   );
 }

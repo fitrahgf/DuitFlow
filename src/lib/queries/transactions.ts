@@ -6,6 +6,7 @@ export type TransactionSourceFilter =
   | 'all'
   | 'manual'
   | 'quick_add'
+  | 'telegram_bot'
   | 'system_transfer'
   | 'wishlist_conversion';
 export type TransactionSortOption = 'newest' | 'oldest' | 'highest' | 'lowest';
