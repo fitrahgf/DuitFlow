@@ -6,6 +6,7 @@ import {
   type SmartParserWalletOption,
 } from '@/lib/smartParser';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { extractReceiptTransactionFromImage } from '@/lib/telegram/receipt';
 import {
   getLocalDateInTimezone,
   hashTelegramLinkToken,
@@ -26,9 +27,26 @@ interface TelegramChat {
   type: string;
 }
 
+interface TelegramPhotoSize {
+  file_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
+}
+
+interface TelegramDocument {
+  file_id: string;
+  mime_type?: string;
+  file_name?: string;
+  file_size?: number;
+}
+
 interface TelegramMessage {
   message_id: number;
   text?: string;
+  caption?: string;
+  photo?: TelegramPhotoSize[];
+  document?: TelegramDocument;
   from?: TelegramUser;
   chat: TelegramChat;
 }
@@ -74,6 +92,29 @@ type TelegramTransactionRow = {
 };
 
 const BOT_RUNTIME_ERROR = 'Telegram bot is not configured yet.';
+const TELEGRAM_IMAGE_SIZE_LIMIT_BYTES = 8 * 1024 * 1024;
+
+interface TelegramFileInfo {
+  file_path: string;
+  file_size?: number;
+}
+
+interface TelegramImageAttachment {
+  fileId: string;
+  mimeType: string | null;
+  fileSize: number | null;
+}
+
+interface TelegramTransactionDraft {
+  amount: number;
+  type: 'income' | 'expense';
+  title: string;
+  note: string | null;
+  categoryId: string | null;
+  walletId: string;
+  walletName: string;
+  transactionDate: string;
+}
 
 function resolveTelegramLanguage(languageCode?: string | null): Language {
   return languageCode?.toLowerCase().startsWith('id') ? 'id' : 'en';
@@ -83,12 +124,18 @@ function textByLanguage(language: Language, messages: { id: string; en: string }
   return language === 'id' ? messages.id : messages.en;
 }
 
-async function sendTelegramMessage(chatId: string, text: string) {
+function getTelegramBotToken() {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
   if (!botToken) {
     throw new Error(BOT_RUNTIME_ERROR);
   }
+
+  return botToken;
+}
+
+async function sendTelegramMessage(chatId: string, text: string) {
+  const botToken = getTelegramBotToken();
 
   const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: 'POST',
@@ -106,6 +153,94 @@ async function sendTelegramMessage(chatId: string, text: string) {
     const body = await response.text();
     throw new Error(`Telegram sendMessage failed: ${body}`);
   }
+}
+
+function pickTelegramImageAttachment(message: TelegramMessage): TelegramImageAttachment | null {
+  if (message.photo && message.photo.length > 0) {
+    const sortedPhotos = [...message.photo].sort((left, right) => {
+      const leftScore = left.file_size ?? left.width * left.height;
+      const rightScore = right.file_size ?? right.width * right.height;
+      return rightScore - leftScore;
+    });
+    const bestPhoto = sortedPhotos[0];
+
+    return {
+      fileId: bestPhoto.file_id,
+      mimeType: 'image/jpeg',
+      fileSize: bestPhoto.file_size ?? null,
+    };
+  }
+
+  if (message.document?.mime_type?.startsWith('image/')) {
+    return {
+      fileId: message.document.file_id,
+      mimeType: message.document.mime_type,
+      fileSize: message.document.file_size ?? null,
+    };
+  }
+
+  return null;
+}
+
+async function fetchTelegramFileInfo(fileId: string) {
+  const botToken = getTelegramBotToken();
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`);
+  const payload = (await response.json()) as {
+    ok?: boolean;
+    result?: TelegramFileInfo;
+    description?: string;
+  };
+
+  if (!response.ok || !payload.ok || !payload.result?.file_path) {
+    throw new Error(payload.description || 'Failed to fetch Telegram file info.');
+  }
+
+  return payload.result;
+}
+
+function inferMimeType(filePath: string, fallbackMimeType: string | null) {
+  if (fallbackMimeType) {
+    return fallbackMimeType;
+  }
+
+  const normalizedPath = filePath.toLowerCase();
+
+  if (normalizedPath.endsWith('.png')) {
+    return 'image/png';
+  }
+
+  if (normalizedPath.endsWith('.webp')) {
+    return 'image/webp';
+  }
+
+  return 'image/jpeg';
+}
+
+async function downloadTelegramFileAsDataUrl(fileId: string, fallbackMimeType: string | null) {
+  const botToken = getTelegramBotToken();
+  const fileInfo = await fetchTelegramFileInfo(fileId);
+
+  if ((fileInfo.file_size ?? 0) > TELEGRAM_IMAGE_SIZE_LIMIT_BYTES) {
+    throw new Error('telegram_image_too_large');
+  }
+
+  const response = await fetch(`https://api.telegram.org/file/bot${botToken}/${fileInfo.file_path}`);
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Failed to download Telegram file: ${body}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+
+  if (arrayBuffer.byteLength > TELEGRAM_IMAGE_SIZE_LIMIT_BYTES) {
+    throw new Error('telegram_image_too_large');
+  }
+
+  const mimeType = inferMimeType(fileInfo.file_path, fallbackMimeType);
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+  return `data:${mimeType};base64,${base64}`;
 }
 
 async function findTelegramConnection(chatId: string) {
@@ -319,6 +454,59 @@ async function disconnectTelegramConnection(chatId: string) {
   }
 }
 
+async function persistTelegramTransaction(userId: string, draft: TelegramTransactionDraft) {
+  const admin = createAdminClient();
+  const { error } = await admin.from('transactions').insert({
+    user_id: userId,
+    amount: draft.amount,
+    type: draft.type,
+    title: draft.title,
+    note: draft.note,
+    category_id: draft.categoryId,
+    wallet_id: draft.walletId,
+    source: 'telegram_bot',
+    date: draft.transactionDate,
+    transaction_date: draft.transactionDate,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function sendSavedTelegramTransactionMessage(
+  chatId: string,
+  profile: TelegramProfileRow,
+  draft: TelegramTransactionDraft,
+  source: 'text' | 'receipt'
+) {
+  const sourceLabel = source === 'receipt'
+    ? textByLanguage(profile.preferred_language, {
+        id: 'Tersimpan dari struk',
+        en: 'Saved from receipt',
+      })
+    : textByLanguage(profile.preferred_language, {
+        id: 'Tersimpan',
+        en: 'Saved',
+      });
+
+  await sendTelegramMessage(
+    chatId,
+    textByLanguage(profile.preferred_language, {
+      id: `${sourceLabel}: ${draft.title} - ${formatCurrencyAmount(
+        draft.amount,
+        profile.preferred_language,
+        profile.currency_code
+      )} - ${draft.walletName}`,
+      en: `${sourceLabel}: ${draft.title} - ${formatCurrencyAmount(
+        draft.amount,
+        profile.preferred_language,
+        profile.currency_code
+      )} - ${draft.walletName}`,
+    })
+  );
+}
+
 async function createTelegramTransaction(chatId: string, text: string, connection: TelegramConnectionRow) {
   const [profile, wallets, categories] = await Promise.all([
     fetchTelegramProfile(connection.user_id),
@@ -362,39 +550,136 @@ async function createTelegramTransaction(chatId: string, text: string, connectio
   }
 
   const localDate = getLocalDateInTimezone(profile.timezone);
-  const admin = createAdminClient();
-  const { error } = await admin.from('transactions').insert({
-    user_id: connection.user_id,
+  const draft: TelegramTransactionDraft = {
     amount: preview.amount,
     type: preview.type,
     title: preview.title,
     note: null,
-    category_id: preview.categoryId,
-    wallet_id: preview.walletId,
-    source: 'telegram_bot',
-    date: localDate,
-    transaction_date: localDate,
-  });
+    categoryId: preview.categoryId,
+    walletId: preview.walletId!,
+    walletName: preview.walletName ?? wallets.find((wallet) => wallet.id === preview.walletId)?.name ?? '-',
+    transactionDate: localDate,
+  };
 
-  if (error) {
-    throw error;
+  await persistTelegramTransaction(connection.user_id, draft);
+  await sendSavedTelegramTransactionMessage(chatId, profile, draft, 'text');
+}
+
+async function createTelegramReceiptTransaction(
+  chatId: string,
+  message: TelegramMessage,
+  connection: TelegramConnectionRow,
+  attachment: TelegramImageAttachment
+) {
+  const [profile, wallets, categories] = await Promise.all([
+    fetchTelegramProfile(connection.user_id),
+    fetchTelegramWallets(connection.user_id),
+    fetchTelegramCategories(connection.user_id),
+  ]);
+
+  if (wallets.length === 0) {
+    await sendTelegramMessage(
+      chatId,
+      textByLanguage(profile.preferred_language, {
+        id: 'Buat dompet aktif dulu di DuitFlow sebelum kirim struk dari Telegram.',
+        en: 'Create an active wallet in DuitFlow before uploading receipts from Telegram.',
+      })
+    );
+    return;
   }
 
-  await sendTelegramMessage(
-    chatId,
-    textByLanguage(profile.preferred_language, {
-      id: `Tersimpan: ${preview.title} - ${formatCurrencyAmount(
-        preview.amount,
-        profile.preferred_language,
-        profile.currency_code
-      )} - ${preview.walletName}`,
-      en: `Saved: ${preview.title} - ${formatCurrencyAmount(
-        preview.amount,
-        profile.preferred_language,
-        profile.currency_code
-      )} - ${preview.walletName}`,
-    })
-  );
+  if (!process.env.GROQ_API_KEY) {
+    await sendTelegramMessage(
+      chatId,
+      textByLanguage(profile.preferred_language, {
+        id: 'Fitur struk AI belum aktif. Tambahkan GROQ_API_KEY di environment server dulu.',
+        en: 'AI receipt parsing is not enabled yet. Add GROQ_API_KEY to the server environment first.',
+      })
+    );
+    return;
+  }
+
+  if ((attachment.fileSize ?? 0) > TELEGRAM_IMAGE_SIZE_LIMIT_BYTES) {
+    await sendTelegramMessage(
+      chatId,
+      textByLanguage(profile.preferred_language, {
+        id: 'Foto struk terlalu besar. Kirim versi yang lebih kecil atau kompres dulu.',
+        en: 'The receipt image is too large. Send a smaller or compressed version.',
+      })
+    );
+    return;
+  }
+
+  const caption = message.caption?.trim() ?? '';
+  const captionPreview = caption
+    ? parseSmartInput(caption, {
+        wallets,
+        categories,
+      })
+    : null;
+
+  try {
+    const imageDataUrl = await downloadTelegramFileAsDataUrl(attachment.fileId, attachment.mimeType);
+    const extracted = await extractReceiptTransactionFromImage({
+      imageDataUrl,
+      caption,
+      language: profile.preferred_language,
+      wallets,
+      categories,
+      timezone: profile.timezone,
+      walletIdOverride: captionPreview?.walletId ?? null,
+      categoryIdOverride: captionPreview?.categoryId ?? null,
+    });
+
+    if (!extracted.isReceipt || !extracted.title || extracted.amount <= 0) {
+      await sendTelegramMessage(
+        chatId,
+        textByLanguage(profile.preferred_language, {
+          id: 'Aku belum bisa membaca struk ini dengan yakin. Coba foto yang lebih jelas atau unggah ulang dengan pencahayaan yang lebih baik.',
+          en: 'I could not read this receipt confidently. Try a clearer photo or re-upload it with better lighting.',
+        })
+      );
+      return;
+    }
+
+    if (!extracted.walletId || !extracted.walletName) {
+      await sendTelegramMessage(
+        chatId,
+        textByLanguage(profile.preferred_language, {
+          id: 'Struknya kebaca, tapi dompetnya belum jelas. Kirim ulang foto dengan caption nama dompet, mis. "cash" atau "bca".',
+          en: 'I could read the receipt, but the wallet is still unclear. Re-send the image with a wallet name caption like "cash" or "bca".',
+        })
+      );
+      return;
+    }
+
+    const draft: TelegramTransactionDraft = {
+      amount: extracted.amount,
+      type: extracted.type,
+      title: extracted.title,
+      note: extracted.note,
+      categoryId: extracted.categoryId,
+      walletId: extracted.walletId,
+      walletName: extracted.walletName,
+      transactionDate: extracted.transactionDate,
+    };
+
+    await persistTelegramTransaction(connection.user_id, draft);
+    await sendSavedTelegramTransactionMessage(chatId, profile, draft, 'receipt');
+  } catch (error) {
+    if (error instanceof Error && error.message === 'telegram_image_too_large') {
+      await sendTelegramMessage(
+        chatId,
+        textByLanguage(profile.preferred_language, {
+          id: 'Foto struk terlalu besar. Kirim versi yang lebih kecil atau kompres dulu.',
+          en: 'The receipt image is too large. Send a smaller or compressed version.',
+        })
+      );
+      return;
+    }
+
+    throw error;
+  }
 }
 
 async function sendBalance(chatId: string, connection: TelegramConnectionRow) {
@@ -568,6 +853,7 @@ async function sendHelp(chatId: string, language: Language) {
         'Contoh:',
         '- kopi 25rb cash',
         '- gaji 5jt bca',
+        '- upload foto struk, lalu tambahkan caption nama dompet jika perlu',
         '',
         'Perintah:',
         '- /commands',
@@ -584,6 +870,7 @@ async function sendHelp(chatId: string, language: Language) {
         'Examples:',
         '- coffee 25k cash',
         '- salary 5m bca',
+        '- upload a receipt image and add a wallet name in the caption if needed',
         '',
         'Commands:',
         '- /commands',
@@ -601,13 +888,19 @@ async function sendHelp(chatId: string, language: Language) {
 export async function handleTelegramUpdate(update: TelegramUpdate) {
   const message = update.message;
 
-  if (!message?.text || message.chat.type !== 'private') {
+  if (!message || message.chat.type !== 'private') {
+    return;
+  }
+
+  const imageAttachment = pickTelegramImageAttachment(message);
+
+  if (!message.text && !message.caption && !imageAttachment) {
     return;
   }
 
   const chatId = String(message.chat.id);
   const fallbackLanguage = resolveTelegramLanguage(message.from?.language_code);
-  const command = parseTelegramCommand(message.text);
+  const command = message.text ? parseTelegramCommand(message.text) : null;
 
   if (command?.command === 'start') {
     const token = command.args[0];
@@ -720,5 +1013,12 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     return;
   }
 
-  await createTelegramTransaction(chatId, message.text, connection);
+  if (imageAttachment) {
+    await createTelegramReceiptTransaction(chatId, message, connection, imageAttachment);
+    return;
+  }
+
+  if (message.text) {
+    await createTelegramTransaction(chatId, message.text, connection);
+  }
 }

@@ -109,6 +109,8 @@ NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=DuitFlowMoneyTrack_Bot
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_SECRET=...
 SUPABASE_SERVICE_ROLE_KEY=...
+GROQ_API_KEY=...
+GROQ_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 ```
 
 Setelah deploy ke Vercel, set webhook Telegram:
@@ -123,6 +125,7 @@ Flow koneksi user:
 - klik `Connect bot`
 - Telegram akan membuka chat bot dengan token sekali pakai
 - setelah terhubung, user bisa kirim pesan seperti `kopi 25rb cash`
+- user juga bisa upload foto struk; jika wallet tidak jelas, tambahkan caption seperti `cash` atau `bca`
 
 Command awal yang tersedia:
 

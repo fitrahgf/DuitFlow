@@ -79,3 +79,35 @@ export async function fetchTransactions() {
 
   return (data ?? []) as TransactionListItem[];
 }
+
+export interface SuggestionTransactionItem {
+  title: string | null;
+  type: 'income' | 'expense';
+  category_id: string | null;
+  wallet_id: string | null;
+  transaction_date: string | null;
+  created_at: string | null;
+}
+
+export async function fetchRecentLabeledTransactionsForSuggestions(limit: number = 300) {
+  const supabase = createClient();
+
+  const normalizedLimit = Math.max(1, Math.min(300, Number.isFinite(limit) ? limit : 300));
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('title, type, category_id, wallet_id, transaction_date, created_at')
+    .is('deleted_at', null)
+    .is('transfer_group_id', null)
+    .not('title', 'is', null)
+    .neq('title', '')
+    .order('transaction_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(normalizedLimit);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as SuggestionTransactionItem[];
+}

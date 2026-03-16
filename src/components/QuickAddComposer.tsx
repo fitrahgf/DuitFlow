@@ -1,8 +1,9 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, CheckCircle2, Sparkles } from 'lucide-react';
-import { useRef, useState } from 'react';
+import Link from 'next/link';
+import { AlertCircle, ArrowLeftRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider';
 import type { TransactionFormPrefill } from '@/components/TransactionForm';
@@ -16,6 +17,8 @@ import { NOTIFICATIONS_REFRESH_EVENT, TRANSACTIONS_CHANGED_EVENT } from '@/lib/e
 import { getErrorMessage } from '@/lib/errors';
 import { queryKeys } from '@/lib/queries/keys';
 import { fetchActiveWallets, fetchCategories } from '@/lib/queries/reference';
+import { fetchRecentLabeledTransactionsForSuggestions } from '@/lib/queries/transactions';
+import { buildSuggestionModel, suggestCategory, suggestWallet } from '@/lib/smartSuggest';
 import { parseSmartInput } from '@/lib/smartParser';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -40,6 +43,45 @@ function buildDraft(input: string, preview: ReturnType<typeof parseSmartInput>):
   };
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractMentionedWalletIds(input: string, wallets: Array<{ id: string; name: string }>) {
+  const normalizedInput = input.toLowerCase();
+  const mentioned = new Set<string>();
+  const sortedWallets = [...wallets].sort((left, right) => right.name.length - left.name.length);
+
+  for (const wallet of sortedWallets) {
+    const normalizedWalletName = wallet.name.trim().toLowerCase();
+    if (!normalizedWalletName) {
+      continue;
+    }
+
+    const regex = new RegExp(`(?:^|\\s)${escapeRegExp(normalizedWalletName)}(?=\\s|$)`, 'i');
+
+    if (regex.test(normalizedInput)) {
+      mentioned.add(wallet.id);
+    }
+  }
+
+  return mentioned;
+}
+
+function looksLikeTransferInput(input: string, wallets: Array<{ id: string; name: string }>) {
+  if (!input.trim()) {
+    return false;
+  }
+
+  const normalized = input.toLowerCase();
+  if (normalized.includes('->')) {
+    return true;
+  }
+
+  const mentionedWallets = extractMentionedWalletIds(input, wallets);
+  return mentionedWallets.size >= 2;
+}
+
 export default function QuickAddComposer({
   variant = 'panel',
   onReview,
@@ -50,6 +92,8 @@ export default function QuickAddComposer({
   const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [overrideCategoryId, setOverrideCategoryId] = useState<string | null>(null);
+  const [overrideWalletId, setOverrideWalletId] = useState<string | null>(null);
 
   const walletsQuery = useQuery({
     queryKey: queryKeys.wallets.active,
@@ -61,13 +105,105 @@ export default function QuickAddComposer({
     queryFn: () => fetchCategories(),
   });
 
-  const preview =
+  const historyQuery = useQuery({
+    queryKey: queryKeys.transactions.list('suggestions'),
+    queryFn: () => fetchRecentLabeledTransactionsForSuggestions(300),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const walletLabelById = useMemo(
+    () =>
+      Object.fromEntries(
+        (walletsQuery.data ?? []).map((wallet) => [wallet.id, wallet.name])
+      ) as Record<string, string>,
+    [walletsQuery.data]
+  );
+
+  const categoryLabelById = useMemo(
+    () =>
+      Object.fromEntries(
+        (categoriesQuery.data ?? []).map((category) => [category.id, category.name])
+      ) as Record<string, string>,
+    [categoriesQuery.data]
+  );
+
+  const suggestionModel = useMemo(
+    () => buildSuggestionModel(historyQuery.data ?? [], { language: 'auto' }),
+    [historyQuery.data]
+  );
+
+  const previewBase =
     input.trim().length > 0
       ? parseSmartInput(input, {
           wallets: walletsQuery.data ?? [],
           categories: categoriesQuery.data ?? [],
         })
       : null;
+
+  const preview = useMemo(() => {
+    if (!previewBase) {
+      return null;
+    }
+
+    const resolvedWalletId = overrideWalletId ?? previewBase.walletId;
+    const resolvedCategoryId = overrideCategoryId ?? previewBase.categoryId;
+
+    const resolvedWalletName =
+      resolvedWalletId ? walletLabelById[resolvedWalletId] ?? previewBase.walletName : previewBase.walletName;
+    const resolvedCategoryName =
+      resolvedCategoryId
+        ? categoryLabelById[resolvedCategoryId] ?? previewBase.categoryName
+        : previewBase.categoryName;
+
+    const missing = previewBase.missing.filter((field) => field !== 'wallet' || Boolean(resolvedWalletId));
+    const status: typeof previewBase.status =
+      missing.length === 0 ? 'ready' : missing.length === 3 ? 'invalid' : 'partial';
+
+    return {
+      ...previewBase,
+      walletId: resolvedWalletId ?? null,
+      walletName: resolvedWalletName ?? null,
+      categoryId: resolvedCategoryId ?? null,
+      categoryName: resolvedCategoryName ?? null,
+      missing,
+      status,
+    };
+  }, [categoryLabelById, overrideCategoryId, overrideWalletId, previewBase, walletLabelById]);
+
+  const categorySuggestions = useMemo(() => {
+    if (!preview || previewBase?.categoryId || !preview.title) {
+      return [];
+    }
+
+    return suggestCategory(suggestionModel, preview.title, preview.type, categoryLabelById);
+  }, [categoryLabelById, preview, previewBase?.categoryId, suggestionModel]);
+
+  const walletSuggestions = useMemo(() => {
+    if (!preview || previewBase?.walletId || !preview.title) {
+      return [];
+    }
+
+    return suggestWallet(suggestionModel, preview.title, preview.type, walletLabelById);
+  }, [preview, previewBase?.walletId, suggestionModel, walletLabelById]);
+
+  const showSuggestions =
+    input.trim().length > 0 && (categorySuggestions.length > 0 || walletSuggestions.length > 0);
+  const showTransferHint = useMemo(() => {
+    if (!input.trim()) {
+      return false;
+    }
+
+    if (previewBase?.walletId) {
+      return false;
+    }
+
+    const wallets = walletsQuery.data ?? [];
+    if (wallets.length < 2) {
+      return false;
+    }
+
+    return looksLikeTransferInput(input, wallets.map((wallet) => ({ id: wallet.id, name: wallet.name })));
+  }, [input, previewBase?.walletId, walletsQuery.data]);
 
   const quickAddMutation = useMutation({
     mutationFn: async () => {
@@ -96,8 +232,11 @@ export default function QuickAddComposer({
     },
     onSuccess: async () => {
       setInput('');
+      setOverrideCategoryId(null);
+      setOverrideWalletId(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.transactions.list('suggestions') }),
         queryClient.invalidateQueries({ queryKey: queryKeys.wallets.all }),
       ]);
       window.dispatchEvent(new Event(TRANSACTIONS_CHANGED_EVENT));
@@ -154,7 +293,11 @@ export default function QuickAddComposer({
           type="text"
           placeholder={t('dashboard.smartInputPlaceholder')}
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={(event) => {
+            setInput(event.target.value);
+            setOverrideCategoryId(null);
+            setOverrideWalletId(null);
+          }}
           disabled={quickAddMutation.isPending}
         />
 
@@ -206,6 +349,71 @@ export default function QuickAddComposer({
           </Card>
         ) : null}
 
+        {showSuggestions || showTransferHint ? (
+          <div className="grid gap-3 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-4 animate-fade-in">
+            {showSuggestions ? (
+              <p className="text-sm text-text-3">{t('dashboard.quickAdd.basedOnHistory')}</p>
+            ) : null}
+
+            {showTransferHint ? (
+              <Button asChild variant="secondary" className="justify-start">
+                <Link href="/transfer">
+                  <ArrowLeftRight size={18} />
+                  {t('dashboard.quickAdd.transferHint')}
+                </Link>
+              </Button>
+            ) : null}
+
+            {categorySuggestions.length > 0 ? (
+              <div className="grid gap-2">
+                <p className="kicker">{t('dashboard.quickAdd.suggestedCategories')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {categorySuggestions.map((suggestion) => {
+                    const selected = overrideCategoryId === suggestion.id;
+
+                    return (
+                      <Button
+                        key={suggestion.id}
+                        type="button"
+                        variant={selected ? 'primary' : 'secondary'}
+                        onClick={() => setOverrideCategoryId((current) => (current === suggestion.id ? null : suggestion.id))}
+                        disabled={quickAddMutation.isPending}
+                      >
+                        {selected ? <CheckCircle2 size={18} /> : null}
+                        {suggestion.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {walletSuggestions.length > 0 ? (
+              <div className="grid gap-2">
+                <p className="kicker">{t('dashboard.quickAdd.suggestedWallets')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {walletSuggestions.map((suggestion) => {
+                    const selected = overrideWalletId === suggestion.id;
+
+                    return (
+                      <Button
+                        key={suggestion.id}
+                        type="button"
+                        variant={selected ? 'primary' : 'secondary'}
+                        onClick={() => setOverrideWalletId((current) => (current === suggestion.id ? null : suggestion.id))}
+                        disabled={quickAddMutation.isPending}
+                      >
+                        {selected ? <CheckCircle2 size={18} /> : null}
+                        {suggestion.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className={cn('grid gap-2', preview?.status === 'ready' ? 'sm:grid-cols-[minmax(0,1fr)_auto]' : 'sm:grid-cols-1')}>
           <Button
             type="submit"
@@ -242,6 +450,8 @@ export default function QuickAddComposer({
               className="inline-flex items-center rounded-full border border-border-subtle bg-surface-2/55 px-3 py-1.5 text-sm text-accent-strong transition hover:border-border-strong hover:bg-surface-2"
               onClick={() => {
                 setInput(example);
+                setOverrideCategoryId(null);
+                setOverrideWalletId(null);
                 inputRef.current?.focus();
               }}
             >

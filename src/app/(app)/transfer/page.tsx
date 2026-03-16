@@ -21,7 +21,7 @@ import {
 } from '@/components/shared/PagePrimitives';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NOTIFICATIONS_REFRESH_EVENT, TRANSACTIONS_CHANGED_EVENT } from '@/lib/events';
 import { getErrorMessage } from '@/lib/errors';
@@ -146,6 +146,9 @@ function TransferPageContent() {
 
       <Dialog open={isFormOpen} onOpenChange={(open) => (!open ? closeForm() : setLocalFormOpen(true))}>
         <DialogContent className="max-w-[42rem] overflow-hidden p-0" hideClose>
+          <DialogTitle className="sr-only">
+            {activeEditId ? t('transfers.form.edit') : t('transfers.form.new')}
+          </DialogTitle>
           {activeEditId && transferDetailQuery.isLoading && !activeTransfer ? (
             <Card className="border-0 shadow-none">
               <EmptyState title={t('common.loading')} compact />
