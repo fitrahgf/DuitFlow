@@ -2,6 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === '/api/telegram/webhook') {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
   const isPublicAuthRoute =
     request.nextUrl.pathname.startsWith('/login') ||
