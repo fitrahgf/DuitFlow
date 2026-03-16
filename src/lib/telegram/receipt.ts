@@ -112,6 +112,20 @@ const receiptJsonSchema = {
   },
 } as const;
 
+interface GroqResponsesApiPayload {
+  output_text?: string;
+  output?: Array<{
+    type?: string;
+    content?: Array<{
+      type?: string;
+      text?: string;
+    }>;
+  }>;
+  error?: {
+    message?: string;
+  };
+}
+
 function normalizeMatchText(value: string) {
   return value
     .toLowerCase()
@@ -322,6 +336,20 @@ function buildReceiptPrompt({
   ].join('\n');
 }
 
+function extractGroqOutputText(payload: GroqResponsesApiPayload) {
+  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
+    return payload.output_text;
+  }
+
+  const contentTexts =
+    payload.output
+      ?.flatMap((item) => item.content ?? [])
+      .map((item) => item.text ?? '')
+      .filter((text) => text.trim().length > 0) ?? [];
+
+  return contentTexts.join('\n').trim();
+}
+
 export async function extractReceiptTransactionFromImage({
   imageDataUrl,
   caption,
@@ -384,20 +412,19 @@ export async function extractReceiptTransactionFromImage({
     }),
   });
 
-  const payload = (await response.json()) as {
-    output_text?: string;
-    error?: { message?: string };
-  };
+  const payload = (await response.json()) as GroqResponsesApiPayload;
 
   if (!response.ok) {
     throw new Error(payload.error?.message || 'Groq receipt extraction failed.');
   }
 
-  if (!payload.output_text) {
+  const outputText = extractGroqOutputText(payload);
+
+  if (!outputText) {
     throw new Error('Groq receipt extraction returned no output.');
   }
 
-  const parsed = JSON.parse(payload.output_text) as RawGroqReceiptResponse;
+  const parsed = JSON.parse(outputText) as RawGroqReceiptResponse;
 
   return resolveReceiptTransaction(parsed, {
     wallets,

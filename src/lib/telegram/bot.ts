@@ -885,6 +885,37 @@ async function sendHelp(chatId: string, language: Language) {
   );
 }
 
+function getTelegramProcessingErrorMessage(language: Language, error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+
+  if (
+    message.includes('GROQ_API_KEY is not configured') ||
+    message.includes('model') ||
+    message.includes('Groq')
+  ) {
+    return textByLanguage(language, {
+      id: 'Foto struk diterima, tapi proses AI-nya gagal. Cek `GROQ_API_KEY`, model vision, dan redeploy Vercel.',
+      en: 'The receipt image was received, but the AI step failed. Check `GROQ_API_KEY`, the vision model, and redeploy Vercel.',
+    });
+  }
+
+  if (
+    message.includes('getFile') ||
+    message.includes('download Telegram file') ||
+    message.includes('telegram_image_too_large')
+  ) {
+    return textByLanguage(language, {
+      id: 'Aku gagal mengambil file gambar dari Telegram. Coba kirim ulang foto yang lebih kecil atau tanpa kompresi aneh.',
+      en: 'I could not fetch the image from Telegram. Try sending the receipt again with a smaller or cleaner image.',
+    });
+  }
+
+  return textByLanguage(language, {
+    id: 'Aku menerima pesanmu, tapi prosesnya gagal di server. Cek log deployment lalu coba lagi.',
+    en: 'I received your message, but processing failed on the server. Check the deployment logs and try again.',
+  });
+}
+
 export async function handleTelegramUpdate(update: TelegramUpdate) {
   const message = update.message;
 
@@ -902,123 +933,141 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   const fallbackLanguage = resolveTelegramLanguage(message.from?.language_code);
   const command = message.text ? parseTelegramCommand(message.text) : null;
 
-  if (command?.command === 'start') {
-    const token = command.args[0];
+  try {
+    if (command?.command === 'start') {
+      const token = command.args[0];
 
-    if (token) {
-      const linkResult = await linkTelegramAccount(token, message);
+      if (token) {
+        const linkResult = await linkTelegramAccount(token, message);
 
-      if (!linkResult.ok) {
+        if (!linkResult.ok) {
+          await sendTelegramMessage(
+            chatId,
+            textByLanguage(fallbackLanguage, {
+              id:
+                linkResult.reason === 'already_linked'
+                  ? 'Akun Telegram ini sudah terhubung ke user lain.'
+                  : 'Token koneksi tidak valid atau sudah kedaluwarsa. Buat link baru dari Pengaturan DuitFlow.',
+              en:
+                linkResult.reason === 'already_linked'
+                  ? 'This Telegram account is already linked to another user.'
+                  : 'This connect token is invalid or expired. Create a new link from DuitFlow Settings.',
+            })
+          );
+          return;
+        }
+
+        const profile = await fetchTelegramProfile(linkResult.userId);
         await sendTelegramMessage(
           chatId,
-          textByLanguage(fallbackLanguage, {
-            id:
-              linkResult.reason === 'already_linked'
-                ? 'Akun Telegram ini sudah terhubung ke user lain.'
-                : 'Token koneksi tidak valid atau sudah kedaluwarsa. Buat link baru dari Pengaturan DuitFlow.',
-            en:
-              linkResult.reason === 'already_linked'
-                ? 'This Telegram account is already linked to another user.'
-                : 'This connect token is invalid or expired. Create a new link from DuitFlow Settings.',
+          textByLanguage(profile.preferred_language, {
+            id: 'Bot terhubung. Kirim transaksi seperti "kopi 25rb cash" atau pakai /help.',
+            en: 'Bot connected. Send entries like "coffee 25k cash" or use /help.',
           })
         );
         return;
       }
 
-      const profile = await fetchTelegramProfile(linkResult.userId);
+      const existingConnection = await findTelegramConnection(chatId);
+      const activeLanguage = existingConnection
+        ? await fetchTelegramProfile(existingConnection.user_id).then((profile) => profile.preferred_language)
+        : fallbackLanguage;
+
       await sendTelegramMessage(
         chatId,
-        textByLanguage(profile.preferred_language, {
-          id: 'Bot terhubung. Kirim transaksi seperti "kopi 25rb cash" atau pakai /help.',
-          en: 'Bot connected. Send entries like "coffee 25k cash" or use /help.',
+        textByLanguage(activeLanguage, {
+          id: existingConnection
+            ? 'Bot siap dipakai. Coba kirim "kopi 25rb cash" atau pakai /help.'
+            : 'Hubungkan bot dari Pengaturan DuitFlow, lalu kirim transaksi langsung dari chat.',
+          en: existingConnection
+            ? 'Bot is ready. Try "coffee 25k cash" or use /help.'
+            : 'Connect the bot from DuitFlow Settings, then send transactions directly from chat.',
         })
       );
       return;
     }
 
-    const existingConnection = await findTelegramConnection(chatId);
-    const activeLanguage = existingConnection
-      ? await fetchTelegramProfile(existingConnection.user_id).then((profile) => profile.preferred_language)
-      : fallbackLanguage;
+    const connection = await findTelegramConnection(chatId);
 
-    await sendTelegramMessage(
+    if (!connection) {
+      await sendTelegramMessage(
+        chatId,
+        textByLanguage(fallbackLanguage, {
+          id: 'Bot belum terhubung. Buka DuitFlow > Pengaturan > Telegram untuk connect.',
+          en: 'Bot is not linked yet. Open DuitFlow > Settings > Telegram to connect it.',
+        })
+      );
+      return;
+    }
+
+    await touchTelegramConnection(chatId);
+    const profile = await fetchTelegramProfile(connection.user_id);
+
+    if (command?.command === 'help' || command?.command === 'commands') {
+      await sendHelp(chatId, profile.preferred_language);
+      return;
+    }
+
+    if (command?.command === 'balance') {
+      await sendBalance(chatId, connection);
+      return;
+    }
+
+    if (command?.command === 'wallets') {
+      await sendWallets(chatId, connection);
+      return;
+    }
+
+    if (command?.command === 'today') {
+      await sendTodaySummary(chatId, connection);
+      return;
+    }
+
+    if (command?.command === 'latest') {
+      await sendLatestTransactions(chatId, connection);
+      return;
+    }
+
+    if (command?.command === 'status') {
+      await sendStatus(chatId, connection);
+      return;
+    }
+
+    if (command?.command === 'unlink') {
+      await disconnectTelegramConnection(chatId);
+      await sendTelegramMessage(
+        chatId,
+        textByLanguage(profile.preferred_language, {
+          id: 'Bot dilepas. Hubungkan lagi dari Pengaturan DuitFlow kapan saja.',
+          en: 'Bot disconnected. Reconnect it anytime from DuitFlow Settings.',
+        })
+      );
+      return;
+    }
+
+    if (imageAttachment) {
+      await createTelegramReceiptTransaction(chatId, message, connection, imageAttachment);
+      return;
+    }
+
+    if (message.text) {
+      await createTelegramTransaction(chatId, message.text, connection);
+    }
+  } catch (error) {
+    console.error('Telegram bot processing error', {
+      updateId: update.update_id,
       chatId,
-      textByLanguage(activeLanguage, {
-        id: existingConnection
-          ? 'Bot siap dipakai. Coba kirim "kopi 25rb cash" atau pakai /help.'
-          : 'Hubungkan bot dari Pengaturan DuitFlow, lalu kirim transaksi langsung dari chat.',
-        en: existingConnection
-          ? 'Bot is ready. Try "coffee 25k cash" or use /help.'
-          : 'Connect the bot from DuitFlow Settings, then send transactions directly from chat.',
-      })
-    );
-    return;
-  }
+      error,
+    });
 
-  const connection = await findTelegramConnection(chatId);
-
-  if (!connection) {
-    await sendTelegramMessage(
-      chatId,
-      textByLanguage(fallbackLanguage, {
-        id: 'Bot belum terhubung. Buka DuitFlow > Pengaturan > Telegram untuk connect.',
-        en: 'Bot is not linked yet. Open DuitFlow > Settings > Telegram to connect it.',
-      })
-    );
-    return;
-  }
-
-  await touchTelegramConnection(chatId);
-  const profile = await fetchTelegramProfile(connection.user_id);
-
-  if (command?.command === 'help' || command?.command === 'commands') {
-    await sendHelp(chatId, profile.preferred_language);
-    return;
-  }
-
-  if (command?.command === 'balance') {
-    await sendBalance(chatId, connection);
-    return;
-  }
-
-  if (command?.command === 'wallets') {
-    await sendWallets(chatId, connection);
-    return;
-  }
-
-  if (command?.command === 'today') {
-    await sendTodaySummary(chatId, connection);
-    return;
-  }
-
-  if (command?.command === 'latest') {
-    await sendLatestTransactions(chatId, connection);
-    return;
-  }
-
-  if (command?.command === 'status') {
-    await sendStatus(chatId, connection);
-    return;
-  }
-
-  if (command?.command === 'unlink') {
-    await disconnectTelegramConnection(chatId);
-    await sendTelegramMessage(
-      chatId,
-      textByLanguage(profile.preferred_language, {
-        id: 'Bot dilepas. Hubungkan lagi dari Pengaturan DuitFlow kapan saja.',
-        en: 'Bot disconnected. Reconnect it anytime from DuitFlow Settings.',
-      })
-    );
-    return;
-  }
-
-  if (imageAttachment) {
-    await createTelegramReceiptTransaction(chatId, message, connection, imageAttachment);
-    return;
-  }
-
-  if (message.text) {
-    await createTelegramTransaction(chatId, message.text, connection);
+    try {
+      await sendTelegramMessage(chatId, getTelegramProcessingErrorMessage(fallbackLanguage, error));
+    } catch (replyError) {
+      console.error('Telegram bot fallback reply failed', {
+        updateId: update.update_id,
+        chatId,
+        error: replyError,
+      });
+    }
   }
 }
