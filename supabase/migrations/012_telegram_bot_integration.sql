@@ -37,7 +37,7 @@ CREATE TRIGGER set_telegram_connections_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 CREATE TABLE IF NOT EXISTS public.telegram_link_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMPTZ NOT NULL,
@@ -83,7 +83,7 @@ BEGIN
     OR expires_at <= now()
     OR used_at IS NOT NULL;
 
-  new_token := encode(gen_random_bytes(24), 'hex');
+  new_token := encode(extensions.gen_random_bytes(24), 'hex');
 
   INSERT INTO public.telegram_link_tokens (
     user_id,
@@ -92,7 +92,7 @@ BEGIN
   )
   VALUES (
     actor,
-    encode(digest(new_token, 'sha256'), 'hex'),
+    encode(extensions.digest(new_token, 'sha256'), 'hex'),
     token_expiry
   );
 

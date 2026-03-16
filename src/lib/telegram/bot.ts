@@ -1,8 +1,16 @@
 import { formatCurrencyAmount } from '@/lib/currency';
 import type { Language } from '@/lib/i18n/dictionaries';
-import { parseSmartInput, type SmartParserCategoryOption, type SmartParserWalletOption } from '@/lib/smartParser';
+import {
+  parseSmartInput,
+  type SmartParserCategoryOption,
+  type SmartParserWalletOption,
+} from '@/lib/smartParser';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getLocalDateInTimezone, hashTelegramLinkToken, parseTelegramCommand } from '@/lib/telegram/server';
+import {
+  getLocalDateInTimezone,
+  hashTelegramLinkToken,
+  parseTelegramCommand,
+} from '@/lib/telegram/server';
 
 interface TelegramUser {
   id: number;
@@ -54,6 +62,16 @@ interface TelegramWalletRow extends SmartParserWalletOption {
 }
 
 type TelegramCategoryRow = SmartParserCategoryOption & { is_archived?: boolean };
+
+type TelegramTransactionRow = {
+  title: string | null;
+  amount: number;
+  type: 'income' | 'expense';
+  transaction_date: string | null;
+  date: string | null;
+  source?: string | null;
+  wallets?: { name: string | null } | null;
+};
 
 const BOT_RUNTIME_ERROR = 'Telegram bot is not configured yet.';
 
@@ -125,7 +143,7 @@ async function linkTelegramAccount(token: string, message: TelegramMessage): Pro
   }
 
   if (!tokenRow) {
-    return { ok: false, reason: 'invalid_token' as const };
+    return { ok: false, reason: 'invalid_token' };
   }
 
   const linkTokenRow = tokenRow as { id: string; user_id: string };
@@ -143,7 +161,7 @@ async function linkTelegramAccount(token: string, message: TelegramMessage): Pro
   const existingConnectionRow = (existingConnection ?? null) as { user_id: string } | null;
 
   if (existingConnectionRow && existingConnectionRow.user_id !== linkTokenRow.user_id) {
-    return { ok: false, reason: 'already_linked' as const };
+    return { ok: false, reason: 'already_linked' };
   }
 
   const { error: upsertError } = await admin.from('telegram_connections').upsert(
@@ -231,6 +249,56 @@ async function fetchTelegramCategories(userId: string) {
   return (data ?? []) as TelegramCategoryRow[];
 }
 
+async function fetchRecentTelegramTransactions(userId: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('transactions')
+    .select('title, amount, type, transaction_date, date, source, wallets(name)')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .order('transaction_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as TelegramTransactionRow[];
+}
+
+async function fetchTodayTelegramSummary(userId: string, today: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('transactions')
+    .select('amount, type, source')
+    .eq('user_id', userId)
+    .eq('transaction_date', today)
+    .is('deleted_at', null);
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = (
+    (data ?? []) as Array<{ amount: number; type: 'income' | 'expense'; source?: string | null }>
+  ).filter((row) => row.source !== 'system_transfer');
+
+  const income = rows
+    .filter((row) => row.type === 'income')
+    .reduce((sum, row) => sum + row.amount, 0);
+  const expense = rows
+    .filter((row) => row.type === 'expense')
+    .reduce((sum, row) => sum + row.amount, 0);
+
+  return {
+    income,
+    expense,
+    net: income - expense,
+    count: rows.length,
+  };
+}
+
 async function touchTelegramConnection(chatId: string) {
   const admin = createAdminClient();
   await admin
@@ -315,16 +383,16 @@ async function createTelegramTransaction(chatId: string, text: string, connectio
   await sendTelegramMessage(
     chatId,
     textByLanguage(profile.preferred_language, {
-      id: `Tersimpan: ${preview.title} • ${formatCurrencyAmount(
+      id: `Tersimpan: ${preview.title} - ${formatCurrencyAmount(
         preview.amount,
         profile.preferred_language,
         profile.currency_code
-      )} • ${preview.walletName}`,
-      en: `Saved: ${preview.title} • ${formatCurrencyAmount(
+      )} - ${preview.walletName}`,
+      en: `Saved: ${preview.title} - ${formatCurrencyAmount(
         preview.amount,
         profile.preferred_language,
         profile.currency_code
-      )} • ${preview.walletName}`,
+      )} - ${preview.walletName}`,
     })
   );
 }
@@ -351,7 +419,7 @@ async function sendBalance(chatId: string, connection: TelegramConnectionRow) {
     .slice(0, 5)
     .map(
       (wallet) =>
-        `• ${wallet.name}: ${formatCurrencyAmount(
+        `- ${wallet.name}: ${formatCurrencyAmount(
           wallet.balance ?? 0,
           profile.preferred_language,
           profile.currency_code
@@ -394,7 +462,98 @@ async function sendWallets(chatId: string, connection: TelegramConnectionRow) {
         id: 'Dompet aktif:',
         en: 'Active wallets:',
       }),
-      ...wallets.map((wallet) => `• ${wallet.name}`),
+      ...wallets.map((wallet) => `- ${wallet.name}`),
+    ].join('\n')
+  );
+}
+
+async function sendStatus(chatId: string, connection: TelegramConnectionRow) {
+  const profile = await fetchTelegramProfile(connection.user_id);
+
+  await sendTelegramMessage(
+    chatId,
+    textByLanguage(profile.preferred_language, {
+      id: [
+        'Status bot:',
+        '- Terhubung: ya',
+        `- Username Telegram: ${connection.telegram_username ? `@${connection.telegram_username}` : '-'}`,
+        `- Bahasa: ${profile.preferred_language.toUpperCase()}`,
+        `- Mata uang: ${profile.currency_code}`,
+        `- Zona waktu: ${profile.timezone}`,
+      ].join('\n'),
+      en: [
+        'Bot status:',
+        '- Connected: yes',
+        `- Telegram username: ${connection.telegram_username ? `@${connection.telegram_username}` : '-'}`,
+        `- Language: ${profile.preferred_language.toUpperCase()}`,
+        `- Currency: ${profile.currency_code}`,
+        `- Timezone: ${profile.timezone}`,
+      ].join('\n'),
+    })
+  );
+}
+
+async function sendTodaySummary(chatId: string, connection: TelegramConnectionRow) {
+  const profile = await fetchTelegramProfile(connection.user_id);
+  const today = getLocalDateInTimezone(profile.timezone);
+  const summary = await fetchTodayTelegramSummary(connection.user_id, today);
+
+  await sendTelegramMessage(
+    chatId,
+    textByLanguage(profile.preferred_language, {
+      id: [
+        `Ringkasan hari ini (${today})`,
+        `- Pemasukan: ${formatCurrencyAmount(summary.income, profile.preferred_language, profile.currency_code)}`,
+        `- Pengeluaran: ${formatCurrencyAmount(summary.expense, profile.preferred_language, profile.currency_code)}`,
+        `- Selisih: ${formatCurrencyAmount(summary.net, profile.preferred_language, profile.currency_code, { signDisplay: 'always' })}`,
+        `- Transaksi: ${summary.count}`,
+      ].join('\n'),
+      en: [
+        `Today summary (${today})`,
+        `- Income: ${formatCurrencyAmount(summary.income, profile.preferred_language, profile.currency_code)}`,
+        `- Expense: ${formatCurrencyAmount(summary.expense, profile.preferred_language, profile.currency_code)}`,
+        `- Net: ${formatCurrencyAmount(summary.net, profile.preferred_language, profile.currency_code, { signDisplay: 'always' })}`,
+        `- Transactions: ${summary.count}`,
+      ].join('\n'),
+    })
+  );
+}
+
+async function sendLatestTransactions(chatId: string, connection: TelegramConnectionRow) {
+  const profile = await fetchTelegramProfile(connection.user_id);
+  const transactions = await fetchRecentTelegramTransactions(connection.user_id);
+
+  if (transactions.length === 0) {
+    await sendTelegramMessage(
+      chatId,
+      textByLanguage(profile.preferred_language, {
+        id: 'Belum ada transaksi terbaru.',
+        en: 'No recent transactions yet.',
+      })
+    );
+    return;
+  }
+
+  const lines = transactions.map((transaction) => {
+    const sign = transaction.type === 'income' ? '+' : '-';
+    const date = transaction.transaction_date || transaction.date || '-';
+    const walletName = transaction.wallets?.name ? ` - ${transaction.wallets.name}` : '';
+
+    return `${sign} ${transaction.title || '-'} - ${formatCurrencyAmount(
+      transaction.amount,
+      profile.preferred_language,
+      profile.currency_code
+    )}${walletName} - ${date}`;
+  });
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      textByLanguage(profile.preferred_language, {
+        id: 'Transaksi terbaru:',
+        en: 'Recent transactions:',
+      }),
+      ...lines,
     ].join('\n')
   );
 }
@@ -407,25 +566,33 @@ async function sendHelp(chatId: string, language: Language) {
         'Kirim transaksi langsung dari chat.',
         '',
         'Contoh:',
-        '• kopi 25rb cash',
-        '• gaji 5jt bca',
+        '- kopi 25rb cash',
+        '- gaji 5jt bca',
         '',
         'Perintah:',
-        '• /balance',
-        '• /wallets',
-        '• /unlink',
+        '- /commands',
+        '- /balance',
+        '- /wallets',
+        '- /today',
+        '- /latest',
+        '- /status',
+        '- /unlink',
       ].join('\n'),
       en: [
         'Send transactions directly from chat.',
         '',
         'Examples:',
-        '• coffee 25k cash',
-        '• salary 5m bca',
+        '- coffee 25k cash',
+        '- salary 5m bca',
         '',
         'Commands:',
-        '• /balance',
-        '• /wallets',
-        '• /unlink',
+        '- /commands',
+        '- /balance',
+        '- /wallets',
+        '- /today',
+        '- /latest',
+        '- /status',
+        '- /unlink',
       ].join('\n'),
     })
   );
@@ -452,12 +619,14 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
         await sendTelegramMessage(
           chatId,
           textByLanguage(fallbackLanguage, {
-            id: linkResult.reason === 'already_linked'
-              ? 'Akun Telegram ini sudah terhubung ke user lain.'
-              : 'Token koneksi tidak valid atau sudah kedaluwarsa. Buat link baru dari Pengaturan DuitFlow.',
-            en: linkResult.reason === 'already_linked'
-              ? 'This Telegram account is already linked to another user.'
-              : 'This connect token is invalid or expired. Create a new link from DuitFlow Settings.',
+            id:
+              linkResult.reason === 'already_linked'
+                ? 'Akun Telegram ini sudah terhubung ke user lain.'
+                : 'Token koneksi tidak valid atau sudah kedaluwarsa. Buat link baru dari Pengaturan DuitFlow.',
+            en:
+              linkResult.reason === 'already_linked'
+                ? 'This Telegram account is already linked to another user.'
+                : 'This connect token is invalid or expired. Create a new link from DuitFlow Settings.',
           })
         );
         return;
@@ -475,9 +644,13 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     }
 
     const existingConnection = await findTelegramConnection(chatId);
+    const activeLanguage = existingConnection
+      ? await fetchTelegramProfile(existingConnection.user_id).then((profile) => profile.preferred_language)
+      : fallbackLanguage;
+
     await sendTelegramMessage(
       chatId,
-      textByLanguage(existingConnection ? await fetchTelegramProfile(existingConnection.user_id).then((profile) => profile.preferred_language) : fallbackLanguage, {
+      textByLanguage(activeLanguage, {
         id: existingConnection
           ? 'Bot siap dipakai. Coba kirim "kopi 25rb cash" atau pakai /help.'
           : 'Hubungkan bot dari Pengaturan DuitFlow, lalu kirim transaksi langsung dari chat.',
@@ -505,7 +678,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   await touchTelegramConnection(chatId);
   const profile = await fetchTelegramProfile(connection.user_id);
 
-  if (command?.command === 'help') {
+  if (command?.command === 'help' || command?.command === 'commands') {
     await sendHelp(chatId, profile.preferred_language);
     return;
   }
@@ -517,6 +690,21 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
 
   if (command?.command === 'wallets') {
     await sendWallets(chatId, connection);
+    return;
+  }
+
+  if (command?.command === 'today') {
+    await sendTodaySummary(chatId, connection);
+    return;
+  }
+
+  if (command?.command === 'latest') {
+    await sendLatestTransactions(chatId, connection);
+    return;
+  }
+
+  if (command?.command === 'status') {
+    await sendStatus(chatId, connection);
     return;
   }
 
