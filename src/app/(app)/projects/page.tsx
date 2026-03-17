@@ -14,7 +14,6 @@ import {
 import type { ProjectRecord } from "@/features/projects/queries";
 import { EmptyStateWorkspace } from "@/components/shared/EmptyState";
 import {
-  MetricCard,
   PageHeader,
   PageHeaderActions,
   PageHeading,
@@ -36,6 +35,37 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useLanguage } from "@/components/LanguageProvider";
 import { projectTemplates } from "@/lib/projectTemplates";
+
+function ProjectSummaryStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "default" | "accent" | "success";
+}) {
+  const dotClassName =
+    tone === "accent"
+      ? "bg-accent"
+      : tone === "success"
+        ? "bg-success"
+        : "bg-text-3/35";
+
+  return (
+    <div className="grid gap-0.5 px-3 py-2.5 first:pl-0 last:pr-0">
+      <div className="inline-flex items-center gap-2">
+        <span className={`h-1.5 w-1.5 rounded-full ${dotClassName}`} aria-hidden="true" />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+    </div>
+  );
+}
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
@@ -134,6 +164,7 @@ export default function ProjectsPage() {
       title: t(template.nameKey),
       categories: template.subcategoryKeys.slice(0, 3).map((categoryKey) => t(categoryKey)),
     }));
+  const showSummaryStrip = loading || projects.length > 0;
 
   return (
     <PageShell className="animate-fade-in">
@@ -153,38 +184,38 @@ export default function ProjectsPage() {
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label={t("projects.title")}
-          value={loading ? "..." : projects.length}
-          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-        />
-        <MetricCard
-          label={t("projects.status.active")}
-          value={loading ? "..." : activeProjects.length}
-          tone="accent"
-          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-        />
-        <MetricCard
-          label={t("projects.totalBudget")}
-          value={loading ? "..." : formatCurrency(totalBudget)}
-          tone="success"
-          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-        />
-        <MetricCard
-          label={t("projects.categoriesText")}
-          value={
-            loading
-              ? "..."
-              : projects.reduce(
-                  (sum, project) =>
-                    sum + (project.project_categories?.length ?? 0),
-                  0,
-                )
-          }
-          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-        />
-      </section>
+      {showSummaryStrip ? (
+        <SurfaceCard padding="compact">
+          <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/80">
+            <ProjectSummaryStat
+              label={t("projects.title")}
+              value={loading ? "..." : projects.length}
+            />
+            <ProjectSummaryStat
+              label={t("projects.status.active")}
+              value={loading ? "..." : activeProjects.length}
+              tone="accent"
+            />
+            <ProjectSummaryStat
+              label={t("projects.totalBudget")}
+              value={loading ? "..." : formatCurrency(totalBudget)}
+              tone="success"
+            />
+            <ProjectSummaryStat
+              label={t("projects.categoriesText")}
+              value={
+                loading
+                  ? "..."
+                  : projects.reduce(
+                      (sum, project) =>
+                        sum + (project.project_categories?.length ?? 0),
+                      0,
+                    )
+              }
+            />
+          </div>
+        </SurfaceCard>
+      ) : null}
 
       <SurfaceCard padding="compact">
         <div className="grid gap-2.5">

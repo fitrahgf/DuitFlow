@@ -485,36 +485,32 @@ export default function BudgetsPage() {
   };
 
   const monthLabel = formatMonthLabel(monthKey, language);
-  const untrackedPanel = (
-    <SurfaceCard padding="compact">
-      <div className="grid gap-2.5">
-        <SectionHeading title={t("budgets.untrackedTitle")} />
-
-        {untrackedSpending.length === 0 ? (
-          <BudgetInlineEmpty title={t("budgets.noUntracked")} />
-        ) : (
-          <div className="grid gap-0 divide-y divide-border-subtle/80">
-            {untrackedSpending.map((item) => (
-              <div
-                key={item.id}
-                className="list-row flex min-h-0 items-center justify-between gap-4 px-3 py-2 first:pt-0 last:pb-0"
-              >
-                <span className="text-[0.84rem] text-text-2">{item.name}</span>
-                <strong className="text-[0.84rem] font-semibold tracking-[-0.03em] text-text-1">
-                  {formatCurrency(item.spent)}
-                </strong>
-              </div>
-            ))}
+  const hasCategoryBudgets = categoryRows.length > 0;
+  const renderUntrackedList = (compact = false) =>
+    untrackedSpending.length === 0 ? (
+      <BudgetInlineEmpty title={t("budgets.noUntracked")} />
+    ) : (
+      <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {untrackedSpending.map((item) => (
+          <div
+            key={item.id}
+            className={cn(
+              "list-row flex min-h-0 items-center justify-between gap-4 px-3 first:pt-0 last:pb-0",
+              compact ? "py-2" : "py-2.5",
+            )}
+          >
+            <span className="text-[0.84rem] text-text-2">{item.name}</span>
+            <strong className="text-[0.84rem] font-semibold tracking-[-0.03em] text-text-1">
+              {formatCurrency(item.spent)}
+            </strong>
           </div>
-        )}
+        ))}
       </div>
-    </SurfaceCard>
-  );
-
+    );
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t("budgets.title")} />
+        <PageHeading title={t("budgets.title")} subtitle={t("budgets.subtitle")} />
         <PageHeaderActions>
           <Button
             type="button"
@@ -756,8 +752,8 @@ export default function BudgetsPage() {
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid gap-3 xl:grid-cols-[minmax(18.5rem,0.78fr)_minmax(0,1.22fr)] xl:items-start">
-            <div className="grid gap-3">
+          <section className="grid gap-3 xl:grid-cols-[minmax(19rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+            <div className="grid gap-3 xl:sticky xl:top-[var(--shell-sticky-offset)]">
               <SurfaceCard padding="compact">
                 <div className="grid gap-2.5">
                   <SectionHeading
@@ -842,23 +838,40 @@ export default function BudgetsPage() {
                       onAction={() => openCreateForm("overall")}
                     />
                   )}
+
+                  <div className="grid gap-2.5 border-t border-border-subtle/85 pt-3">
+                    <SectionHeading
+                      title={t("budgets.untrackedTitle")}
+                      description={t("budgets.untrackedSubtitle")}
+                      hideDescriptionOnMobile={false}
+                    />
+                    {renderUntrackedList(true)}
+                  </div>
                 </div>
               </SurfaceCard>
-
-              <div className="hidden xl:block">{untrackedPanel}</div>
             </div>
 
-            <SurfaceCard padding="compact" className="xl:min-h-full">
+            <SurfaceCard padding="compact" className={cn(hasCategoryBudgets && "xl:min-h-full")}>
               <div className="grid gap-2.5">
-                <SectionHeading title={t("budgets.categoryTitle")} />
+                <SectionHeading
+                  title={t("budgets.categoryTitle")}
+                  description={t("budgets.categorySubtitle")}
+                  hideDescriptionOnMobile={false}
+                  actions={
+                    !hasCategoryBudgets ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openCreateForm("category")}
+                      >
+                        {t("budgets.addCategory")}
+                      </Button>
+                    ) : null
+                  }
+                />
 
-                {categoryRows.length === 0 ? (
-                  <BudgetInlineEmpty
-                    title={t("budgets.noCategories")}
-                    actionLabel={t("budgets.addCategory")}
-                    onAction={() => openCreateForm("category")}
-                  />
-                ) : (
+                {hasCategoryBudgets ? (
                   <div className="grid gap-0 divide-y divide-border-subtle/80">
                     {categoryRows.map(
                       ({ budget, spent, limit, ratio, tone }) => (
@@ -931,12 +944,30 @@ export default function BudgetsPage() {
                       ),
                     )}
                   </div>
+                ) : (
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,0.92fr)_minmax(16rem,1.08fr)] lg:items-start">
+                    <BudgetInlineEmpty
+                      title={t("budgets.noCategories")}
+                      actionLabel={t("budgets.addCategory")}
+                      onAction={() => openCreateForm("category")}
+                    />
+                    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-dashed border-border-subtle bg-surface-2/32 px-3 py-3">
+                      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                        {language === "id"
+                          ? "Belum ada budget kategori aktif."
+                          : "No category budgets yet."}
+                      </strong>
+                      <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
+                        {language === "id"
+                          ? "Tambahkan budget kategori untuk memecah pengeluaran rutin per pos. Pengeluaran tanpa budget tetap muncul di ringkasan kiri."
+                          : "Add category budgets to break recurring spending into clearer envelopes. Untracked spend still appears in the left overview."}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </SurfaceCard>
           </section>
-
-          <div className="xl:hidden">{untrackedPanel}</div>
         </>
       )}
     </PageShell>

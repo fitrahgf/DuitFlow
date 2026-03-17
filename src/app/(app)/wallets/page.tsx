@@ -42,6 +42,7 @@ import {
   SectionHeading,
   SurfaceCard,
 } from "@/components/shared/PagePrimitives";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
@@ -76,6 +77,30 @@ const typeOptions: { value: WalletType; labelKey: string; icon: LucideIcon }[] =
     { value: "e-wallet", labelKey: "wallets.types.e-wallet", icon: Smartphone },
     { value: "other", labelKey: "wallets.types.other", icon: Wallet },
   ];
+
+function WalletOverviewRow({
+  label,
+  value,
+  meta,
+}: {
+  label: string;
+  value: ReactNode;
+  meta?: ReactNode;
+}) {
+  return (
+    <div className="grid gap-0.5 py-2.5 first:pt-0 last:pb-0">
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+        {label}
+      </span>
+      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+      {meta ? (
+        <span className="text-[0.76rem] leading-5 text-text-2">{meta}</span>
+      ) : null}
+    </div>
+  );
+}
 
 export default function WalletsPage() {
   const router = useRouter();
@@ -364,11 +389,27 @@ export default function WalletsPage() {
   const walletDetail = walletDetailQuery.data;
   const wallets = walletsQuery.data ?? [];
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
+  const totalTransactions = wallets.reduce(
+    (sum, wallet) => sum + wallet.transaction_count,
+    0,
+  );
+  const featuredWallet =
+    wallets.length > 0
+      ? [...wallets].sort((left, right) => right.balance - left.balance)[0]
+      : null;
+  const latestWallet =
+    wallets
+      .filter((wallet) => wallet.last_transaction_date)
+      .sort(
+        (left, right) =>
+          new Date(right.last_transaction_date ?? 0).getTime() -
+          new Date(left.last_transaction_date ?? 0).getTime(),
+      )[0] ?? null;
 
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t("wallets.title")} />
+        <PageHeading title={t("wallets.title")} subtitle={t("wallets.subtitle")} />
         <PageHeaderActions>
           <Button
             type="button"
@@ -382,11 +423,11 @@ export default function WalletsPage() {
       </PageHeader>
 
       <SurfaceCard padding="compact">
-        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.35fr)_minmax(18.5rem,21rem)] xl:items-center">
-          <div className="grid gap-1.5">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="grid gap-2">
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
               <div className="grid gap-1">
-                <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
                   {t("wallets.view")}
                 </span>
                 <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -419,14 +460,19 @@ export default function WalletsPage() {
                 {t("wallets.addWallet")}
               </Button>
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-[0.78rem] text-text-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+              <span>
+                {view === "active"
+                  ? language === "id"
+                    ? `${wallets.length} dompet aktif sedang ditampilkan`
+                    : `${wallets.length} active wallets in view`
+                  : language === "id"
+                    ? `${wallets.length} dompet arsip sedang ditampilkan`
+                    : `${wallets.length} archived wallets in view`}
+              </span>
+            </div>
           </div>
-
-          <MetricCard
-            label={t("wallets.totalBalance")}
-            value={formatCurrency(totalBalance)}
-            tone="accent"
-            className="min-w-0 min-h-[4.45rem] p-[var(--space-panel-tight)] xl:max-w-[21rem] xl:justify-self-end"
-          />
         </div>
       </SurfaceCard>
 
@@ -636,170 +682,310 @@ export default function WalletsPage() {
         </DialogContent>
       </Dialog>
 
-      <section className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
-        {walletsQuery.isLoading ? (
-          <SurfaceCard padding="compact" className="[grid-column:1/-1]">
-            <EmptyState title={t("common.loading")} compact />
-          </SurfaceCard>
-        ) : walletsQuery.isError ? (
-          <SurfaceCard padding="compact" className="[grid-column:1/-1]">
-            <EmptyState title={t("wallets.loadError")} compact />
-          </SurfaceCard>
-        ) : wallets.length === 0 ? (
-          <SurfaceCard padding="compact" className="[grid-column:1/-1]">
-            <EmptyState
-              title={
-                view === "active"
-                  ? t("wallets.noWallets")
-                  : t("wallets.noArchivedWallets")
-              }
-              compact
-              icon={<Wallet size={18} />}
-            />
-          </SurfaceCard>
-        ) : (
-          wallets.map((wallet) => (
-            <article
-              key={wallet.id}
-              className="self-start overflow-hidden rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 shadow-xs"
-              style={{ borderTop: `3px solid ${wallet.color || "#16a34a"}` }}
-            >
-              <button
-                type="button"
-                className="grid w-full gap-1.5 p-2.5 text-left transition hover:bg-surface-2/55 sm:gap-2 sm:p-3"
-                onClick={() => setDetailWalletId(wallet.id)}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.02rem)]"
-                    style={{
-                      backgroundColor: `${wallet.color || "#16a34a"}18`,
-                      color: wallet.color || "#16a34a",
-                    }}
-                  >
-                    {getWalletIcon(wallet.type)}
-                  </div>
+      {walletsQuery.isLoading ? (
+        <SurfaceCard padding="compact">
+          <EmptyState title={t("common.loading")} compact />
+        </SurfaceCard>
+      ) : walletsQuery.isError ? (
+        <SurfaceCard padding="compact">
+          <EmptyState title={t("wallets.loadError")} compact />
+        </SurfaceCard>
+      ) : wallets.length === 0 ? (
+        <SurfaceCard padding="compact">
+          <EmptyState
+            title={
+              view === "active"
+                ? t("wallets.noWallets")
+                : t("wallets.noArchivedWallets")
+            }
+            compact
+            icon={<Wallet size={18} />}
+          />
+        </SurfaceCard>
+      ) : (
+        <section className="grid gap-3 xl:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+          <SurfaceCard
+            padding="compact"
+            className="xl:sticky xl:top-[var(--shell-sticky-offset)]"
+          >
+            <div className="grid gap-3">
+              <SectionHeading
+                title={
+                  view === "active"
+                    ? language === "id"
+                      ? "Ringkasan dompet"
+                      : "Wallet overview"
+                    : language === "id"
+                      ? "Ringkasan arsip"
+                      : "Archive overview"
+                }
+                description={
+                  view === "active"
+                    ? language === "id"
+                      ? "Pantau saldo, aktivitas, dan dompet paling dominan dari workspace utama."
+                      : "Track balances, activity, and the most dominant wallet in your main workspace."
+                    : language === "id"
+                      ? "Lihat kembali dompet yang sudah tidak aktif tanpa membuat daftar terasa kosong."
+                      : "Review inactive wallets without leaving the archive list feeling empty."
+                }
+                hideDescriptionOnMobile={false}
+              />
 
-                  <div className="grid min-w-0 flex-1 gap-1.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="grid min-w-0 gap-0.5">
-                        <h3 className="m-0 truncate text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1">
-                          {wallet.name}
-                        </h3>
-                        <p className="m-0 text-[0.72rem] leading-4 text-text-3">
-                          {t(`wallets.types.${wallet.type}`)}
-                        </p>
-                      </div>
+              <div className="grid gap-0 divide-y divide-border-subtle/80">
+                <WalletOverviewRow
+                  label={t("wallets.totalBalance")}
+                  value={formatCurrency(totalBalance)}
+                  meta={
+                    latestWallet
+                      ? language === "id"
+                        ? `Aktivitas terakhir · ${latestWallet.name}`
+                        : `Latest activity · ${latestWallet.name}`
+                      : undefined
+                  }
+                />
+                <WalletOverviewRow
+                  label={
+                    view === "active"
+                      ? t("wallets.tabs.active")
+                      : t("wallets.tabs.archived")
+                  }
+                  value={wallets.length}
+                />
+                <WalletOverviewRow
+                  label={t("wallets.detail.transactions")}
+                  value={totalTransactions}
+                />
+              </div>
 
-                      <div className="grid shrink-0 justify-items-end gap-0.5">
-                        <span className="text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-text-3">
-                          {t("wallets.currentBalance")}
-                        </span>
-                        <strong className="text-[1rem] font-semibold tracking-[-0.045em] text-text-1">
-                          {formatCurrency(wallet.balance)}
-                        </strong>
-                      </div>
+              {featuredWallet ? (
+                <div className="grid gap-2.5 rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle bg-surface-2/35 px-3 py-3">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-[calc(var(--radius-control)+0.04rem)]"
+                      style={{
+                        backgroundColor: `${featuredWallet.color || "#16a34a"}18`,
+                        color: featuredWallet.color || "#16a34a",
+                      }}
+                    >
+                      {getWalletIcon(featuredWallet.type)}
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.72rem] leading-4 text-text-3">
-                      <span className="whitespace-nowrap">
-                        {wallet.transaction_count}{" "}
-                        {t("wallets.detail.transactions")}
+                    <div className="grid gap-0.5">
+                      <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
+                        {language === "id" ? "Saldo terbesar" : "Largest balance"}
                       </span>
-                      <span
-                        className="h-1 w-1 rounded-full bg-border-strong/80"
-                        aria-hidden="true"
-                      />
-                      <span className="hidden whitespace-nowrap sm:inline">
-                        {t("wallets.detail.income")}:{" "}
-                        {formatCurrency(wallet.income_total)}
-                      </span>
-                      <span
-                        className="h-1 w-1 rounded-full bg-border-strong/80"
-                        aria-hidden="true"
-                      />
-                      <span className="whitespace-nowrap">
-                        {formatDate(wallet.last_transaction_date)}
+                      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                        {featuredWallet.name}
+                      </strong>
+                      <span className="text-[0.82rem] leading-5 text-text-2">
+                        {formatCurrency(featuredWallet.balance)}
                       </span>
                     </div>
                   </div>
-                </div>
-              </button>
-
-              {!wallet.is_archived ? (
-                <div className="grid grid-cols-2 gap-1.5 border-t border-border-subtle/90 bg-surface-2/22 px-2.5 py-2 sm:hidden">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openTransactionFormForWallet(wallet.id)}
-                  >
-                    <ArrowUpRight size={15} />
-                    {t("wallets.actions.addTransaction")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openTransferFormForWallet(wallet.id)}
-                  >
-                    <ArrowLeftRight size={15} />
-                    {t("wallets.actions.transfer")}
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2 text-[0.76rem] text-text-2">
+                    <span>
+                      {featuredWallet.transaction_count}{" "}
+                      {t("wallets.detail.transactions")}
+                    </span>
+                    <span
+                      className="h-1 w-1 rounded-full bg-border-strong/80"
+                      aria-hidden="true"
+                    />
+                    <span>{formatDate(featuredWallet.last_transaction_date)}</span>
+                  </div>
+                  <div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setDetailWalletId(featuredWallet.id)}
+                    >
+                      {language === "id" ? "Lihat detail" : "View details"}
+                    </Button>
+                  </div>
                 </div>
               ) : null}
+            </div>
+          </SurfaceCard>
 
-              <div className="hidden items-center justify-end gap-1 border-t border-border-subtle/90 bg-surface-2/28 px-3 py-1.5 sm:flex">
-                <WalletActionButton
-                  ariaLabel={t("wallets.actions.edit")}
-                  onClick={() => handleOpenForm(wallet)}
-                >
-                  <Pencil size={15} />
-                </WalletActionButton>
-                {!wallet.is_archived ? (
-                  <>
-                    <WalletActionButton
-                      ariaLabel={t("wallets.actions.addTransaction")}
-                      onClick={() => openTransactionFormForWallet(wallet.id)}
-                    >
-                      <ArrowUpRight size={15} />
-                    </WalletActionButton>
-                    <WalletActionButton
-                      ariaLabel={t("wallets.actions.transfer")}
-                      onClick={() => openTransferFormForWallet(wallet.id)}
-                    >
-                      <ArrowLeftRight size={15} />
-                    </WalletActionButton>
-                  </>
-                ) : null}
-                <WalletActionButton
-                  ariaLabel={
-                    wallet.is_archived
-                      ? t("wallets.actions.restore")
-                      : t("wallets.actions.archive")
-                  }
-                  onClick={() => {
-                    void handleArchiveToggle(wallet);
-                  }}
-                >
-                  <Archive size={15} />
-                </WalletActionButton>
-                {wallet.transaction_count === 0 ? (
-                  <WalletActionButton
-                    ariaLabel={t("common.delete")}
-                    tone="danger"
-                    onClick={() => {
-                      void handleDelete(wallet);
-                    }}
+          <SurfaceCard padding="compact">
+            <div className="grid gap-2.5">
+              <SectionHeading
+                title={
+                  view === "active"
+                    ? language === "id"
+                      ? "Daftar dompet"
+                      : "Wallet list"
+                    : language === "id"
+                      ? "Daftar arsip"
+                      : "Archived wallets"
+                }
+                description={
+                  view === "active"
+                    ? language === "id"
+                      ? "Setiap dompet diringkas sebagai row yang lebih cepat dipindai, bukan grid kartu besar."
+                      : "Each wallet is summarized as a faster-scanning row instead of a large card grid."
+                    : language === "id"
+                      ? "Arsip tetap mudah dipindai tanpa terasa seperti halaman kosong."
+                      : "The archive stays scannable without turning into an empty-feeling page."
+                }
+                hideDescriptionOnMobile={false}
+              />
+
+              <div className="grid gap-0 divide-y divide-border-subtle/80">
+                {wallets.map((wallet) => (
+                  <article
+                    key={wallet.id}
+                    className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                   >
-                    <Trash2 size={15} />
-                  </WalletActionButton>
-                ) : null}
+                    <button
+                      type="button"
+                      className="grid w-full gap-2 text-left transition hover:bg-surface-2/35"
+                      onClick={() => setDetailWalletId(wallet.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-[calc(var(--radius-control)+0.04rem)]"
+                          style={{
+                            backgroundColor: `${wallet.color || "#16a34a"}18`,
+                            color: wallet.color || "#16a34a",
+                          }}
+                        >
+                          {getWalletIcon(wallet.type)}
+                        </div>
+
+                        <div className="grid min-w-0 flex-1 gap-1.5">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="grid min-w-0 gap-0.5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="m-0 truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+                                  {wallet.name}
+                                </h3>
+                                {wallet.is_archived ? (
+                                  <Badge variant="default">
+                                    {t("wallets.tabs.archived")}
+                                  </Badge>
+                                ) : null}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-[0.74rem] leading-5 text-text-2">
+                                <span>{t(`wallets.types.${wallet.type}`)}</span>
+                                <span
+                                  className="h-1 w-1 rounded-full bg-border-strong/80"
+                                  aria-hidden="true"
+                                />
+                                <span>
+                                  {wallet.transaction_count}{" "}
+                                  {t("wallets.detail.transactions")}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="grid justify-items-end gap-0.5">
+                              <strong className="text-[1rem] font-semibold tracking-[-0.045em] text-text-1">
+                                {formatCurrency(wallet.balance)}
+                              </strong>
+                              <span className="text-[0.72rem] text-text-3">
+                                {formatDate(wallet.last_transaction_date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.74rem] leading-5 text-text-2">
+                            <span>
+                              {t("wallets.detail.income")}:{" "}
+                              {formatCurrency(wallet.income_total)}
+                            </span>
+                            <span
+                              className="h-1 w-1 rounded-full bg-border-strong/80"
+                              aria-hidden="true"
+                            />
+                            <span>
+                              {language === "id" ? "Saldo awal" : "Opening"}:{" "}
+                              {formatCurrency(wallet.initial_balance)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <div className="grid gap-2 lg:justify-items-end">
+                      {!wallet.is_archived ? (
+                        <div className="grid grid-cols-2 gap-1.5 sm:hidden">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openTransactionFormForWallet(wallet.id)}
+                          >
+                            <ArrowUpRight size={15} />
+                            {t("wallets.actions.addTransaction")}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openTransferFormForWallet(wallet.id)}
+                          >
+                            <ArrowLeftRight size={15} />
+                            {t("wallets.actions.transfer")}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      <div className="flex flex-wrap gap-1 lg:justify-end">
+                        <WalletActionButton
+                          ariaLabel={t("wallets.actions.edit")}
+                          onClick={() => handleOpenForm(wallet)}
+                        >
+                          <Pencil size={15} />
+                        </WalletActionButton>
+                        {!wallet.is_archived ? (
+                          <>
+                            <WalletActionButton
+                              ariaLabel={t("wallets.actions.addTransaction")}
+                              onClick={() => openTransactionFormForWallet(wallet.id)}
+                            >
+                              <ArrowUpRight size={15} />
+                            </WalletActionButton>
+                            <WalletActionButton
+                              ariaLabel={t("wallets.actions.transfer")}
+                              onClick={() => openTransferFormForWallet(wallet.id)}
+                            >
+                              <ArrowLeftRight size={15} />
+                            </WalletActionButton>
+                          </>
+                        ) : null}
+                        <WalletActionButton
+                          ariaLabel={
+                            wallet.is_archived
+                              ? t("wallets.actions.restore")
+                              : t("wallets.actions.archive")
+                          }
+                          onClick={() => {
+                            void handleArchiveToggle(wallet);
+                          }}
+                        >
+                          <Archive size={15} />
+                        </WalletActionButton>
+                        {wallet.transaction_count === 0 ? (
+                          <WalletActionButton
+                            ariaLabel={t("common.delete")}
+                            tone="danger"
+                            onClick={() => {
+                              void handleDelete(wallet);
+                            }}
+                          >
+                            <Trash2 size={15} />
+                          </WalletActionButton>
+                        ) : null}
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
-            </article>
-          ))
-        )}
-      </section>
+            </div>
+          </SurfaceCard>
+        </section>
+      )}
     </PageShell>
   );
 }

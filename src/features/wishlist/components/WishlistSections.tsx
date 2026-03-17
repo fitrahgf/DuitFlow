@@ -20,7 +20,6 @@ import {
 } from "@/components/shared/EmptyState";
 import { FieldError } from "@/components/shared/FieldError";
 import {
-  MetricCard,
   ProgressMeter,
   SectionHeading,
   SurfaceCard,
@@ -37,7 +36,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { WalletOption } from "@/lib/queries/reference";
 import type { WishlistItem } from "@/lib/queries/wishlist";
@@ -177,6 +175,47 @@ function MetaStat({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+function WishlistSummaryStat({
+  label,
+  value,
+  meta,
+  tone = "default",
+}: {
+  label: string;
+  value: ReactNode;
+  meta?: ReactNode;
+  tone?: "default" | "accent" | "warning" | "success";
+}) {
+  const dotToneClassName =
+    tone === "accent"
+      ? "bg-accent"
+      : tone === "warning"
+        ? "bg-warning"
+        : tone === "success"
+          ? "bg-success"
+          : "bg-text-3/35";
+
+  return (
+    <div className="grid gap-0.5 px-3 py-2.5 first:pl-0 last:pr-0">
+      <div className="inline-flex items-center gap-2">
+        <span
+          className={cn("h-1.5 w-1.5 rounded-full", dotToneClassName)}
+          aria-hidden="true"
+        />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+      {meta ? (
+        <span className="text-[0.76rem] leading-5 text-text-2">{meta}</span>
+      ) : null}
+    </div>
+  );
+}
+
 interface WishlistSummarySectionProps {
   isLoading: boolean;
   itemsCount: number;
@@ -199,32 +238,30 @@ export function WishlistSummarySection({
   formatCurrency,
 }: WishlistSummarySectionProps) {
   return (
-    <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard
-        label={t("wishlist.tabs.all")}
-        value={isLoading ? "..." : itemsCount}
-        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-      />
-      <MetricCard
-        label={t("wishlist.tabs.due")}
-        value={isLoading ? "..." : dueCount}
-        tone={dueCount > 0 ? "warning" : "default"}
-        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-      />
-      <MetricCard
-        label={t("wishlist.tabs.approved")}
-        value={isLoading ? "..." : approvedCount}
-        tone={approvedCount > 0 ? "accent" : "default"}
-        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-      />
-      <MetricCard
-        label={t("wishlist.meta.wallet")}
-        value={isLoading ? "..." : linkedWalletCount}
-        meta={isLoading ? undefined : formatCurrency(totalTrackedValue)}
-        tone="accent"
-        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
-      />
-    </section>
+    <SurfaceCard padding="compact">
+      <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/80">
+        <WishlistSummaryStat
+          label={t("wishlist.tabs.all")}
+          value={isLoading ? "..." : itemsCount}
+        />
+        <WishlistSummaryStat
+          label={t("wishlist.tabs.due")}
+          value={isLoading ? "..." : dueCount}
+          tone={dueCount > 0 ? "warning" : "default"}
+        />
+        <WishlistSummaryStat
+          label={t("wishlist.tabs.approved")}
+          value={isLoading ? "..." : approvedCount}
+          tone={approvedCount > 0 ? "accent" : "default"}
+        />
+        <WishlistSummaryStat
+          label={t("wishlist.meta.wallet")}
+          value={isLoading ? "..." : linkedWalletCount}
+          meta={isLoading ? undefined : formatCurrency(totalTrackedValue)}
+          tone="success"
+        />
+      </div>
+    </SurfaceCard>
   );
 }
 
@@ -318,27 +355,50 @@ export function WishlistBoardSection({
   isReviewDue,
   getCoolingProgress,
 }: WishlistBoardSectionProps) {
+  const tabsLabel = language === "id" ? "Filter wishlist" : "Wishlist tabs";
+
   return (
     <SurfaceCard padding="compact">
-      <Tabs value={activeTab} onValueChange={onTabChange} className="grid gap-2.5">
+      <div className="grid gap-2.5">
         <div className="pb-1">
-          <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] md:!flex md:flex-wrap">
+          <div
+            role="tablist"
+            aria-label={tabsLabel}
+            className="grid w-full grid-cols-2 justify-start overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/75 p-1 md:flex md:flex-wrap"
+          >
             {tabs.map((tab) => (
-              <TabsTrigger
+              <button
                 key={tab.key}
-                value={tab.key}
-                className="min-w-0 w-full gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-2.5 py-1.5 text-[0.78rem] md:flex-1"
+                id={`wishlist-tab-${tab.key}`}
+                role="tab"
+                type="button"
+                aria-selected={activeTab === tab.key}
+                aria-controls={`wishlist-panel-${tab.key}`}
+                tabIndex={activeTab === tab.key ? 0 : -1}
+                className={cn(
+                  "inline-flex min-w-0 w-full items-center justify-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color,box-shadow] md:flex-1",
+                  activeTab === tab.key
+                    ? "bg-surface-1 text-text-1 shadow-xs"
+                    : "hover:bg-surface-1/80 hover:text-text-1",
+                )}
+                data-state={activeTab === tab.key ? "active" : "inactive"}
+                onClick={() => onTabChange(tab.key)}
               >
                 <span>{tab.label}</span>
                 <span className="inline-flex h-[1.125rem] min-w-[1.25rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.64rem] font-bold text-text-3">
                   {tab.count}
                 </span>
-              </TabsTrigger>
+              </button>
             ))}
-          </TabsList>
+          </div>
         </div>
 
-        <TabsContent value={activeTab} className="mt-0">
+        <div
+          id={`wishlist-panel-${activeTab}`}
+          role="tabpanel"
+          aria-labelledby={`wishlist-tab-${activeTab}`}
+          className="mt-0 outline-none"
+        >
           {isLoading ? (
             <EmptyState title={t("common.loading")} compact />
           ) : isError ? (
@@ -455,8 +515,8 @@ export function WishlistBoardSection({
               )}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </SurfaceCard>
   );
 }

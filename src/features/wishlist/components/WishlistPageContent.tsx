@@ -335,6 +335,11 @@ export function WishlistPageContent() {
   const linkedWalletCount = items.filter(
     (item) => item.selected_wallet_id,
   ).length;
+  const showSummaryStrip =
+    itemsQuery.isLoading ||
+    items.length > 0 ||
+    linkedWalletCount > 0 ||
+    totalTrackedValue > 0;
   const convertingPrefill: TransactionFormPrefill | null = convertingItem
     ? {
         title: convertingItem.item_name,
@@ -379,16 +384,18 @@ export function WishlistPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <WishlistSummarySection
-        isLoading={itemsQuery.isLoading}
-        itemsCount={items.length}
-        dueCount={dueItems.length}
-        approvedCount={approvedItems.length}
-        linkedWalletCount={linkedWalletCount}
-        totalTrackedValue={totalTrackedValue}
-        t={t}
-        formatCurrency={formatCurrency}
-      />
+      {showSummaryStrip ? (
+        <WishlistSummarySection
+          isLoading={itemsQuery.isLoading}
+          itemsCount={items.length}
+          dueCount={dueItems.length}
+          approvedCount={approvedItems.length}
+          linkedWalletCount={linkedWalletCount}
+          totalTrackedValue={totalTrackedValue}
+          t={t}
+          formatCurrency={formatCurrency}
+        />
+      ) : null}
 
       <WishlistDueBanner dueCount={dueItems.length} t={t} />
 
