@@ -11,21 +11,21 @@ type SurfacePadding = 'default' | 'compact' | 'none';
 
 const pageContainerSizeClassName: Record<PageContainerSize, string> = {
   default: 'max-w-shell',
-  narrow: 'max-w-4xl',
-  wide: 'max-w-[72rem]',
+  narrow: 'max-w-5xl',
+  wide: 'max-w-[79rem]',
 };
 
 const pageContainerAlignClassName: Record<PageContainerAlign, string> = {
   center: 'mx-auto',
   left: 'mx-0',
-  responsive: 'mx-auto lg:mx-0',
+  responsive: 'mx-auto',
 };
 
 const pageContainerPaddingClassName: Record<PageContainerPadding, string> = {
   none: '',
-  header: 'px-3 md:px-4 lg:px-6 xl:px-7',
+  header: 'px-[var(--page-gutter)]',
   page:
-    'px-3 pt-2 pb-4 md:px-4 md:pb-6 lg:px-6 lg:pt-3 lg:pb-8 xl:px-7',
+    'px-[var(--page-gutter)] pt-[var(--page-top-space)] pb-[var(--page-bottom-space)]',
 };
 
 const surfaceToneClassName: Record<SurfaceTone, string> = {
@@ -37,8 +37,8 @@ const surfaceToneClassName: Record<SurfaceTone, string> = {
 };
 
 const surfacePaddingClassName: Record<SurfacePadding, string> = {
-  default: 'p-[var(--space-panel)] md:p-[var(--space-panel-lg)]',
-  compact: 'p-3 md:p-4',
+  default: 'p-[var(--space-panel)] lg:p-[var(--space-panel-lg)]',
+  compact: 'p-[var(--space-panel-tight)] lg:p-[var(--space-panel)]',
   none: 'p-0',
 };
 
@@ -67,7 +67,7 @@ export function PageContainer({
         pageContainerPaddingClassName[padding],
         withMobileNavOffset &&
           padding === 'page' &&
-          'pb-[calc(4.75rem+var(--safe-bottom))] md:pb-6 lg:pb-8',
+          'pb-[calc(5rem+var(--page-bottom-space)+var(--safe-bottom))] md:pb-[calc(var(--page-bottom-space)+0.5rem)] lg:pb-[calc(var(--page-bottom-space)+0.75rem)]',
         className
       )}
       {...props}
@@ -79,7 +79,15 @@ export function PageShell({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-col gap-[var(--space-stack)] lg:gap-[var(--space-stack-lg)]', className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        'flex w-full min-w-0 flex-col gap-[var(--page-section-gap)] xl:gap-[var(--page-section-gap-lg)]',
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 export function PageHeader({
@@ -89,7 +97,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'grid gap-2 border-b border-border-subtle/70 pb-3 lg:gap-2.5 xl:flex xl:flex-row xl:items-start xl:justify-between',
+        'grid gap-[var(--page-header-gap)] border-b border-border-subtle/80 pb-[var(--page-header-padding-bottom)] xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end',
         className
       )}
       {...props}
@@ -115,15 +123,15 @@ export function PageHeading({
   hideSubtitleOnMobile?: boolean;
 }) {
   return (
-    <div className={cn('grid max-w-[32rem] gap-1', className)}>
+    <div className={cn('grid max-w-[36rem] gap-1.5', className)}>
       {eyebrow ? (
-        <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-text-3">
+        <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
           {eyebrow}
         </span>
       ) : null}
       <h1
         className={cn(
-          'm-0 text-[clamp(1.38rem,1.18rem+0.92vw,2.05rem)] font-semibold leading-[1.02] tracking-[-0.048em] text-text-1',
+          'm-0 text-[clamp(1.32rem,1.12rem+0.88vw,1.96rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-text-1',
           titleClassName
         )}
       >
@@ -132,7 +140,7 @@ export function PageHeading({
       {subtitle ? (
         <p
           className={cn(
-            'm-0 max-w-xl text-[0.8rem] leading-5 text-text-3',
+            'm-0 max-w-[42rem] text-[0.86rem] leading-[1.55] text-text-2',
             hideSubtitleOnMobile && 'hidden sm:block',
             subtitleClassName
           )}
@@ -151,8 +159,8 @@ export function PageHeaderActions({
 }: React.HTMLAttributes<HTMLDivElement> & { mobileLayout?: 'scroll' | 'grid' }) {
   const mobileClassName =
     mobileLayout === 'grid'
-      ? 'grid grid-cols-2 gap-1 sm:flex sm:flex-wrap sm:items-center'
-      : 'flex snap-x items-center gap-1 overflow-x-auto px-px pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0';
+      ? 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end'
+      : 'flex snap-x items-center gap-2 overflow-x-auto px-px pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:justify-end sm:overflow-visible sm:px-0 sm:pb-0 [&>*]:shrink-0';
 
   return (
     <div
@@ -178,8 +186,9 @@ export function SurfaceCard({
       className={cn(
         surfaceToneClassName[tone],
         surfacePaddingClassName[padding],
+        'rounded-[var(--radius-card)] shadow-xs',
         interactive &&
-          'transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-surface-2/45',
+          'transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-surface-2/60 hover:shadow-sm',
         className
       )}
       {...props}
@@ -194,7 +203,7 @@ export function Toolbar({
   return (
     <div
       className={cn(
-        'flex flex-col gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1 p-[var(--space-panel)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between',
+        'flex flex-col gap-2 rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 p-[var(--space-panel)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between',
         className
       )}
       {...props}
@@ -224,31 +233,49 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        'flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between',
+        'flex flex-col gap-2 sm:min-h-[var(--panel-header-min-height)] sm:flex-row sm:items-start sm:justify-between',
         className
       )}
     >
       <div className="grid gap-0.5">
         {eyebrow ? (
-          <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-text-3">
+          <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
             {eyebrow}
           </span>
         ) : null}
-        <h2 className={cn('m-0 text-[0.94rem] font-semibold tracking-[-0.03em] text-text-1', titleClassName)}>
+        <h2
+          className={cn(
+            'm-0 text-[1rem] font-semibold tracking-[-0.04em] text-text-1',
+            titleClassName
+          )}
+        >
           {title}
         </h2>
         {description ? (
-          <p className={cn('m-0 text-[0.8rem] leading-5 text-text-3', hideDescriptionOnMobile && 'hidden sm:block')}>
+          <p
+            className={cn(
+              'm-0 text-[0.84rem] leading-[1.55] text-text-2',
+              hideDescriptionOnMobile && 'hidden sm:block'
+            )}
+          >
             {description}
           </p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-1 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 export function SectionHeading(props: SectionHeaderProps) {
+  return <SectionHeader {...props} />;
+}
+
+export function PanelHeader(props: SectionHeaderProps) {
   return <SectionHeader {...props} />;
 }
 
@@ -292,17 +319,19 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        'grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] p-[var(--space-panel)] shadow-none md:p-[var(--space-panel-lg)]',
+        'grid min-h-[5.2rem] gap-1.5 rounded-[calc(var(--radius-card)-0.08rem)] p-[var(--space-panel)] shadow-none lg:p-[var(--space-panel-lg)]',
         metricToneClassName[tone],
         className
       )}
     >
       <div className="inline-flex items-center gap-2">
         <span className={cn('h-1.5 w-1.5 rounded-full', metricIndicatorClassName[tone])} aria-hidden="true" />
-        <span className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-text-3">{label}</span>
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">{label}</span>
       </div>
-      <strong className="text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1 sm:text-[1rem]">{value}</strong>
-      {meta ? <span className="text-[0.78rem] leading-5 text-text-3">{meta}</span> : null}
+      <strong className="text-[1rem] font-semibold tracking-[-0.05em] text-text-1 sm:text-[1.08rem]">
+        {value}
+      </strong>
+      {meta ? <span className="text-[0.79rem] leading-5 text-text-2">{meta}</span> : null}
     </Card>
   );
 }

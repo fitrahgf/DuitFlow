@@ -10,14 +10,13 @@ import { FieldError } from "@/components/shared/FieldError";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
   PageHeader,
-  PageHeaderActions,
   PageHeading,
   PageShell,
   SectionHeading,
   SurfaceCard,
 } from "@/components/shared/PagePrimitives";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
@@ -256,56 +255,53 @@ export default function SettingsPage() {
     selectedLanguage ?? language,
     selectedCurrency ?? "IDR",
   );
+  const activeTabLabel =
+    tabs.find((tab) => tab.value === activeTab)?.label ?? t("settings.title");
 
   if (profileQuery.isLoading) {
     return (
-      <PageShell className="animate-fade-in">
+      <PageShell className="mx-auto w-full max-w-[68rem] animate-fade-in">
         <PageHeader>
-          <PageHeading title={t("settings.title")} />
+          <PageHeading
+            title={t("settings.title")}
+            subtitle={t("settings.subtitle")}
+          />
         </PageHeader>
-        <Card>
+        <SurfaceCard padding="compact" className="max-w-3xl">
           <EmptyState title={t("common.loading")} compact />
-        </Card>
+        </SurfaceCard>
       </PageShell>
     );
   }
 
   if (profileQuery.isError) {
     return (
-      <PageShell className="animate-fade-in">
+      <PageShell className="mx-auto w-full max-w-[68rem] animate-fade-in">
         <PageHeader>
-          <PageHeading title={t("settings.title")} />
+          <PageHeading
+            title={t("settings.title")}
+            subtitle={t("settings.subtitle")}
+          />
         </PageHeader>
-        <Card>
+        <SurfaceCard padding="compact" className="max-w-3xl">
           <EmptyState title={t("settings.loadError")} compact />
-        </Card>
+        </SurfaceCard>
       </PageShell>
     );
   }
 
   return (
-    <PageShell className="animate-fade-in">
+    <PageShell className="mx-auto w-full max-w-[68rem] animate-fade-in">
       <PageHeader>
-        <PageHeading title={t("settings.title")} />
-        <PageHeaderActions>
-          <Button
-            type="submit"
-            form="settings-form"
-            variant="primary"
-            className="max-sm:hidden"
-            disabled={profileMutation.isPending}
-          >
-            <Save size={16} />
-            {profileMutation.isPending
-              ? t("settings.saving")
-              : t("settings.save")}
-          </Button>
-        </PageHeaderActions>
+        <PageHeading
+          title={t("settings.title")}
+          subtitle={t("settings.subtitle")}
+        />
       </PageHeader>
 
       <form
         id="settings-form"
-        className="grid gap-3.5"
+        className="grid gap-3"
         onSubmit={handleSubmit(async (values) => {
           await profileMutation.mutateAsync(values);
         })}
@@ -313,15 +309,15 @@ export default function SettingsPage() {
         <Tabs
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as ExtendedSettingsTab)}
-          className="grid gap-3.5"
+          className="grid gap-3"
         >
-          <div className="pb-1">
-            <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-2xl md:!flex md:flex-wrap">
+          <div className="pb-0.5">
+            <TabsList className="!flex !w-auto gap-1 rounded-[calc(var(--radius-control)+0.06rem)] border border-border-subtle/75 bg-surface-2/52 p-0.5 sm:!grid sm:!w-full sm:grid-cols-3 xl:grid-cols-5">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="min-w-0 w-full rounded-xl px-3 py-2 text-sm md:flex-1"
+                  className="min-w-max shrink-0 rounded-[calc(var(--radius-control)-0.06rem)] px-3.5 py-1.5 text-[0.77rem] sm:min-w-0 sm:w-full md:flex-1"
                 >
                   {tab.label}
                 </TabsTrigger>
@@ -329,12 +325,10 @@ export default function SettingsPage() {
             </TabsList>
           </div>
 
-          <TabsContent value="profile" className="mt-0">
-            <SurfaceCard>
-              <div className="grid gap-3">
-                <SectionHeading title={t("settings.profile.title")} />
-
-                <div className="grid gap-3 md:grid-cols-2">
+          <TabsContent value="profile" className="mt-0 mx-auto w-full max-w-4xl">
+            <SettingsTabPanel>
+              <SettingsSectionCard title={t("settings.profile.title")}>
+                <div className="grid gap-2">
                   <SettingsField
                     label={t("settings.profile.fullName")}
                     htmlFor="full_name"
@@ -351,36 +345,40 @@ export default function SettingsPage() {
                   <SettingsField
                     label={t("settings.profile.email")}
                     htmlFor="account_email"
+                    description={t("settings.profile.emailHint")}
                   >
                     <Input
                       id="account_email"
                       type="email"
                       value={profileQuery.data?.email ?? ""}
+                      className="cursor-not-allowed bg-surface-2/72 text-text-2 hover:border-border-subtle hover:bg-surface-2/72"
                       disabled
                       readOnly
                     />
                   </SettingsField>
                 </div>
-              </div>
-            </SurfaceCard>
+              </SettingsSectionCard>
+            </SettingsTabPanel>
           </TabsContent>
 
-          <TabsContent value="regional" className="mt-0">
-            <div className="grid gap-3.5">
-              <SurfaceCard>
-                <div className="grid gap-3">
-                  <SectionHeading title={t("settings.language.title")} />
-
-                  <div className="grid gap-3 md:grid-cols-2">
+          <TabsContent value="regional" className="mt-0 mx-auto w-full max-w-5xl">
+            <SettingsTabPanel>
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
+                <SettingsSectionCard
+                  title={t("settings.language.title")}
+                  description={t("settings.language.subtitle")}
+                  className="xl:border-r xl:border-border-subtle/80 xl:pr-6"
+                >
+                  <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.16rem)] bg-surface-2/35 p-1 sm:grid-cols-2 xl:grid-cols-1">
                     {languageOptions.map((option) => (
                       <button
                         key={option.value}
                         type="button"
                         className={cn(
-                          "inline-flex min-h-[3.15rem] items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-4 text-sm font-semibold transition",
+                          "inline-flex min-h-[3.1rem] items-center justify-between gap-3 rounded-[calc(var(--radius-control)-0.04rem)] px-3 py-2 text-left transition",
                           selectedLanguage === option.value
-                            ? "border-border-strong bg-surface-2 text-text-1"
-                            : "border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2",
+                            ? "bg-accent-soft/78 text-text-1 ring-1 ring-accent/28"
+                            : "bg-transparent text-text-2 hover:bg-surface-1/88",
                         )}
                         onClick={() =>
                           setValue("preferred_language", option.value, {
@@ -389,37 +387,42 @@ export default function SettingsPage() {
                           })
                         }
                       >
-                        <span>{option.label}</span>
-                        <span className="rounded-full bg-surface-2 px-2 py-1 text-[0.68rem] font-semibold text-text-3">
-                          {option.code}
+                        <span className="grid gap-0.5">
+                          <span className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                            {option.label}
+                          </span>
+                          <span className="text-[0.72rem] font-medium tracking-[0.05em] text-text-2">
+                            {option.code}
+                          </span>
                         </span>
+                        <span
+                          className={cn(
+                            "h-2 w-2 rounded-full transition-colors",
+                            selectedLanguage === option.value
+                              ? "bg-accent"
+                              : "bg-border-subtle",
+                          )}
+                        />
                       </button>
                     ))}
                   </div>
-                </div>
-              </SurfaceCard>
+                </SettingsSectionCard>
 
-              <SurfaceCard>
-                <div className="grid gap-3">
-                  <SectionHeading
-                    title={
-                      language === "id"
-                        ? "Zona waktu & mata uang"
-                        : "Timezone & currency"
-                    }
-                  />
-
-                  <div className="grid gap-3 md:grid-cols-2">
+                <SettingsSectionCard
+                  title={
+                    language === "id"
+                      ? "Zona waktu & mata uang"
+                      : "Timezone & currency"
+                  }
+                  className="h-full"
+                >
+                  <div className="grid gap-2">
                     <SettingsField
                       label={t("settings.regional.timezone")}
                       htmlFor="timezone"
                       error={errors.timezone?.message}
                     >
-                      <NativeSelect
-                        id="timezone"
-                        className="min-h-[3rem] px-4 py-3"
-                        {...register("timezone")}
-                      >
+                      <NativeSelect id="timezone" {...register("timezone")}>
                         {timezones.map((timezone) => (
                           <option key={timezone} value={timezone}>
                             {timezone}
@@ -433,11 +436,7 @@ export default function SettingsPage() {
                       htmlFor="currency_code"
                       error={errors.currency_code?.message}
                     >
-                      <NativeSelect
-                        id="currency_code"
-                        className="min-h-[3rem] px-4 py-3"
-                        {...register("currency_code")}
-                      >
+                      <NativeSelect id="currency_code" {...register("currency_code")}>
                         {currencyOptions.map((currency) => (
                           <option key={currency.value} value={currency.value}>
                             {currency.label}
@@ -445,35 +444,40 @@ export default function SettingsPage() {
                         ))}
                       </NativeSelect>
                     </SettingsField>
-                  </div>
 
-                  <div className="rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
-                    <div className="grid gap-0.5">
-                      <strong className="text-lg font-semibold tracking-[-0.03em] text-text-1">
-                        {currencyPreview}
-                      </strong>
+                    <div className="flex items-center justify-between gap-3 border-t border-border-subtle/80 pt-3">
+                      <div className="grid gap-0.5">
+                        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                          {t("settings.regional.currency")}
+                        </span>
+                        <strong className="text-base font-semibold tracking-[-0.03em] text-text-1 tabular-nums">
+                          {currencyPreview}
+                        </strong>
+                      </div>
+                      <Badge>{selectedCurrency ?? "IDR"}</Badge>
                     </div>
                   </div>
-                </div>
-              </SurfaceCard>
-            </div>
+                </SettingsSectionCard>
+              </div>
+            </SettingsTabPanel>
           </TabsContent>
 
-          <TabsContent value="appearance" className="mt-0">
-            <SurfaceCard>
-              <div className="grid gap-3">
-                <SectionHeading title={t("settings.appearance.title")} />
-
-                <div className="grid gap-3 md:grid-cols-3">
+          <TabsContent value="appearance" className="mt-0 mx-auto w-full max-w-4xl">
+            <SettingsTabPanel>
+              <SettingsSectionCard
+                title={t("settings.appearance.title")}
+                description={t("settings.appearance.subtitle")}
+              >
+                <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.14rem)] bg-surface-2/35 p-1 sm:grid-cols-3">
                   {themeOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       className={cn(
-                        "inline-flex min-h-[5.6rem] flex-col items-start justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-3.5 py-3.5 text-left transition",
+                        "inline-flex min-h-[4rem] items-center gap-3 rounded-[calc(var(--radius-control)-0.04rem)] px-3 py-2.5 text-left transition",
                         selectedTheme === option.value
-                          ? "border-border-strong bg-surface-2 text-text-1"
-                          : "border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2",
+                          ? "bg-accent-soft/78 text-text-1 ring-1 ring-accent/28"
+                          : "bg-transparent text-text-2 hover:bg-surface-1/88",
                       )}
                       onClick={() =>
                         setValue("theme_preference", option.value, {
@@ -482,26 +486,37 @@ export default function SettingsPage() {
                         })
                       }
                     >
-                      <span className="grid h-9 w-9 place-items-center rounded-2xl bg-surface-1 text-text-1">
+                      <span
+                        className={cn(
+                          "grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] transition-colors",
+                          selectedTheme === option.value
+                            ? "bg-accent text-white"
+                            : "bg-surface-1 text-text-1",
+                        )}
+                      >
                         {option.icon}
                       </span>
-                      <span className="text-sm font-semibold">
+                      <span className="text-sm font-semibold tracking-[-0.02em] text-text-1">
                         {option.label}
                       </span>
                     </button>
                   ))}
                 </div>
-              </div>
-            </SurfaceCard>
+              </SettingsSectionCard>
+            </SettingsTabPanel>
           </TabsContent>
 
-          <TabsContent value="notifications" className="mt-0">
-            <SurfaceCard>
-              <div className="grid gap-3">
-                <SectionHeading title={t("settings.notifications.title")} />
-
-                <div className="grid gap-3">
-                  <ToggleField title={t("settings.notifications.wishlistDue")}>
+          <TabsContent
+            value="notifications"
+            className="mt-0 mx-auto w-full max-w-4xl"
+          >
+            <SettingsTabPanel>
+              <SettingsSectionCard title={t("settings.notifications.title")}>
+                <div className="grid gap-2">
+                  <ToggleField
+                    title={t("settings.notifications.wishlistDue")}
+                    description={t("settings.notifications.wishlistDueHint")}
+                  >
                     <Controller
                       control={control}
                       name="notification_preferences.wishlist_due"
@@ -517,6 +532,7 @@ export default function SettingsPage() {
 
                   <ToggleField
                     title={t("settings.notifications.budgetWarning")}
+                    description={t("settings.notifications.budgetWarningHint")}
                   >
                     <Controller
                       control={control}
@@ -533,6 +549,7 @@ export default function SettingsPage() {
 
                   <ToggleField
                     title={t("settings.notifications.budgetExceeded")}
+                    description={t("settings.notifications.budgetExceededHint")}
                   >
                     <Controller
                       control={control}
@@ -541,53 +558,59 @@ export default function SettingsPage() {
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          aria-label={t(
-                            "settings.notifications.budgetExceeded",
-                          )}
+                          aria-label={t("settings.notifications.budgetExceeded")}
                         />
                       )}
                     />
                   </ToggleField>
                 </div>
-              </div>
-            </SurfaceCard>
+              </SettingsSectionCard>
+            </SettingsTabPanel>
           </TabsContent>
 
-          <TabsContent value="integrations" className="mt-0">
-            <SurfaceCard>
-              <div className="grid gap-3">
-                <SectionHeading title={t("settings.telegram.title")} />
-
-                <div className="flex flex-col gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
+          <TabsContent
+            value="integrations"
+            className="mt-0 mx-auto w-full max-w-4xl"
+          >
+            <SettingsTabPanel>
+              <SettingsSectionCard title={t("settings.telegram.title")}>
+                <div className="grid gap-3 border-t border-border-subtle/80 pt-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div className="flex items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-2 text-text-1">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-2/65 text-text-1">
                       <Bot size={18} />
                     </span>
                     <div className="grid gap-1">
-                      <strong className="text-sm font-semibold text-text-1">
-                        @
-                        {telegramQuery.data?.botUsername ||
-                          process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
-                          "DuitFlowMoneyTrack_Bot"}
-                      </strong>
-                      <span className="text-sm text-text-2">
-                        {telegramQuery.data?.connected
-                          ? t("settings.telegram.connected")
-                          : t("settings.telegram.disconnected")}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                          @
+                          {telegramQuery.data?.botUsername ||
+                            process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
+                            "DuitFlowMoneyTrack_Bot"}
+                        </strong>
+                        <Badge
+                          variant={
+                            telegramQuery.data?.connected ? "accent" : "default"
+                          }
+                        >
+                          {telegramQuery.data?.connected
+                            ? t("settings.telegram.connected")
+                            : t("settings.telegram.disconnected")}
+                        </Badge>
+                      </div>
                       {telegramQuery.data?.connected &&
                       telegramQuery.data.username ? (
-                        <span className="text-sm text-text-3">
+                        <span className="text-[0.82rem] leading-5 text-text-2">
                           @{telegramQuery.data.username}
                         </span>
                       ) : null}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
                     <Button
                       type="button"
                       variant="primary"
+                      size="sm"
                       disabled={
                         telegramConnectMutation.isPending ||
                         !telegramQuery.data?.botUsername
@@ -603,6 +626,7 @@ export default function SettingsPage() {
                       <Button
                         type="button"
                         variant="secondary"
+                        size="sm"
                         disabled={telegramDisconnectMutation.isPending}
                         onClick={() => telegramDisconnectMutation.mutate()}
                       >
@@ -612,25 +636,40 @@ export default function SettingsPage() {
                     ) : null}
                   </div>
                 </div>
-              </div>
-            </SurfaceCard>
+              </SettingsSectionCard>
+            </SettingsTabPanel>
           </TabsContent>
         </Tabs>
 
-        <div className="sticky bottom-0 z-10 sm:hidden">
-          <div className="rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/95 p-2 backdrop-blur">
-            <Button
-              type="submit"
-              form="settings-form"
-              variant="primary"
-              fullWidth
-              disabled={profileMutation.isPending || !isDirty}
-            >
-              <Save size={16} />
-              {profileMutation.isPending
-                ? t("settings.saving")
-                : t("settings.save")}
-            </Button>
+        <div className="sticky bottom-[calc(4.75rem+var(--safe-bottom))] z-10 mx-auto w-full max-w-4xl pt-1 md:bottom-0">
+          <div className="rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/95 px-3 py-2.5 shadow-xs backdrop-blur">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full transition-colors",
+                    isDirty ? "bg-accent" : "bg-border-strong/60",
+                  )}
+                />
+                <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                  {activeTabLabel}
+                </span>
+              </div>
+              <Button
+                type="submit"
+                form="settings-form"
+                variant="primary"
+                size="sm"
+                fullWidth
+                className="sm:w-auto"
+                disabled={profileMutation.isPending || !isDirty}
+              >
+                <Save size={16} />
+                {profileMutation.isPending
+                  ? t("settings.saving")
+                  : t("settings.save")}
+              </Button>
+            </div>
           </div>
         </div>
       </form>
@@ -642,42 +681,104 @@ function SettingsField({
   label,
   htmlFor,
   error,
+  description,
+  className,
   children,
 }: {
   label: string;
   htmlFor?: string;
   error?: string;
+  description?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2">
-      <label
-        className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
-        htmlFor={htmlFor}
-      >
-        {label}
-      </label>
-      {children}
-      <FieldError message={error} />
+    <div
+      className={cn(
+        "grid gap-2 border-b border-border-subtle/80 py-3 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,0.78fr)_minmax(0,1fr)] sm:items-start",
+        className,
+      )}
+    >
+      <div className="grid gap-0.5">
+        <label
+          className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2"
+          htmlFor={htmlFor}
+        >
+          {label}
+        </label>
+        {description ? (
+          <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      <div className="grid gap-1.5">
+        {children}
+        <FieldError message={error} />
+      </div>
     </div>
+  );
+}
+
+function SettingsSectionCard({
+  title,
+  description,
+  className,
+  children,
+}: {
+  title: string;
+  description?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("grid gap-2.5 sm:gap-3", className)}>
+      <SectionHeading
+        title={title}
+        description={description}
+        hideDescriptionOnMobile={false}
+      />
+      {children}
+    </div>
+  );
+}
+
+function SettingsTabPanel({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <SurfaceCard padding="compact" className={className}>
+      <div className="grid gap-4 sm:gap-5">{children}</div>
+    </SurfaceCard>
   );
 }
 
 function ToggleField({
   title,
+  description,
   children,
 }: {
   title: string;
+  description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
-      <div className="grid gap-1">
+    <div className="grid gap-2 border-b border-border-subtle/80 py-3 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="grid gap-0.5">
         <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
           {title}
         </strong>
+        {description ? (
+          <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
+            {description}
+          </p>
+        ) : null}
       </div>
-      <div className="pt-1">{children}</div>
+      <div className="pt-0.5 sm:justify-self-end sm:pt-0">{children}</div>
     </div>
   );
 }

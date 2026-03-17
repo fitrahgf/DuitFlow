@@ -28,7 +28,7 @@ export default function ShellUserMenu({
     return (
       <button
         type="button"
-        className="mt-auto grid h-[2.45rem] w-[2.45rem] place-items-center rounded-[0.95rem] border border-border-subtle/80 bg-surface-1 text-[0.6rem] font-semibold text-text-1"
+        className="mt-auto grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.88rem] border border-border-subtle/80 bg-surface-1 text-[0.6rem] font-semibold text-text-1"
         onClick={onSignOut}
         title={signOutLabel}
       >
@@ -38,7 +38,7 @@ export default function ShellUserMenu({
   }
 
   return (
-    <div className="rounded-[calc(var(--radius-card)-0.12rem)] bg-surface-1/84 p-1.5 shadow-sm ring-1 ring-white/40 backdrop-blur-sm dark:ring-white/5">
+    <div className="rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/70 bg-surface-1 p-1.5 shadow-none">
       {accountLabel ? (
         <span className="mb-1.5 flex items-center gap-1.5 px-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.18em] text-text-3/78">
           <span
@@ -51,7 +51,7 @@ export default function ShellUserMenu({
 
       <div className="grid gap-2">
         <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-0.5">
-          <div className="grid h-9 w-9 place-items-center rounded-[0.95rem] bg-surface-2 text-[0.72rem] font-semibold tracking-[-0.03em] text-text-1">
+          <div className="grid h-9 w-9 place-items-center rounded-[0.9rem] bg-surface-2 text-[0.72rem] font-semibold tracking-[-0.03em] text-text-1">
             {initials}
           </div>
           <div className="min-w-0">
@@ -67,7 +67,7 @@ export default function ShellUserMenu({
         <button
           type="button"
           className={cn(
-            "group flex min-h-[2.15rem] w-full items-center justify-between rounded-[calc(var(--radius-control)-0.08rem)] bg-surface-2/78 px-2 py-1 text-left text-[0.74rem] font-medium text-text-2 transition-[background-color,color] duration-200",
+            "group flex min-h-[var(--control-height-sm)] w-full items-center justify-between rounded-[calc(var(--radius-control)-0.08rem)] bg-surface-2/78 px-2.5 py-1 text-left text-[0.74rem] font-medium text-text-2 transition-[background-color,color] duration-200",
             "hover:bg-surface-2 hover:text-text-1",
           )}
           onClick={onSignOut}

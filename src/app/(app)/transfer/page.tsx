@@ -10,6 +10,7 @@ import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider
 import TransferForm from '@/components/TransferForm';
 import { useLanguage } from '@/components/LanguageProvider';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ModalShell } from '@/components/shared/ModalShell';
 import {
   MetricCard,
   PageHeader,
@@ -21,7 +22,6 @@ import {
 } from '@/components/shared/PagePrimitives';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NOTIFICATIONS_REFRESH_EVENT, TRANSACTIONS_CHANGED_EVENT } from '@/lib/events';
 import { getErrorMessage } from '@/lib/errors';
@@ -126,17 +126,17 @@ function TransferPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-        <PageHeader>
-          <PageHeading title={t('transfers.title')} />
-          <PageHeaderActions>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="max-sm:min-w-max"
-              onClick={() => {
-                setLocalEditId(null);
-                setLocalFromWalletId(null);
+      <PageHeader>
+        <PageHeading title={t('transfers.title')} />
+        <PageHeaderActions>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => {
+              setLocalEditId(null);
+              setLocalFromWalletId(null);
               setLocalFormOpen(true);
             }}
           >
@@ -146,11 +146,15 @@ function TransferPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <Dialog open={isFormOpen} onOpenChange={(open) => (!open ? closeForm() : setLocalFormOpen(true))}>
-        <DialogContent className="max-w-[42rem] overflow-hidden p-0" hideClose>
-          <DialogTitle className="sr-only">
-            {activeEditId ? t('transfers.form.edit') : t('transfers.form.new')}
-          </DialogTitle>
+      <ModalShell
+        open={isFormOpen}
+        onOpenChange={(open) => (!open ? closeForm() : setLocalFormOpen(true))}
+        title={activeEditId ? t('transfers.form.edit') : t('transfers.form.new')}
+        size="lg"
+        padding="flush"
+        hideClose
+        headerHidden
+      >
           {activeEditId && transferDetailQuery.isLoading && !activeTransfer ? (
             <Card className="border-0 shadow-none">
               <EmptyState title={t('common.loading')} compact />
@@ -163,25 +167,30 @@ function TransferPageContent() {
               onCancel={closeForm}
             />
           )}
-        </DialogContent>
-      </Dialog>
+      </ModalShell>
 
-      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           label={t('transfers.summary.totalMoved')}
           value={formatCurrency(totalMoved)}
           tone="accent"
+          className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
         />
         <MetricCard
           label={t('transfers.summary.totalFees')}
           value={formatCurrency(totalFees)}
           tone={totalFees > 0 ? 'warning' : 'default'}
+          className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
         />
-        <MetricCard label={t('transfers.summary.count')} value={transfers.length} />
+        <MetricCard
+          label={t('transfers.summary.count')}
+          value={transfers.length}
+          className="col-span-2 min-h-[4.35rem] p-[var(--space-panel-tight)] sm:col-span-1"
+        />
       </section>
 
-      <SurfaceCard>
-        <div className="grid gap-3">
+      <SurfaceCard padding="compact">
+        <div className="grid gap-2.5">
           <SectionHeading title={t('transfers.list.title')} />
 
           {transfersQuery.isLoading ? (
@@ -208,7 +217,7 @@ function TransferPageContent() {
               }
             />
           ) : (
-            <div className="grid gap-2.5">
+            <div className="grid gap-1.5">
               {transfers.map((transfer) => (
                 <TransferRow
                   key={transfer.id}
@@ -251,86 +260,74 @@ function TransferRow({
   const totalDeducted = transfer.amount + transfer.fee_amount;
 
   return (
-    <article className="group grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-      <div className="grid gap-3">
-        <div className="flex items-start gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
-            <ArrowLeftRight size={18} />
-          </span>
+    <article className="list-row group min-h-0 p-2.5 transition-all duration-200 hover:border-border-strong hover:bg-surface-2/75 md:p-3">
+      <div className="flex items-start gap-2.5">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.02rem)] bg-accent-soft text-accent-strong">
+          <ArrowLeftRight size={17} />
+        </span>
 
-          <div className="grid min-w-0 gap-2">
-            <div className="grid gap-1">
-              <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+        <div className="grid min-w-0 flex-1 gap-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="grid min-w-0 gap-0.5">
+              <strong className="truncate text-[0.86rem] font-semibold tracking-[-0.025em] text-text-1 sm:text-sm">
                 {transfer.from_wallet?.name || '-'} {'->'} {transfer.to_wallet?.name || '-'}
               </strong>
-              <span className="text-xs text-text-3">
-                {formatDate(transfer.transfer_date, language)}
-              </span>
+
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.72rem] leading-4 text-text-3">
+                <span className="whitespace-nowrap">
+                  {formatDate(transfer.transfer_date, language)}
+                </span>
+                {transfer.fee_amount > 0 ? (
+                  <>
+                    <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
+                    <span className="whitespace-nowrap">
+                      {t('transfers.list.fee')}: {formatCurrency(transfer.fee_amount)}
+                    </span>
+                  </>
+                ) : null}
+              </div>
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-3">
-              <TransferMetric
-                label={t('transfers.list.totalDeducted')}
-                value={formatCurrency(totalDeducted)}
-              />
-              <TransferMetric
-                label={t('transfers.preview.amount')}
-                value={formatCurrency(transfer.amount)}
-              />
-              <TransferMetric
-                label={t('transfers.list.fee')}
-                value={
-                  transfer.fee_amount > 0
-                    ? formatCurrency(transfer.fee_amount)
-                    : t('transfers.list.noFee')
-                }
-              />
-            </div>
+            <div className="flex shrink-0 items-start gap-1.5 pl-2">
+              <div className="grid justify-items-end gap-0.5 text-right">
+                <strong className="text-[0.86rem] font-semibold tracking-[-0.03em] text-accent-strong sm:text-[0.92rem]">
+                  {formatCurrency(transfer.amount)}
+                </strong>
+                <span className="whitespace-nowrap text-[0.68rem] leading-4 text-text-3">
+                  {t('transfers.list.totalDeducted')}: {formatCurrency(totalDeducted)}
+                </span>
+              </div>
 
-            {transfer.note ? <p className="m-0 text-sm leading-5 text-text-2">{transfer.note}</p> : null}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 min-w-[2rem] justify-self-start text-text-3 md:justify-self-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                    aria-label={t('nav.more')}
+                  >
+                    <MoreHorizontal size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={onEdit}>
+                    <Pencil size={16} />
+                    {t('common.edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-danger focus:text-danger" onSelect={onDelete} disabled={deleting}>
+                    <Trash2 size={16} />
+                    {t('common.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
+
+          {transfer.note ? <p className="m-0 overflow-hidden text-ellipsis whitespace-nowrap text-[0.72rem] leading-4 text-text-2">{transfer.note}</p> : null}
         </div>
       </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 justify-self-start text-text-3 md:justify-self-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
-            aria-label={t('nav.more')}
-          >
-            <MoreHorizontal size={16} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={onEdit}>
-            <Pencil size={16} />
-            {t('common.edit')}
-          </DropdownMenuItem>
-          <DropdownMenuItem className="text-danger focus:text-danger" onSelect={onDelete} disabled={deleting}>
-            <Trash2 size={16} />
-            {t('common.delete')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </article>
-  );
-}
-
-function TransferMetric({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.15rem)] border border-border-subtle bg-surface-1/75 p-3">
-      <span className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-text-3">{label}</span>
-      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">{value}</strong>
-    </div>
   );
 }
 

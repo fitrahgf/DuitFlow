@@ -23,11 +23,11 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        right: 'inset-y-0 right-0 h-full w-full max-w-md overflow-y-auto rounded-l-[1.55rem] p-[var(--space-panel-lg)]',
-        left: 'inset-y-0 left-0 h-full w-full max-w-md overflow-y-auto rounded-r-[1.55rem] p-[var(--space-panel-lg)]',
-        top: 'inset-x-0 top-0 overflow-y-auto rounded-b-[1.55rem] p-[var(--space-panel-lg)]',
+        right: 'inset-y-0 right-0 h-full w-full max-w-md overflow-y-auto rounded-l-[var(--radius-sheet)] p-[var(--space-panel-lg)]',
+        left: 'inset-y-0 left-0 h-full w-full max-w-md overflow-y-auto rounded-r-[var(--radius-sheet)] p-[var(--space-panel-lg)]',
+        top: 'inset-x-0 top-0 overflow-y-auto rounded-b-[var(--radius-sheet)] p-[var(--space-panel-lg)]',
         bottom:
-          'inset-x-0 bottom-0 mx-auto w-full max-w-[33rem] max-h-[min(88dvh,46rem)] overflow-y-auto rounded-t-[1.55rem] px-3 pb-[calc(0.8rem+var(--safe-bottom))] pt-2',
+          'inset-x-0 bottom-0 mx-auto w-full max-w-[33rem] max-h-[min(88dvh,46rem)] overflow-y-auto rounded-t-[var(--radius-sheet)] px-[var(--page-gutter)] pb-[calc(var(--page-bottom-space)+var(--safe-bottom))] pt-2',
       },
     },
     defaultVariants: {
@@ -48,7 +48,7 @@ export const SheetContent = ({
     <SheetOverlay />
     <DialogPrimitive.Content className={cn(sheetVariants({ side }), className)} {...props}>
       {!hideClose ? (
-        <DialogPrimitive.Close className="absolute right-2.5 top-2.5 inline-flex h-[var(--control-height-icon)] w-[var(--control-height-icon)] items-center justify-center rounded-[var(--radius-control)] text-text-3 transition-all duration-300 hover:bg-surface-2 hover:text-text-1">
+        <DialogPrimitive.Close className="absolute right-2.5 top-2.5 inline-flex h-[var(--control-height-icon)] w-[var(--control-height-icon)] items-center justify-center rounded-[var(--radius-control)] text-text-3 transition-[background-color,color] duration-200 hover:bg-surface-2 hover:text-text-1">
           <X size={18} />
         </DialogPrimitive.Close>
       ) : null}
@@ -65,7 +65,7 @@ export const SheetTitle = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) => (
-  <DialogPrimitive.Title className={cn('text-[0.94rem] font-semibold tracking-[-0.03em]', className)} {...props} />
+  <DialogPrimitive.Title className={cn('text-[0.98rem] font-semibold tracking-[-0.04em]', className)} {...props} />
 );
 
 export const SheetDescription = ({

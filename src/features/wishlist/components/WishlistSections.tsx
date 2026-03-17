@@ -14,7 +14,10 @@ import TransactionForm, {
   type TransactionFormPrefill,
 } from "@/components/TransactionForm";
 import { ModalShell } from "@/components/shared/ModalShell";
-import { EmptyState } from "@/components/shared/EmptyState";
+import {
+  EmptyState,
+  EmptyStateWorkspace,
+} from "@/components/shared/EmptyState";
 import { FieldError } from "@/components/shared/FieldError";
 import {
   MetricCard,
@@ -196,26 +199,30 @@ export function WishlistSummarySection({
   formatCurrency,
 }: WishlistSummarySectionProps) {
   return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard
         label={t("wishlist.tabs.all")}
         value={isLoading ? "..." : itemsCount}
+        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
       />
       <MetricCard
         label={t("wishlist.tabs.due")}
         value={isLoading ? "..." : dueCount}
         tone={dueCount > 0 ? "warning" : "default"}
+        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
       />
       <MetricCard
         label={t("wishlist.tabs.approved")}
         value={isLoading ? "..." : approvedCount}
         tone={approvedCount > 0 ? "accent" : "default"}
+        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
       />
       <MetricCard
         label={t("wishlist.meta.wallet")}
         value={isLoading ? "..." : linkedWalletCount}
         meta={isLoading ? undefined : formatCurrency(totalTrackedValue)}
         tone="accent"
+        className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
       />
     </section>
   );
@@ -233,10 +240,13 @@ export function WishlistDueBanner({
   }
 
   return (
-    <SurfaceCard className="border-accent/18 bg-surface-1">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <SurfaceCard
+      padding="compact"
+      className="border-accent/18 bg-surface-1"
+    >
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
+          <span className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)-0.02rem)] bg-accent-soft text-accent-strong">
             <Sparkles size={18} />
           </span>
           <div className="grid gap-1">
@@ -309,18 +319,18 @@ export function WishlistBoardSection({
   getCoolingProgress,
 }: WishlistBoardSectionProps) {
   return (
-    <SurfaceCard>
-      <Tabs value={activeTab} onValueChange={onTabChange} className="grid gap-3">
+    <SurfaceCard padding="compact">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="grid gap-2.5">
         <div className="pb-1">
-          <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-2xl md:!flex md:flex-wrap">
+          <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] md:!flex md:flex-wrap">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.key}
                 value={tab.key}
-                className="min-w-0 w-full gap-2 rounded-xl px-3 py-2 text-sm md:flex-1"
+                className="min-w-0 w-full gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-2.5 py-1.5 text-[0.78rem] md:flex-1"
               >
                 <span>{tab.label}</span>
-                <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
+                <span className="inline-flex h-[1.125rem] min-w-[1.25rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.64rem] font-bold text-text-3">
                   {tab.count}
                 </span>
               </TabsTrigger>
@@ -334,8 +344,10 @@ export function WishlistBoardSection({
           ) : isError ? (
             <EmptyState title={t("wishlist.loadError")} compact />
           ) : items.length === 0 ? (
-            <EmptyState
-              title={t("wishlist.noItems")}
+            <EmptyStateWorkspace
+              eyebrow={language === "id" ? "Wishlist board" : "Wishlist board"}
+              title={t("wishlist.emptyTitle")}
+              description={t("wishlist.emptyDescription")}
               icon={<ShoppingBasket size={20} />}
               action={
                 <Button type="button" variant="primary" onClick={onCreateItem}>
@@ -343,23 +355,44 @@ export function WishlistBoardSection({
                   {t("wishlist.addItem")}
                 </Button>
               }
+              supporting={<WishlistEmptyWorkflowAside language={language} t={t} />}
             />
           ) : !hasAnyVisibleItem ? (
-            <EmptyState
-              title={t("wishlist.emptyTab")}
-              compact
+            <EmptyStateWorkspace
+              eyebrow={language === "id" ? "Tab aktif" : "Active tab"}
+              title={t("wishlist.emptyTabTitle")}
+              description={t("wishlist.emptyTabDescription")}
               icon={<Clock3 size={18} />}
+              action={
+                activeTab !== "all" ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onTabChange("all")}
+                  >
+                    {t("wishlist.tabs.all")}
+                  </Button>
+                ) : undefined
+              }
+              supporting={
+                <WishlistAvailableTabsAside
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={onTabChange}
+                  language={language}
+                />
+              }
             />
           ) : (
-            <div className="grid gap-3.5">
+            <div className="grid gap-3">
               {activeSections.map((section) =>
                 section.items.length > 0 ? (
-                  <section key={section.title} className="grid gap-3">
+                  <section key={section.title} className="grid gap-2.5">
                     <details
                       className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden"
                       open
                     >
-                      <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+                      <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
                         <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
                           {section.title}
                         </strong>
@@ -367,8 +400,8 @@ export function WishlistBoardSection({
                           v
                         </span>
                       </summary>
-                      <div className="border-t border-border-subtle px-3.5 py-3">
-                        <div className="grid gap-3">
+                      <div className="border-t border-border-subtle px-3 py-2.5">
+                        <div className="grid gap-2.5">
                           {section.items.map((item) => (
                             <WishlistItemCard
                               key={item.id}
@@ -392,9 +425,9 @@ export function WishlistBoardSection({
                         </div>
                       </div>
                     </details>
-                    <div className="hidden gap-4 sm:grid">
+                    <div className="hidden gap-3 sm:grid">
                       <SectionHeading title={section.title} />
-                      <div className="grid gap-4 2xl:grid-cols-2">
+                      <div className="grid gap-3 2xl:grid-cols-2">
                         {section.items.map((item) => (
                           <WishlistItemCard
                             key={item.id}
@@ -425,6 +458,118 @@ export function WishlistBoardSection({
         </TabsContent>
       </Tabs>
     </SurfaceCard>
+  );
+}
+
+function WishlistEmptyWorkflowAside({
+  language,
+  t,
+}: {
+  language: "en" | "id";
+  t: (key: string) => string;
+}) {
+  const steps = [
+    {
+      number: "01",
+      title: t("wishlist.addItem"),
+      description:
+        language === "id"
+          ? "Simpan barang yang ingin ditimbang tanpa buru-buru checkout."
+          : "Capture the item first before deciding to buy.",
+    },
+    {
+      number: "02",
+      title: t("wishlist.actions.reviewNow"),
+      description:
+        language === "id"
+          ? "Biarkan periode cooling-off berjalan lalu review saat jatuh tempo."
+          : "Let the cooling period run, then review it when due.",
+    },
+    {
+      number: "03",
+      title: t("wishlist.actions.convert"),
+      description:
+        language === "id"
+          ? "Item yang lolos review bisa langsung diubah jadi transaksi."
+          : "Items that pass review can be converted into a transaction.",
+    },
+  ];
+
+  return (
+    <>
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+        {language === "id" ? "Alur board" : "Board flow"}
+      </span>
+      <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {steps.map((step) => (
+          <div
+            key={step.number}
+            className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5 py-2.5 first:pt-0 last:pb-0"
+          >
+            <span className="text-[0.72rem] font-semibold tracking-[0.08em] text-text-3">
+              {step.number}
+            </span>
+            <div className="grid gap-0.5">
+              <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                {step.title}
+              </strong>
+              <span className="text-[0.76rem] leading-5 text-text-3">
+                {step.description}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function WishlistAvailableTabsAside({
+  tabs,
+  activeTab,
+  onTabChange,
+  language,
+}: {
+  tabs: Array<{ key: string; label: string; count: number }>;
+  activeTab: string;
+  onTabChange: (value: string) => void;
+  language: "en" | "id";
+}) {
+  const availableTabs = tabs.filter(
+    (tab) => tab.key !== activeTab && tab.count > 0,
+  );
+
+  return (
+    <>
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+        {language === "id" ? "Pindah ke tab berisi" : "Tabs with items"}
+      </span>
+      {availableTabs.length > 0 ? (
+        <div className="grid gap-0 divide-y divide-border-subtle/80">
+          {availableTabs.slice(0, 3).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className="flex items-center justify-between gap-3 py-2.5 text-left transition first:pt-0 last:pb-0 hover:text-text-1"
+              onClick={() => onTabChange(tab.key)}
+            >
+              <span className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                {tab.label}
+              </span>
+              <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-surface-1/85 px-1.5 py-0.5 text-[0.7rem] font-semibold text-text-3">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="border-t border-border-subtle/80 pt-2.5 text-[0.78rem] text-text-3">
+          {language === "id"
+            ? "Belum ada tab lain yang berisi item."
+            : "There are no other tabs with items yet."}
+        </div>
+      )}
+    </>
   );
 }
 

@@ -12,7 +12,6 @@ import {
 } from "@/features/categories/hooks";
 import type { CategoryRecord } from "@/features/categories/queries";
 import {
-  MetricCard,
   PageHeader,
   PageHeaderActions,
   PageHeading,
@@ -22,7 +21,6 @@ import {
 } from "@/components/shared/PagePrimitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -158,42 +156,41 @@ export default function CategoriesPage() {
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard
-          label={t("categories.title")}
-          value={loading ? "..." : categories.length}
-        />
-        <MetricCard
-          label={t("categories.systemDefault")}
-          value={loading ? "..." : defaultCategories.length}
-          tone="accent"
-        />
-        <MetricCard
-          label={t("categories.customCategory")}
-          value={loading ? "..." : customCategories}
-          tone="success"
-        />
-      </section>
-
       <SurfaceCard>
         <div className="grid gap-3">
-          <SectionHeading
-            title={language === "id" ? "Daftar kategori" : "Category list"}
-          />
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border-subtle/80 pb-3">
+            <SectionHeading
+              title={language === "id" ? "Daftar kategori" : "Category list"}
+            />
+            <div className="flex flex-wrap gap-1.5">
+              <Badge>{loading ? "..." : categories.length}</Badge>
+              <Badge variant="accent">
+                {t("categories.systemDefault")}: {loading ? "..." : defaultCategories.length}
+              </Badge>
+              <Badge variant="success">
+                {t("categories.customCategory")}: {loading ? "..." : customCategories}
+              </Badge>
+            </div>
+          </div>
 
           {loading ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Card
+                <div
                   key={`category-skeleton-${index}`}
-                  className="grid gap-4 p-4 shadow-none"
+                  className="grid gap-3 py-3"
                 >
-                  <div className="skeleton h-12 w-12 rounded-2xl" />
-                  <div className="grid gap-2">
-                    <div className="skeleton skeleton-line skeleton-line--sm" />
-                    <div className="skeleton skeleton-line skeleton-line--lg" />
+                  <div className="flex items-center gap-3">
+                    <div className="skeleton h-10 w-10 rounded-2xl" />
+                    <div className="grid min-w-0 flex-1 gap-2">
+                      <div className="skeleton skeleton-line skeleton-line--sm" />
+                      <div className="skeleton skeleton-line skeleton-line--lg" />
+                    </div>
                   </div>
-                </Card>
+                  <div className="grid gap-1 pl-[3.25rem]">
+                    <div className="skeleton skeleton-line skeleton-line--sm" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : categories.length === 0 ? (
@@ -212,64 +209,33 @@ export default function CategoriesPage() {
               }
             />
           ) : (
-            <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {categories.map((category) => (
                 <article
                   key={category.id}
-                  className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
+                  className="grid gap-3 py-3 first:pt-0 last:pb-0 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div
-                      className="grid h-10 w-10 place-items-center rounded-2xl border"
-                      style={{
-                        backgroundColor: `${category.color}18`,
-                        color: category.color,
-                        borderColor: `${category.color}35`,
-                      }}
-                    >
-                      {getCategoryIcon(
-                        category.name,
-                        "expense",
-                        22,
-                        category.icon,
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-2xl"
-                        onClick={() => handleOpenForm(category)}
-                        aria-label={t("categories.form.edit")}
-                        title={t("categories.form.edit")}
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      {!category.is_default ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-2xl text-danger"
-                          onClick={() => {
-                            void handleDelete(category.id);
-                          }}
-                          aria-label={t("common.delete")}
-                          title={t("common.delete")}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      ) : null}
-                    </div>
+                  <div
+                    className="grid h-10 w-10 place-items-center rounded-2xl border md:self-start"
+                    style={{
+                      backgroundColor: `${category.color}18`,
+                      color: category.color,
+                      borderColor: `${category.color}35`,
+                    }}
+                  >
+                    {getCategoryIcon(
+                      category.name,
+                      "expense",
+                      22,
+                      category.icon,
+                    )}
                   </div>
 
-                  <div className="grid gap-2">
-                    <strong className="truncate text-base font-semibold tracking-[-0.03em] text-text-1">
-                      {category.name}
-                    </strong>
+                  <div className="grid gap-1.5">
                     <div className="flex flex-wrap items-center gap-2">
+                      <strong className="truncate text-[0.98rem] font-semibold tracking-[-0.03em] text-text-1">
+                        {category.name}
+                      </strong>
                       <Badge
                         variant={category.is_default ? "accent" : "default"}
                       >
@@ -277,10 +243,48 @@ export default function CategoriesPage() {
                           ? t("categories.systemDefault")
                           : t("categories.customCategory")}
                       </Badge>
-                      <span className="text-xs text-text-3">
-                        {category.icon}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[0.8rem] text-text-2">
+                      <span>{category.icon}</span>
+                      <span aria-hidden="true">/</span>
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                          aria-hidden="true"
+                        />
+                        {category.color}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={() => handleOpenForm(category)}
+                      aria-label={t("categories.form.edit")}
+                      title={t("categories.form.edit")}
+                    >
+                      <Pencil size={16} />
+                    </Button>
+                    {!category.is_default ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-danger"
+                        onClick={() => {
+                          void handleDelete(category.id);
+                        }}
+                        aria-label={t("common.delete")}
+                        title={t("common.delete")}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    ) : null}
                   </div>
                 </article>
               ))}
@@ -308,7 +312,7 @@ export default function CategoriesPage() {
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_7.5rem]">
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="category-name"
                 >
                   {t("categories.form.name")}
@@ -325,7 +329,7 @@ export default function CategoriesPage() {
 
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="category-color"
                 >
                   {t("categories.form.color")}
@@ -352,7 +356,7 @@ export default function CategoriesPage() {
             </div>
 
             <div className="grid gap-2">
-              <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+              <span className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2">
                 {t("categories.form.selectIcon")}
               </span>
               <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">

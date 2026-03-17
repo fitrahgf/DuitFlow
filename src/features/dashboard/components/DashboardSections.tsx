@@ -19,7 +19,6 @@ import TransactionForm, {
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ModalShell } from '@/components/shared/ModalShell';
 import {
-  MetricCard,
   ProgressMeter,
   SectionHeading,
   SurfaceCard,
@@ -106,6 +105,7 @@ interface DashboardTopSectionProps {
   totalIncome: number;
   totalExpense: number;
   totalTransfers: number;
+  recentTransactions: TransactionDisplayItem[];
   wallets: DashboardWalletSummary[];
   topWallets: DashboardWalletSummary[];
   totalWalletBalance: number;
@@ -120,6 +120,19 @@ interface DashboardTopSectionProps {
   language: 'en' | 'id';
   t: (path: string) => string;
   formatCurrency: (amount: number) => string;
+  insightView: DashboardInsightView;
+  onInsightViewChange: (view: DashboardInsightView) => void;
+  barData: {
+    labels: string[];
+    income: number[];
+    expense: number[];
+  };
+  categoryData: {
+    labels: string[];
+    values: number[];
+    colors: string[];
+  };
+  hasCategoryBreakdown: boolean;
   onReviewQuickAdd: (draft: TransactionFormPrefill) => void;
 }
 
@@ -130,6 +143,7 @@ export function DashboardTopSection({
   totalIncome,
   totalExpense,
   totalTransfers,
+  recentTransactions,
   wallets,
   topWallets,
   totalWalletBalance,
@@ -144,19 +158,173 @@ export function DashboardTopSection({
   language,
   t,
   formatCurrency,
+  insightView,
+  onInsightViewChange,
+  barData,
+  categoryData,
+  hasCategoryBreakdown,
   onReviewQuickAdd,
 }: DashboardTopSectionProps) {
+  const monthlyNet = totalIncome - totalExpense;
+  const netFlowLabel =
+    language === 'id' ? 'Arus bersih bulan ini' : 'Net flow this month';
+  const quickInputLabel =
+    language === 'id' ? 'Catat cepat' : 'Quick capture';
+  const activeWalletsLabel =
+    language === 'id'
+      ? `${wallets.length} dompet aktif`
+      : `${wallets.length} active wallets`;
+  const plannerLabel =
+    language === 'id' ? 'Fokus bulan ini' : 'Monthly focus';
+  const walletSnapshotTitle =
+    language === 'id' ? 'Distribusi dompet utama' : 'Top wallet distribution';
+
   return (
     <>
-      <section className="grid gap-2.5 xl:items-start xl:grid-cols-[minmax(0,1.42fr)_minmax(18.25rem,0.92fr)]">
-        <SurfaceCard className="order-2 self-start overflow-hidden xl:order-1">
-          <div className="grid gap-2.5 sm:gap-3">
-            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between">
-              <div className="grid gap-1">
-                <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-text-3">
+      <section className="hidden gap-3 sm:grid">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.42fr)_minmax(22rem,0.84fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.5fr)_minmax(24rem,0.74fr)]">
+          <SurfaceCard className="overflow-hidden border-border-strong/50">
+            <div className="grid gap-3.5">
+              <div className="grid gap-2">
+                <span className="text-[0.74rem] font-medium tracking-[0.08em] text-text-2">
                   {t('dashboard.totalBalance')}
                 </span>
-                <strong className="text-[clamp(2.2rem,1.9rem+1.7vw,3.5rem)] font-semibold leading-none tracking-[-0.08em] text-text-1">
+                <strong className="text-[clamp(2.7rem,2.38rem+1.6vw,4.1rem)] font-semibold leading-none tracking-[-0.088em] text-text-1">
+                  {loading ? '...' : formatCurrency(totalBalance)}
+                </strong>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.84rem] text-text-2">
+                  <span>{netFlowLabel}</span>
+                  <strong
+                    className={cn(
+                      'text-[0.94rem] font-semibold tracking-[-0.03em]',
+                      monthlyNet >= 0 ? 'text-success' : 'text-danger',
+                    )}
+                  >
+                    {monthlyNet >= 0 ? '+' : '-'}
+                    {formatCurrency(Math.abs(monthlyNet))}
+                  </strong>
+                  <span className="text-text-2">{activeWalletsLabel}</span>
+                  {overallBudgetLimit > 0 ? (
+                    <span className="text-text-2">{budgetStatusLabel}</span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid gap-0 border-y border-border-subtle/90 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/90">
+                <DashboardHeroMetric
+                  label={t('dashboard.monthlyIncome')}
+                  value={loading ? '...' : formatCurrency(totalIncome)}
+                  tone="success"
+                />
+                <DashboardHeroMetric
+                  label={t('dashboard.monthlyExpense')}
+                  value={loading ? '...' : formatCurrency(totalExpense)}
+                  tone="danger"
+                  className="sm:border-0"
+                />
+                <DashboardHeroMetric
+                  label={t('dashboard.monthlyTransfers')}
+                  value={loading ? '...' : formatCurrency(totalTransfers)}
+                  tone="accent"
+                />
+              </div>
+
+              <div className="grid gap-2 border-t border-border-subtle/90 pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="grid gap-0.5">
+                    <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                      {t('dashboard.walletSnapshotTitle')}
+                    </span>
+                    <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                      {walletSnapshotTitle}
+                    </strong>
+                  </div>
+                  <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+                    <Link href="/wallets">{t('dashboard.viewAll')}</Link>
+                  </Button>
+                </div>
+
+                {wallets.length > 0 ? (
+                  <div className="grid gap-0 divide-y divide-border-subtle">
+                    {topWallets.map((wallet) => (
+                      <HeroWalletSummaryRow
+                        key={wallet.id}
+                        wallet={wallet}
+                        totalBalance={totalWalletBalance}
+                        formatCurrency={formatCurrency}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <CompactEmptyLine
+                    icon={<Wallet size={15} />}
+                    label={
+                      language === 'id'
+                        ? 'Belum ada dompet aktif.'
+                        : 'No active wallets yet.'
+                    }
+                  />
+                )}
+
+                {wallets.length > topWallets.length ? (
+                  <span className="text-[0.76rem] text-text-2">
+                    {language === 'id'
+                      ? `+${wallets.length - topWallets.length} dompet lainnya`
+                      : `+${wallets.length - topWallets.length} more wallets`}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </SurfaceCard>
+
+          <DashboardDesktopSupportSection
+            overallBudgetLimit={overallBudgetLimit}
+            overallBudgetSpent={overallBudgetSpent}
+            overallBudgetRemaining={overallBudgetRemaining}
+            overallBudgetRatio={overallBudgetRatio}
+            budgetTone={budgetTone}
+            budgetStatusLabel={budgetStatusLabel}
+            primaryWishlistItem={primaryWishlistItem}
+            readyWishlistItemsCount={readyWishlistItemsCount}
+            plannerLabel={plannerLabel}
+            quickInputLabel={quickInputLabel}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+            onReviewQuickAdd={onReviewQuickAdd}
+          />
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.08fr)_minmax(23rem,0.92fr)]">
+          <DashboardRecentTransactionsSection
+            loading={loading}
+            recentTransactions={recentTransactions}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+          />
+
+          <DashboardDesktopInsightsSection
+            insightView={insightView}
+            onInsightViewChange={onInsightViewChange}
+            language={language}
+            t={t}
+            barData={barData}
+            categoryData={categoryData}
+            hasCategoryBreakdown={hasCategoryBreakdown}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-2.5 sm:hidden">
+        <SurfaceCard className="overflow-hidden">
+          <div className="grid gap-2.75">
+            <div className="flex items-start justify-between gap-3">
+              <div className="grid gap-1">
+                <span className="text-[0.74rem] font-medium tracking-[0.08em] text-text-2">
+                  {t('dashboard.totalBalance')}
+                </span>
+                <strong className="text-[clamp(2.3rem,2.1rem+1.35vw,3.1rem)] font-semibold leading-none tracking-[-0.08em] text-text-1">
                   {loading ? '...' : formatCurrency(totalBalance)}
                 </strong>
               </div>
@@ -165,216 +333,373 @@ export function DashboardTopSection({
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-              <MetricCard
-                label={t('dashboard.monthlyIncome')}
-                value={loading ? '...' : formatCurrency(totalIncome)}
-                tone="success"
-              />
-              <MetricCard
-                label={t('dashboard.monthlyExpense')}
-                value={loading ? '...' : formatCurrency(totalExpense)}
-                tone="danger"
-              />
-              <MetricCard
-                label={t('dashboard.monthlyTransfers')}
-                value={loading ? '...' : formatCurrency(totalTransfers)}
-                tone="accent"
-                className="col-span-2 sm:col-span-1"
-              />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.82rem] text-text-2">
+              <span>{netFlowLabel}</span>
+              <strong
+                className={cn(
+                  'text-[0.88rem] font-semibold tracking-[-0.03em]',
+                  monthlyNet >= 0 ? 'text-success' : 'text-danger',
+                )}
+              >
+                {monthlyNet >= 0 ? '+' : '-'}
+                {formatCurrency(Math.abs(monthlyNet))}
+              </strong>
+            </div>
+
+            <div className="grid gap-2 border-t border-border-subtle/90 pt-2.5">
+              <div className="grid grid-cols-2 gap-2">
+                <DashboardMobilePrimaryMetric
+                  label={t('dashboard.monthlyIncome')}
+                  value={loading ? '...' : formatCurrency(totalIncome)}
+                  tone="success"
+                />
+                <DashboardMobilePrimaryMetric
+                  label={t('dashboard.monthlyExpense')}
+                  value={loading ? '...' : formatCurrency(totalExpense)}
+                  tone="danger"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-[calc(var(--radius-control)+0.02rem)] border border-border-subtle/80 bg-surface-2/42 px-3 py-2.5">
+                <div className="grid gap-0.5">
+                  <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                    {t('dashboard.monthlyTransfers')}
+                  </span>
+                  <strong className="text-[0.98rem] font-semibold tracking-[-0.045em] text-accent-strong">
+                    {loading ? '...' : formatCurrency(totalTransfers)}
+                  </strong>
+                </div>
+                <Badge variant="accent" className="min-h-0 px-2.5 py-1 text-[0.68rem] font-medium">
+                  {activeWalletsLabel}
+                </Badge>
+              </div>
             </div>
           </div>
         </SurfaceCard>
 
-        <div className="order-1 grid gap-2.5 xl:order-2">
-          <SurfaceCard>
-            <div className="grid gap-2.5">
-              <SectionHeading
-                title={t('nav.quickTransaction')}
-                actions={
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/transactions">
-                      {t('dashboard.quickAdd.openForm')}
-                    </Link>
-                  </Button>
-                }
-              />
+        <DashboardMobileSupportSection
+          wallets={wallets}
+          topWallets={topWallets}
+          totalWalletBalance={totalWalletBalance}
+          overallBudgetLimit={overallBudgetLimit}
+          overallBudgetSpent={overallBudgetSpent}
+          overallBudgetRemaining={overallBudgetRemaining}
+          overallBudgetRatio={overallBudgetRatio}
+          budgetStatusLabel={budgetStatusLabel}
+          primaryWishlistItem={primaryWishlistItem}
+          readyWishlistItemsCount={readyWishlistItemsCount}
+          language={language}
+          t={t}
+          formatCurrency={formatCurrency}
+        />
 
-              <QuickAddComposer onReview={onReviewQuickAdd} />
-            </div>
-          </SurfaceCard>
-
-          <SurfaceCard className="hidden self-start sm:grid">
-            <div className="grid gap-2.5">
-              <SectionHeading title={language === 'id' ? 'Fokus' : 'Focus'} />
-
-              <div className="grid gap-1.5">
-                <DashboardFocusBlock
-                  title={t('dashboard.walletSnapshotTitle')}
-                  href="/wallets"
-                  actionLabel={t('dashboard.viewAll')}
-                >
-                  {wallets.length > 0 ? (
-                    <div className="grid gap-1.5">
-                      {topWallets.map((wallet) => (
-                        <DesktopWalletCompactRow
-                          key={wallet.id}
-                          wallet={wallet}
-                          totalBalance={totalWalletBalance}
-                          formatCurrency={formatCurrency}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title={
-                        language === 'id'
-                          ? 'Belum ada dompet aktif.'
-                          : 'No active wallets yet.'
-                      }
-                      compact
-                      icon={<Wallet size={18} />}
-                    />
-                  )}
-                </DashboardFocusBlock>
-
-                <DashboardFocusBlock
-                  title={t('dashboard.budgetTitle')}
-                  href="/budgets"
-                  actionLabel={t('dashboard.viewAll')}
-                >
-                  {overallBudgetLimit > 0 ? (
-                    <div className="grid gap-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                          {formatCurrency(overallBudgetSpent)}
-                        </strong>
-                        <Badge variant={toneToBadgeVariant[budgetTone]}>
-                          {budgetStatusLabel}
-                        </Badge>
-                      </div>
-                      <ProgressMeter
-                        value={overallBudgetRatio}
-                        tone={toneToProgressTone[budgetTone]}
-                        className="h-1.5 bg-surface-1"
-                        ariaLabel={t('dashboard.budgetTitle')}
-                      />
-                      <div className="flex items-center justify-between gap-2 text-xs text-text-3">
-                        <span>{formatCurrency(overallBudgetLimit)}</span>
-                        <span>{formatCurrency(overallBudgetRemaining)}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <CompactEmptyLine
-                      icon={<Target size={15} />}
-                      label={t('dashboard.noBudget')}
-                    />
-                  )}
-                </DashboardFocusBlock>
-
-                <DashboardFocusBlock
-                  title={t('dashboard.wishlistTitle')}
-                  href="/wishlist"
-                  actionLabel={
-                    readyWishlistItemsCount > 0
-                      ? t('dashboard.reviewNow')
-                      : t('dashboard.viewAll')
-                  }
-                >
-                  {primaryWishlistItem ? (
-                    <div className="grid gap-1.5">
-                      <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1">
-                        {primaryWishlistItem.item_name}
-                      </strong>
-                      <div className="flex items-center justify-between gap-2 text-xs text-text-3">
-                        <span>
-                          {getWishlistCountdownLabel(
-                            primaryWishlistItem,
-                            language,
-                          )}
-                        </span>
-                        <span>
-                          {formatCurrency(primaryWishlistItem.target_price ?? 0)}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <CompactEmptyLine
-                      icon={<Clock3 size={15} />}
-                      label={t('dashboard.noWishlistItems')}
-                    />
-                  )}
-                </DashboardFocusBlock>
-              </div>
-            </div>
-          </SurfaceCard>
-        </div>
+        {loading || recentTransactions.length > 0 ? (
+          <DashboardRecentTransactionsSection
+            loading={loading}
+            recentTransactions={recentTransactions}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+            className="sm:hidden"
+          />
+        ) : null}
       </section>
+    </>
+  );
+}
 
-      <section className="grid gap-2.5 sm:hidden">
-        <div className="grid grid-cols-2 gap-2.5">
-          <MobilePriorityCard
-            href="/budgets"
+interface DashboardDesktopSupportSectionProps {
+  overallBudgetLimit: number;
+  overallBudgetSpent: number;
+  overallBudgetRemaining: number;
+  overallBudgetRatio: number;
+  budgetTone: BudgetTone;
+  budgetStatusLabel: string;
+  primaryWishlistItem: DashboardWishlistItem | null;
+  readyWishlistItemsCount: number;
+  plannerLabel: string;
+  quickInputLabel: string;
+  language: 'en' | 'id';
+  t: (path: string) => string;
+  formatCurrency: (amount: number) => string;
+  onReviewQuickAdd: (draft: TransactionFormPrefill) => void;
+}
+
+function DashboardDesktopSupportSection({
+  overallBudgetLimit,
+  overallBudgetSpent,
+  overallBudgetRemaining,
+  overallBudgetRatio,
+  budgetTone,
+  budgetStatusLabel,
+  primaryWishlistItem,
+  readyWishlistItemsCount,
+  plannerLabel,
+  quickInputLabel,
+  language,
+  t,
+  formatCurrency,
+  onReviewQuickAdd,
+}: DashboardDesktopSupportSectionProps) {
+  return (
+    <SurfaceCard
+      padding="compact"
+      className="grid h-full content-start gap-3 border-border-strong/50"
+    >
+        <div className="grid gap-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="grid gap-0.5">
+              <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                {quickInputLabel}
+              </span>
+            <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+              {t('nav.quickTransaction')}
+            </strong>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+            <Link href="/transactions">{t('dashboard.quickAdd.openForm')}</Link>
+          </Button>
+        </div>
+        <QuickAddComposer onReview={onReviewQuickAdd} />
+      </div>
+
+      <div className="h-px bg-border-subtle" />
+
+      <div className="grid gap-2.5">
+        <div className="grid gap-0.5">
+          <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+            {plannerLabel}
+          </span>
+          <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+            {language === 'id'
+              ? 'Budget dan wishlist prioritas'
+              : 'Budget and wishlist priorities'}
+          </strong>
+        </div>
+
+        <div className="grid gap-0 divide-y divide-border-subtle/90">
+          <DashboardPlannerModule
             eyebrow={t('dashboard.budgetTitle')}
-            title={
-              overallBudgetLimit > 0
-                ? budgetStatusLabel
-                : t('dashboard.noBudget')
+            href="/budgets"
+            actionLabel={t('dashboard.viewAll')}
+          >
+            {overallBudgetLimit > 0 ? (
+              <div className="grid gap-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="grid gap-0.5">
+                    <strong className="text-lg font-semibold tracking-[-0.05em] text-text-1">
+                      {formatCurrency(overallBudgetSpent)}
+                    </strong>
+                    <span className="text-[0.76rem] text-text-2">
+                      {t('dashboard.budgetSpent')}
+                    </span>
+                  </div>
+                  <Badge variant={toneToBadgeVariant[budgetTone]}>
+                    {budgetStatusLabel}
+                  </Badge>
+                </div>
+                <ProgressMeter
+                  value={overallBudgetRatio}
+                  tone={toneToProgressTone[budgetTone]}
+                  className="h-1.5 bg-surface-1"
+                  ariaLabel={t('dashboard.budgetTitle')}
+                />
+                <div className="flex items-center justify-between gap-2 text-[0.76rem] text-text-2">
+                  <span>{formatCurrency(overallBudgetRemaining)}</span>
+                  <span>{formatCurrency(overallBudgetLimit)}</span>
+                </div>
+              </div>
+            ) : (
+              <CompactEmptyLine
+                icon={<Target size={15} />}
+                label={t('dashboard.noBudget')}
+              />
+            )}
+          </DashboardPlannerModule>
+
+          <DashboardPlannerModule
+            eyebrow={t('dashboard.wishlistTitle')}
+            href="/wishlist"
+            actionLabel={
+              readyWishlistItemsCount > 0
+                ? t('dashboard.reviewNow')
+                : t('dashboard.viewAll')
             }
-            value={
-              overallBudgetLimit > 0
-                ? `${formatCurrency(overallBudgetSpent)} / ${formatCurrency(overallBudgetLimit)}`
-                : undefined
-            }
-            tone={
-              overallBudgetRatio >= 1
+          >
+            {primaryWishlistItem ? (
+              <div className="grid gap-2">
+                <div className="grid gap-0.5">
+                  <strong className="truncate text-base font-semibold tracking-[-0.04em] text-text-1">
+                    {primaryWishlistItem.item_name}
+                  </strong>
+                  <span className="text-[0.76rem] text-text-2">
+                    {getWishlistCountdownLabel(primaryWishlistItem, language)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-[0.76rem] text-text-2">
+                  <span>
+                    {readyWishlistItemsCount > 0
+                      ? t('dashboard.reviewNow')
+                      : t('dashboard.viewAll')}
+                  </span>
+                  <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                    {formatCurrency(primaryWishlistItem.target_price ?? 0)}
+                  </strong>
+                </div>
+              </div>
+            ) : (
+              <CompactEmptyLine
+                icon={<Clock3 size={15} />}
+                label={t('dashboard.noWishlistItems')}
+              />
+            )}
+          </DashboardPlannerModule>
+        </div>
+      </div>
+    </SurfaceCard>
+  );
+}
+
+interface DashboardMobileSupportSectionProps {
+  wallets: DashboardWalletSummary[];
+  topWallets: DashboardWalletSummary[];
+  totalWalletBalance: number;
+  overallBudgetLimit: number;
+  overallBudgetSpent: number;
+  overallBudgetRemaining: number;
+  overallBudgetRatio: number;
+  budgetStatusLabel: string;
+  primaryWishlistItem: DashboardWishlistItem | null;
+  readyWishlistItemsCount: number;
+  language: 'en' | 'id';
+  t: (path: string) => string;
+  formatCurrency: (amount: number) => string;
+}
+
+function DashboardMobileSupportSection({
+  wallets,
+  topWallets,
+  totalWalletBalance,
+  overallBudgetLimit,
+  overallBudgetSpent,
+  overallBudgetRemaining,
+  overallBudgetRatio,
+  budgetStatusLabel,
+  primaryWishlistItem,
+  readyWishlistItemsCount,
+  language,
+  t,
+  formatCurrency,
+}: DashboardMobileSupportSectionProps) {
+  const hasWallets = wallets.length > 0;
+  const showSection =
+    hasWallets || overallBudgetLimit > 0 || Boolean(primaryWishlistItem);
+
+  if (!showSection) {
+    return null;
+  }
+
+  const budgetMeta =
+    overallBudgetLimit > 0
+      ? `${formatCurrency(overallBudgetSpent)} / ${formatCurrency(overallBudgetLimit)}`
+      : undefined;
+  const wishlistMeta = primaryWishlistItem?.target_price
+    ? formatCurrency(primaryWishlistItem.target_price)
+    : readyWishlistItemsCount > 0
+      ? language === 'id'
+        ? `${readyWishlistItemsCount} siap ditinjau`
+        : `${readyWishlistItemsCount} ready to review`
+      : undefined;
+  const walletSummaryLabel =
+    language === 'id'
+      ? `${wallets.length} dompet aktif`
+      : `${wallets.length} active wallets`;
+
+  return (
+    <SurfaceCard padding="compact" className="grid gap-3 sm:hidden">
+      <div className="grid grid-cols-2 gap-2">
+        <MobilePriorityCard
+          href="/budgets"
+          eyebrow={t('dashboard.budgetTitle')}
+          title={
+            overallBudgetLimit > 0
+              ? budgetStatusLabel
+              : t('dashboard.noBudget')
+          }
+          value={
+            overallBudgetLimit > 0
+              ? language === 'id'
+                ? `Sisa ${formatCurrency(overallBudgetRemaining)}`
+                : `Remaining ${formatCurrency(overallBudgetRemaining)}`
+              : undefined
+          }
+          meta={budgetMeta}
+          tone={
+            overallBudgetLimit > 0
+              ? overallBudgetRatio >= 1
                 ? 'danger'
                 : overallBudgetRatio >= 0.8
                   ? 'warning'
                   : 'accent'
-            }
-          />
-          <MobilePriorityCard
-            href="/wishlist"
-            eyebrow={t('dashboard.wishlistTitle')}
-            title={
-              primaryWishlistItem
-                ? primaryWishlistItem.item_name
-                : t('dashboard.noWishlistItems')
-            }
-            value={
-              primaryWishlistItem?.target_price
-                ? formatCurrency(primaryWishlistItem.target_price)
-                : undefined
-            }
-            tone={primaryWishlistItem ? 'accent' : 'default'}
-          />
+              : 'default'
+          }
+        />
+        <MobilePriorityCard
+          href="/wishlist"
+          eyebrow={t('dashboard.wishlistTitle')}
+          title={
+            primaryWishlistItem
+              ? primaryWishlistItem.item_name
+              : t('dashboard.noWishlistItems')
+          }
+          value={
+            primaryWishlistItem
+              ? getWishlistCountdownLabel(primaryWishlistItem, language)
+              : undefined
+          }
+          meta={wishlistMeta}
+          tone={primaryWishlistItem ? 'accent' : 'default'}
+        />
+      </div>
+
+      <div className="grid gap-2.5 border-t border-border-subtle/80 pt-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="grid gap-0.5">
+            <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+              {t('dashboard.walletSnapshotTitle')}
+            </span>
+            <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+              {walletSummaryLabel}
+            </strong>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+            <Link href="/wallets">{t('dashboard.viewAll')}</Link>
+          </Button>
         </div>
 
-        {wallets.length > 0 ? (
-          <div className="grid gap-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
-                {t('dashboard.walletSnapshotTitle')}
-              </span>
-              <Button asChild variant="ghost" size="sm" className="h-8 px-2.5">
-                <Link href="/wallets">{t('dashboard.viewAll')}</Link>
-              </Button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {topWallets.map((wallet) => (
-                <MobileWalletStripCard
-                  key={wallet.id}
-                  wallet={wallet}
-                  totalBalance={totalWalletBalance}
-                  formatCurrency={formatCurrency}
-                />
-              ))}
-            </div>
+        {hasWallets ? (
+          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {topWallets.map((wallet) => (
+              <MobileWalletStripCard
+                key={wallet.id}
+                wallet={wallet}
+                totalBalance={totalWalletBalance}
+                formatCurrency={formatCurrency}
+              />
+            ))}
           </div>
-        ) : null}
-      </section>
-    </>
+        ) : (
+          <CompactEmptyLine
+            icon={<Wallet size={15} />}
+            label={
+              language === 'id'
+                ? 'Belum ada dompet aktif.'
+                : 'No active wallets yet.'
+            }
+          />
+        )}
+      </div>
+    </SurfaceCard>
   );
 }
 
@@ -408,7 +733,7 @@ export function DashboardOnboardingSection({
   }
 
   return (
-    <Card className="border-dashed p-3.5 md:p-4.5">
+    <Card className="border-dashed p-3.5 md:p-4">
       <div className="grid gap-3">
         <SectionHeading
           eyebrow={t('dashboard.onboarding.eyebrow')}
@@ -445,6 +770,7 @@ interface DashboardRecentTransactionsSectionProps {
   language: 'en' | 'id';
   t: (path: string) => string;
   formatCurrency: (amount: number) => string;
+  className?: string;
 }
 
 export function DashboardRecentTransactionsSection({
@@ -453,18 +779,19 @@ export function DashboardRecentTransactionsSection({
   language,
   t,
   formatCurrency,
+  className,
 }: DashboardRecentTransactionsSectionProps) {
   return (
-    <SurfaceCard>
-      <div className="grid gap-2.5">
-        <SectionHeading
-          title={t('dashboard.recentTransactions')}
-          actions={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/transactions">{t('dashboard.viewAll')}</Link>
-            </Button>
-          }
-        />
+    <SurfaceCard className={cn('h-full', className)}>
+      <div className="grid h-full gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="m-0 text-[0.95rem] font-semibold tracking-[-0.035em] text-text-1">
+            {t('dashboard.recentTransactions')}
+          </h2>
+          <Button asChild variant="ghost" size="sm" className="h-6.5 px-2.5 sm:h-7">
+            <Link href="/transactions">{t('dashboard.viewAll')}</Link>
+          </Button>
+        </div>
 
         {loading ? (
           <EmptyState title={t('common.loading')} compact />
@@ -475,7 +802,7 @@ export function DashboardRecentTransactionsSection({
             icon={<ReceiptText size={18} />}
           />
         ) : (
-          <div className="overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45">
+          <div className="grid gap-0">
             {recentTransactions.map((transaction, index) => (
               <RecentActivityRow
                 key={transaction.id}
@@ -521,8 +848,8 @@ export function DashboardDesktopInsightsSection({
   hasCategoryBreakdown,
 }: DashboardDesktopInsightsSectionProps) {
   return (
-    <SurfaceCard className="hidden sm:grid">
-      <div className="grid gap-2.5">
+    <SurfaceCard className="hidden h-full sm:grid">
+      <div className="grid h-full gap-3">
         <SectionHeading
           title={language === 'id' ? 'Insights' : 'Insights'}
           actions={
@@ -544,8 +871,8 @@ export function DashboardDesktopInsightsSection({
         />
 
         {insightView === 'activity' ? (
-          <div className="grid gap-2.5">
-            <div className="flex items-center gap-3 text-[0.72rem] font-medium text-text-3">
+          <div className="grid h-full gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-[0.74rem] font-medium text-text-2">
               <ChartLegendLabel
                 colorClassName="bg-success"
                 label={t('dashboard.monthlyIncome')}
@@ -555,16 +882,16 @@ export function DashboardDesktopInsightsSection({
                 label={t('dashboard.monthlyExpense')}
               />
             </div>
-            <ChartSurface>
-              <div className="h-[14.5rem]">
+            <ChartSurface className="h-full">
+              <div className="h-[11.5rem] xl:h-[12rem] 2xl:h-[12.5rem]">
                 <TransactionBarChart data={barData} />
               </div>
             </ChartSurface>
           </div>
         ) : (
-          <div className="grid gap-2.5">
-            <ChartSurface>
-              <div className="h-[14.5rem]">
+          <div className="grid h-full gap-3">
+            <ChartSurface className="h-full">
+              <div className="h-[11.5rem] xl:h-[12rem] 2xl:h-[12.5rem]">
                 {hasCategoryBreakdown ? (
                   <CategoryDoughnutChart data={categoryData} />
                 ) : (
@@ -634,159 +961,202 @@ export function DashboardMobilePanelsSection({
   categoryData,
   hasCategoryBreakdown,
 }: DashboardMobilePanelsSectionProps) {
+  const hasActivityData =
+    barData.income.some((value) => value > 0) ||
+    barData.expense.some((value) => value > 0);
+  const hasInsights = hasActivityData || hasCategoryBreakdown;
+  const hasPlannerDetails =
+    overallBudgetLimit > 0 || wishlistItems.length > 0 || categoryBudgetRows.length > 0;
+
+  if (!hasInsights && !hasPlannerDetails) {
+    return null;
+  }
+
   return (
-    <section className="grid gap-3 sm:hidden">
-      <MobileDisclosureCard
-        title={t('dashboard.budgetTitle')}
-        description={budgetStatusLabel}
-        defaultOpen={overallBudgetRatio >= 0.8}
-      >
-        {overallBudgetLimit > 0 ? (
-          <div className="grid gap-3.5">
-            <div className="grid gap-3 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/55 p-3.5 md:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="grid gap-1">
-                  <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
-                    {formatCurrency(overallBudgetSpent)}
-                  </strong>
-                  <span className="text-sm text-text-3">
-                    {t('dashboard.budgetSpent')}
-                  </span>
-                </div>
-                <Badge variant={toneToBadgeVariant[budgetTone]}>
-                  {budgetStatusLabel}
-                </Badge>
-              </div>
-
-              <ProgressMeter
-                value={overallBudgetRatio}
-                tone={toneToProgressTone[budgetTone]}
-                className="h-2 bg-surface-1"
-                ariaLabel={t('dashboard.budgetTitle')}
-              />
-
-              <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-text-3">
-                <span>
-                  {t('dashboard.budgetRemaining')}: {formatCurrency(overallBudgetRemaining)}
-                </span>
-                <span>
-                  {t('dashboard.budgetLimit')}: {formatCurrency(overallBudgetLimit)}
-                </span>
-              </div>
+    <section className="grid gap-2.5 sm:hidden">
+      {hasInsights ? (
+        <MobileDisclosureCard
+          title={language === 'id' ? 'Insights' : 'Insights'}
+          description={
+            insightView === 'activity'
+              ? t('dashboard.weeklyActivity')
+              : t('dashboard.expenseBreakdown')
+          }
+        >
+          <div className="grid gap-3">
+            <div className="inline-flex w-fit rounded-full border border-border-subtle bg-surface-2 p-1">
+              <InsightToggleButton
+                active={insightView === 'activity'}
+                onClick={() => onInsightViewChange('activity')}
+              >
+                {language === 'id' ? 'Aktivitas' : 'Activity'}
+              </InsightToggleButton>
+              <InsightToggleButton
+                active={insightView === 'breakdown'}
+                onClick={() => onInsightViewChange('breakdown')}
+              >
+                {language === 'id' ? 'Kategori' : 'Category'}
+              </InsightToggleButton>
             </div>
 
-            {categoryBudgetRows.length > 0 ? (
-              <div className="grid gap-2">
-                {categoryBudgetRows.map((budget) => (
-                  <BudgetUsageRow
-                    key={budget.id}
-                    budget={budget}
-                    formatCurrency={formatCurrency}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <EmptyState
-            title={t('dashboard.noBudget')}
-            compact
-            icon={<Target size={18} />}
-          />
-        )}
-      </MobileDisclosureCard>
-
-      <MobileDisclosureCard
-        title={t('dashboard.wishlistTitle')}
-        description={
-          primaryWishlistItem
-            ? primaryWishlistItem.item_name
-            : t('dashboard.noWishlistItems')
-        }
-      >
-        {wishlistItems.length === 0 ? (
-          <EmptyState
-            title={t('dashboard.noWishlistItems')}
-            compact
-            icon={<Clock3 size={18} />}
-          />
-        ) : (
-          <div className="overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45">
-            {wishlistHighlights.map((item, index) => (
-              <WishlistReviewRow
-                key={item.id}
-                item={item}
-                language={language}
-                formatCurrency={formatCurrency}
-                className={index > 0 ? 'border-t border-border-subtle' : undefined}
-              />
-            ))}
-          </div>
-        )}
-      </MobileDisclosureCard>
-
-      <MobileDisclosureCard title={language === 'id' ? 'Insights' : 'Insights'}>
-        <div className="grid gap-3">
-          <div className="inline-flex w-fit rounded-full border border-border-subtle bg-surface-2 p-1">
-            <InsightToggleButton
-              active={insightView === 'activity'}
-              onClick={() => onInsightViewChange('activity')}
-            >
-              {language === 'id' ? 'Aktivitas' : 'Activity'}
-            </InsightToggleButton>
-            <InsightToggleButton
-              active={insightView === 'breakdown'}
-              onClick={() => onInsightViewChange('breakdown')}
-            >
-              {language === 'id' ? 'Kategori' : 'Category'}
-            </InsightToggleButton>
-          </div>
-
-          {insightView === 'activity' ? (
-            <div className="grid gap-3">
-              <SectionHeading
-                title={t('dashboard.weeklyActivity')}
-                actions={
-                  <div className="flex items-center gap-3 text-[0.72rem] font-medium text-text-3">
-                    <ChartLegendLabel
-                      colorClassName="bg-success"
-                      label={t('dashboard.monthlyIncome')}
-                    />
-                    <ChartLegendLabel
-                      colorClassName="bg-danger"
-                      label={t('dashboard.monthlyExpense')}
-                    />
-                  </div>
-                }
-              />
-              <ChartSurface>
-                <div className="h-[15rem] sm:h-[16.25rem]">
-                  <TransactionBarChart data={barData} />
-                </div>
-              </ChartSurface>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              <SectionHeading title={t('dashboard.expenseBreakdown')} />
-              <ChartSurface>
-                <div className="h-[15rem] sm:h-[16.25rem]">
-                  {hasCategoryBreakdown ? (
-                    <CategoryDoughnutChart data={categoryData} />
-                  ) : (
-                    <div className="grid h-full place-items-center">
-                      <EmptyState
-                        title={t('dashboard.noExpenseData')}
-                        compact
-                        icon={<PieChart size={18} />}
+            {insightView === 'activity' ? (
+              <div className="grid gap-3">
+                <SectionHeading
+                  title={t('dashboard.weeklyActivity')}
+                  actions={
+                    <div className="flex items-center gap-3 text-[0.74rem] font-medium text-text-2">
+                      <ChartLegendLabel
+                        colorClassName="bg-success"
+                        label={t('dashboard.monthlyIncome')}
+                      />
+                      <ChartLegendLabel
+                        colorClassName="bg-danger"
+                        label={t('dashboard.monthlyExpense')}
                       />
                     </div>
-                  )}
+                  }
+                />
+                <ChartSurface>
+                  <div className="h-[13.5rem]">
+                    <TransactionBarChart data={barData} />
+                  </div>
+                </ChartSurface>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                <SectionHeading title={t('dashboard.expenseBreakdown')} />
+                <ChartSurface>
+                  <div className="h-[13.5rem]">
+                    {hasCategoryBreakdown ? (
+                      <CategoryDoughnutChart data={categoryData} />
+                    ) : (
+                      <div className="grid h-full place-items-center">
+                        <EmptyState
+                          title={t('dashboard.noExpenseData')}
+                          compact
+                          icon={<PieChart size={18} />}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </ChartSurface>
+              </div>
+            )}
+          </div>
+        </MobileDisclosureCard>
+      ) : null}
+
+      {hasPlannerDetails ? (
+        <MobileDisclosureCard
+          title={language === 'id' ? 'Budget & wishlist' : 'Budget & wishlist'}
+          description={
+            overallBudgetLimit > 0
+              ? budgetStatusLabel
+              : primaryWishlistItem
+                ? primaryWishlistItem.item_name
+                : undefined
+          }
+          defaultOpen={overallBudgetRatio >= 0.8}
+        >
+          <div className="grid gap-3">
+            <div className="grid gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
+                  {t('dashboard.budgetTitle')}
+                </strong>
+                <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+                  <Link href="/budgets">{t('dashboard.viewAll')}</Link>
+                </Button>
+              </div>
+
+              {overallBudgetLimit > 0 ? (
+                <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle/80 bg-surface-2/45 px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="grid gap-0.5">
+                      <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+                        {formatCurrency(overallBudgetSpent)}
+                      </strong>
+                      <span className="text-[0.78rem] text-text-2">
+                        {t('dashboard.budgetSpent')}
+                      </span>
+                    </div>
+                    <Badge variant={toneToBadgeVariant[budgetTone]}>
+                      {budgetStatusLabel}
+                    </Badge>
+                  </div>
+
+                  <ProgressMeter
+                    value={overallBudgetRatio}
+                    tone={toneToProgressTone[budgetTone]}
+                    className="h-2 bg-surface-1"
+                    ariaLabel={t('dashboard.budgetTitle')}
+                  />
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[0.78rem] text-text-2">
+                    <span>
+                      {t('dashboard.budgetRemaining')}: {formatCurrency(overallBudgetRemaining)}
+                    </span>
+                    <span>
+                      {t('dashboard.budgetLimit')}: {formatCurrency(overallBudgetLimit)}
+                    </span>
+                  </div>
                 </div>
-              </ChartSurface>
+              ) : (
+                <CompactEmptyLine
+                  icon={<Target size={15} />}
+                  label={t('dashboard.noBudget')}
+                />
+              )}
+
+              {categoryBudgetRows.length > 0 ? (
+                <div className="grid gap-1.5">
+                  {categoryBudgetRows.map((budget) => (
+                    <BudgetUsageRow
+                      key={budget.id}
+                      budget={budget}
+                      formatCurrency={formatCurrency}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
-          )}
-        </div>
-      </MobileDisclosureCard>
+
+            <div className="h-px bg-border-subtle/80" />
+
+            <div className="grid gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
+                  {t('dashboard.wishlistTitle')}
+                </strong>
+                <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+                  <Link href="/wishlist">
+                    {primaryWishlistItem ? t('dashboard.reviewNow') : t('dashboard.viewAll')}
+                  </Link>
+                </Button>
+              </div>
+
+              {wishlistItems.length === 0 ? (
+                <CompactEmptyLine
+                  icon={<Clock3 size={15} />}
+                  label={t('dashboard.noWishlistItems')}
+                />
+              ) : (
+                <div className="overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45">
+                  {wishlistHighlights.map((item, index) => (
+                    <WishlistReviewRow
+                      key={item.id}
+                      item={item}
+                      language={language}
+                      formatCurrency={formatCurrency}
+                      className={index > 0 ? 'border-t border-border-subtle' : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </MobileDisclosureCard>
+      ) : null}
     </section>
   );
 }
@@ -829,16 +1199,18 @@ function MobilePriorityCard({
   eyebrow,
   title,
   value,
+  meta,
   tone = 'default',
 }: {
   href: string;
   eyebrow: string;
   title: string;
   value?: string;
+  meta?: string;
   tone?: 'default' | 'accent' | 'warning' | 'danger';
 }) {
   const toneClassName = {
-    default: 'border-border-subtle bg-surface-1',
+    default: 'border-border-subtle/80 bg-surface-2/35',
     accent: 'border-accent/20 bg-surface-accent/35',
     warning: 'border-warning/25 bg-warning-soft/25',
     danger: 'border-danger/25 bg-danger-soft/20',
@@ -848,17 +1220,18 @@ function MobilePriorityCard({
     <Link
       href={href}
       className={cn(
-        'grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border p-2.75 transition-all duration-300 hover:border-border-strong hover:bg-surface-2/65',
+        'grid gap-1.25 rounded-[calc(var(--radius-card)-0.14rem)] border px-3 py-2.5 transition-all duration-300 hover:border-border-strong hover:bg-surface-2/65',
         toneClassName,
       )}
     >
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
         {eyebrow}
       </span>
       <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
         {title}
       </strong>
-      {value ? <span className="text-xs text-text-3">{value}</span> : null}
+      {value ? <span className="text-[0.78rem] text-text-2">{value}</span> : null}
+      {meta ? <span className="text-[0.72rem] text-text-2">{meta}</span> : null}
     </Link>
   );
 }
@@ -885,10 +1258,10 @@ function MobileDisclosureCard({
             {title}
           </strong>
           {description ? (
-            <span className="text-xs text-text-3">{description}</span>
+            <span className="text-[0.78rem] text-text-2">{description}</span>
           ) : null}
         </div>
-        <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">
+        <span className="text-[0.78rem] font-medium text-text-2 transition-transform duration-300 group-open:rotate-180">
           v
         </span>
       </summary>
@@ -930,7 +1303,7 @@ function SetupStepRow({
   doneLabel: string;
 }) {
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45 px-3.5 py-2.75">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45 px-3 py-2.5">
       <span
         className={cn(
           'grid h-7 w-7 place-items-center rounded-full text-xs font-semibold',
@@ -955,24 +1328,97 @@ function SetupStepRow({
   );
 }
 
-function DashboardFocusBlock({
-  title,
+function DashboardMobilePrimaryMetric({
+  label,
+  value,
+  tone,
+  className,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  tone: 'accent' | 'success' | 'danger';
+  className?: string;
+}) {
+  const toneClassName = {
+    accent: 'border-accent/18 bg-surface-1',
+    success: 'border-success/18 bg-surface-1',
+    danger: 'border-danger/20 bg-surface-1',
+  }[tone];
+
+  const dotClassName = {
+    accent: 'bg-accent',
+    success: 'bg-success',
+    danger: 'bg-danger',
+  }[tone];
+
+  return (
+    <div
+      className={cn(
+        'grid gap-1 rounded-[calc(var(--radius-control)+0.02rem)] border px-3 py-2.5',
+        toneClassName,
+        className,
+      )}
+    >
+      <div className="inline-flex items-center gap-2">
+        <span className={cn('h-1.5 w-1.5 rounded-full', dotClassName)} />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[1rem] font-semibold tracking-[-0.045em] text-text-1">
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function DashboardHeroMetric({
+  label,
+  value,
+  tone,
+  className,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  tone: 'accent' | 'success' | 'danger';
+  className?: string;
+}) {
+  const toneClassName = {
+    accent: 'text-accent-strong',
+    success: 'text-success',
+    danger: 'text-danger',
+  }[tone];
+
+  return (
+    <div className={cn('grid gap-1 px-3 py-2.5 sm:min-h-[4.45rem]', className)}>
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+        {label}
+      </span>
+      <strong className={cn('text-[1rem] font-semibold tracking-[-0.045em]', toneClassName)}>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function DashboardPlannerModule({
+  eyebrow,
   href,
   actionLabel,
   children,
 }: {
-  title: string;
+  eyebrow: string;
   href: string;
   actionLabel: string;
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-1.5 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45 p-2.75">
+    <div className="grid gap-2.5 py-2.5 first:pt-0 last:pb-0">
       <div className="flex items-center justify-between gap-2">
-        <strong className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">
-          {title}
+        <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
+          {eyebrow}
         </strong>
-        <Button asChild variant="ghost" size="sm" className="h-6.5 px-2 text-[0.72rem]">
+        <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[0.72rem]">
           <Link href={href}>{actionLabel}</Link>
         </Button>
       </div>
@@ -989,8 +1435,8 @@ function CompactEmptyLine({
   label: string;
 }) {
   return (
-    <div className="inline-flex items-center gap-1.75 text-[0.84rem] text-text-3">
-      <span className="grid h-6.5 w-6.5 place-items-center rounded-full bg-surface-1 text-text-3">
+    <div className="inline-flex items-center gap-2 text-[0.84rem] text-text-2">
+      <span className="grid h-6 w-6 place-items-center rounded-full bg-surface-1 text-text-2">
         {icon}
       </span>
       <span>{label}</span>
@@ -998,7 +1444,7 @@ function CompactEmptyLine({
   );
 }
 
-function DesktopWalletCompactRow({
+function HeroWalletSummaryRow({
   wallet,
   totalBalance,
   formatCurrency,
@@ -1010,22 +1456,20 @@ function DesktopWalletCompactRow({
   const share = getWalletShare(wallet, totalBalance);
 
   return (
-    <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1 px-2.75 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: wallet.color || 'var(--accent)' }}
-          />
-          <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
-            {wallet.name}
-          </strong>
-        </div>
-        <span className="text-[0.68rem] text-text-3">{share}%</span>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 first:pt-0 last:pb-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: wallet.color || 'var(--accent)' }}
+        />
+        <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
+          {wallet.name}
+        </strong>
       </div>
-      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+      <strong className="whitespace-nowrap text-sm font-semibold tracking-[-0.03em] text-text-1">
         {formatCurrency(wallet.balance)}
       </strong>
+      <span className="text-[0.72rem] font-medium text-text-2">{share}%</span>
     </div>
   );
 }
@@ -1044,8 +1488,8 @@ function InsightToggleButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-[1.9rem] items-center rounded-full px-2.75 text-[0.72rem] font-semibold transition-all duration-300',
-        active ? 'bg-surface-1 text-text-1 shadow-xs' : 'text-text-3 hover:text-text-1',
+        'inline-flex min-h-[var(--chip-height)] items-center rounded-full px-3 text-[0.74rem] font-medium transition-all duration-300',
+        active ? 'bg-surface-1 text-text-1 shadow-xs' : 'text-text-2 hover:text-text-1',
       )}
     >
       {children}
@@ -1067,7 +1511,7 @@ function MobileWalletStripCard({
   return (
     <Link
       href="/wallets"
-      className="grid min-w-[10.25rem] gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1 px-2.75 py-2"
+      className="grid min-w-[8.8rem] gap-1 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle/80 bg-surface-1 px-2.75 py-2"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
@@ -1079,9 +1523,9 @@ function MobileWalletStripCard({
             {wallet.name}
           </strong>
         </div>
-        <span className="text-[0.68rem] font-medium text-text-3">{share}%</span>
+        <span className="text-[0.7rem] font-medium text-text-2">{share}%</span>
       </div>
-      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+      <strong className="text-[0.94rem] font-semibold tracking-[-0.03em] text-text-1">
         {formatCurrency(wallet.balance)}
       </strong>
     </Link>
@@ -1103,7 +1547,7 @@ function BudgetUsageRow({
         <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
           {budget.categories?.name || 'Category'}
         </strong>
-        <span className="text-[0.72rem] font-medium text-text-3">
+        <span className="text-[0.74rem] font-medium text-text-2">
           {Math.min(Math.round(budget.ratio * 100), 999)}%
         </span>
       </div>
@@ -1113,7 +1557,7 @@ function BudgetUsageRow({
         className="h-1.5 bg-surface-1"
         ariaLabel={budget.categories?.name || 'Category'}
       />
-      <div className="flex items-center justify-between gap-3 text-xs text-text-3">
+      <div className="flex items-center justify-between gap-3 text-[0.78rem] text-text-2">
         <span>{formatCurrency(budget.spent)}</span>
         <span>{formatCurrency(budget.amount_limit ?? 0)}</span>
       </div>
@@ -1145,26 +1589,26 @@ function RecentActivityRow({
     return (
       <div
         className={cn(
-          'grid gap-2.5 px-3.5 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center',
+          'grid min-h-[3.6rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 px-2.75 py-2 sm:min-h-[4rem] sm:gap-3 sm:px-3 sm:py-2.5',
           className,
         )}
       >
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-soft text-accent-strong">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-7.5 w-7.5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent-strong sm:h-8 sm:w-8">
             <ArrowLeftRight size={16} />
           </span>
-          <div className="grid min-w-0 gap-1">
+          <div className="grid min-w-0 gap-0.5">
             <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
               {transaction.title}
             </strong>
-            <span className="truncate text-xs text-text-3">{supportingMeta}</span>
+            <span className="truncate text-[0.78rem] text-text-2">{supportingMeta}</span>
           </div>
         </div>
-        <div className="grid gap-0.5 sm:justify-items-end">
+        <div className="grid gap-0.5 text-right">
           <strong className="text-sm font-semibold tracking-[-0.03em] text-accent-strong">
             {formatCurrency(transaction.amount)}
           </strong>
-          <span className="text-[0.72rem] text-text-3">
+          <span className="text-[0.74rem] text-text-2">
             {formatShortDate(getTransactionDisplayDate(transaction), language)}
           </span>
         </div>
@@ -1183,13 +1627,13 @@ function RecentActivityRow({
 
   return (
     <div
-      className={cn(
-        'grid gap-2.5 px-3.5 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center',
+        className={cn(
+        'grid min-h-[3.6rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 px-2.75 py-2 sm:min-h-[4rem] sm:gap-3 sm:px-3 sm:py-2.5',
         className,
       )}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-full', toneClassName)}>
+      <div className="flex min-w-0 items-center gap-3">
+        <span className={cn('grid h-7.5 w-7.5 shrink-0 place-items-center rounded-full sm:h-8 sm:w-8', toneClassName)}>
           {getCategoryIcon(
             transaction.categories?.name,
             transaction.type,
@@ -1197,14 +1641,14 @@ function RecentActivityRow({
             transaction.categories?.icon ?? undefined,
           )}
         </span>
-        <div className="grid min-w-0 gap-1">
+        <div className="grid min-w-0 gap-0.5">
           <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
             {transaction.title || transaction.note || t('common.noNote')}
           </strong>
-          <span className="truncate text-xs text-text-3">{supportingMeta}</span>
+          <span className="truncate text-[0.78rem] text-text-2">{supportingMeta}</span>
         </div>
       </div>
-      <div className="grid gap-0.5 sm:justify-items-end">
+      <div className="grid gap-0.5 text-right">
         <strong
           className={cn(
             'text-sm font-semibold tracking-[-0.03em]',
@@ -1214,7 +1658,7 @@ function RecentActivityRow({
           {transaction.type === 'income' ? '+' : '-'}
           {formatCurrency(transaction.amount)}
         </strong>
-        <span className="text-[0.72rem] text-text-3">
+        <span className="text-[0.74rem] text-text-2">
           {formatShortDate(getTransactionDisplayDate(transaction), language)}
         </span>
       </div>
@@ -1240,7 +1684,7 @@ function WishlistReviewRow({
     <Link
       href="/wishlist"
       className={cn(
-        'flex items-center justify-between gap-3.5 px-3.5 py-3 transition-all duration-300 hover:bg-surface-2/75',
+        'flex min-h-[var(--list-row-min-height)] items-center justify-between gap-3.5 px-3 py-3 transition-all duration-300 hover:bg-surface-2/75',
         className,
       )}
     >
@@ -1256,7 +1700,7 @@ function WishlistReviewRow({
             {item.item_name}
           </strong>
         </div>
-        <span className="truncate text-xs text-text-3">
+        <span className="truncate text-[0.78rem] text-text-2">
           {getWishlistCountdownLabel(item, language)}
         </span>
       </div>
@@ -1267,9 +1711,20 @@ function WishlistReviewRow({
   );
 }
 
-function ChartSurface({ children }: { children: ReactNode }) {
+function ChartSurface({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/35 px-2 py-2 sm:px-3">
+    <div
+      className={cn(
+        'rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/22 px-2 py-2 sm:px-2.5',
+        className,
+      )}
+    >
       {children}
     </div>
   );

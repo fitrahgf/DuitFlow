@@ -12,7 +12,7 @@ export function FilterToolbar({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("grid gap-3", className)} {...props} />;
+  return <div className={cn("grid gap-2.5", className)} {...props} />;
 }
 
 export function ToolbarActions({
@@ -22,7 +22,7 @@ export function ToolbarActions({
   return (
     <div
       className={cn(
-        "flex gap-2 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden",
+        "flex gap-2 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden [&>*]:shrink-0",
         className,
       )}
       {...props}
@@ -47,14 +47,14 @@ export function FilterGroup({
   return (
     <div
       className={cn(
-        "grid gap-1.5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center",
+        "grid gap-1.5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center md:gap-3",
         className,
       )}
       {...props}
     >
       <span
         className={cn(
-          "text-[0.74rem] font-semibold uppercase tracking-[0.14em] text-text-3 md:text-sm md:font-medium md:normal-case md:tracking-normal",
+          "text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3 md:text-[0.72rem] md:tracking-[0.14em]",
           labelClassName,
         )}
       >
@@ -90,7 +90,7 @@ export function FilterField({
     <div className={cn("grid gap-2", className)} {...props}>
       <label
         className={cn(
-          "text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-text-3",
+          "text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3",
           labelClassName,
         )}
         htmlFor={htmlFor}
@@ -106,9 +106,7 @@ export function FilterFieldGrid({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("grid gap-4 md:grid-cols-2", className)} {...props} />
-  );
+  return <div className={cn("grid gap-3 md:grid-cols-2", className)} {...props} />;
 }
 
 interface FilterSearchFieldProps {
@@ -136,7 +134,7 @@ export function FilterSearchField({
     <label
       htmlFor={id}
       className={cn(
-        "flex min-h-[2.95rem] items-center gap-3 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/70 px-3.5 transition-all duration-300 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/70 sm:min-h-[3.15rem] sm:px-4",
+        "flex min-h-[var(--control-height)] items-center gap-2.5 rounded-[var(--radius-control)] border border-border-subtle bg-surface-2/65 px-3.5 transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/75",
         className,
       )}
     >
@@ -172,7 +170,7 @@ export function FilterSelect({
 }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <NativeSelect
-      className={cn("min-h-[3rem] rounded-xl px-4 py-3", className)}
+      className={cn("min-h-[var(--control-height)] rounded-[var(--radius-control)] px-3.5", className)}
       {...props}
     />
   );

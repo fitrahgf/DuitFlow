@@ -13,7 +13,6 @@ import {
 } from "@/features/subscriptions/hooks";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
-  MetricCard,
   PageHeader,
   PageHeaderActions,
   PageHeading,
@@ -23,7 +22,6 @@ import {
 } from "@/components/shared/PagePrimitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
@@ -33,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/components/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 function getSubscriptionStateLabel(isActive: boolean, language: "en" | "id") {
   if (isActive) {
@@ -40,6 +39,39 @@ function getSubscriptionStateLabel(isActive: boolean, language: "en" | "id") {
   }
 
   return language === "id" ? "Dijeda" : "Paused";
+}
+
+function SubscriptionOverviewStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "default" | "accent" | "success" | "warning";
+}) {
+  const dotClassName =
+    tone === "accent"
+      ? "bg-accent"
+      : tone === "success"
+        ? "bg-success"
+        : tone === "warning"
+          ? "bg-warning"
+          : "bg-text-3/35";
+
+  return (
+    <div className="grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0">
+      <div className="inline-flex items-center gap-2">
+        <span className={cn("h-1.5 w-1.5 rounded-full", dotClassName)} aria-hidden="true" />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+    </div>
+  );
 }
 
 export default function SubscriptionsPage() {
@@ -169,45 +201,51 @@ export default function SubscriptionsPage() {
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label={t("subscriptions.totalMonthly")}
-          value={loading ? "..." : formatCurrency(monthlyTotal)}
-          tone="accent"
-        />
-        <MetricCard
-          label={t("subscriptions.activeServices")}
-          value={loading ? "..." : activeSubscriptions.length}
-          tone="success"
-        />
-        <MetricCard
-          label={t("subscriptions.upcoming")}
-          value={loading ? "..." : upcomingCount}
-          tone={upcomingCount > 0 ? "warning" : "default"}
-        />
-        <MetricCard
-          label={t("subscriptions.title")}
-          value={loading ? "..." : subscriptions.length}
-        />
-      </section>
-
       <SurfaceCard>
         <div className="grid gap-3">
-          <SectionHeading
-            title={language === "id" ? "Daftar langganan" : "Subscription list"}
-          />
+          <div className="grid gap-3 border-b border-border-subtle/80 pb-3">
+            <SectionHeading
+              title={language === "id" ? "Daftar langganan" : "Subscription list"}
+            />
+            <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/80">
+              <SubscriptionOverviewStat
+                label={t("subscriptions.totalMonthly")}
+                value={loading ? "..." : formatCurrency(monthlyTotal)}
+                tone="accent"
+              />
+              <SubscriptionOverviewStat
+                label={t("subscriptions.activeServices")}
+                value={loading ? "..." : activeSubscriptions.length}
+                tone="success"
+              />
+              <SubscriptionOverviewStat
+                label={t("subscriptions.upcoming")}
+                value={loading ? "..." : upcomingCount}
+                tone={upcomingCount > 0 ? "warning" : "default"}
+              />
+              <SubscriptionOverviewStat
+                label={t("subscriptions.title")}
+                value={loading ? "..." : subscriptions.length}
+              />
+            </div>
+          </div>
 
           {loading ? (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {Array.from({ length: 3 }).map((_, index) => (
-                <Card
+                <div
                   key={`subscription-skeleton-${index}`}
-                  className="grid gap-4 p-4 shadow-none"
+                  className="grid gap-3 py-3"
                 >
-                  <div className="skeleton skeleton-line skeleton-line--sm" />
-                  <div className="skeleton skeleton-line skeleton-line--lg" />
-                  <div className="skeleton skeleton-line skeleton-line--md" />
-                </Card>
+                  <div className="flex items-center gap-3">
+                    <div className="skeleton h-10 w-10 rounded-2xl" />
+                    <div className="grid min-w-0 flex-1 gap-2">
+                      <div className="skeleton skeleton-line skeleton-line--sm" />
+                      <div className="skeleton skeleton-line skeleton-line--lg" />
+                    </div>
+                  </div>
+                  <div className="skeleton skeleton-line skeleton-line--md w-40" />
+                </div>
               ))}
             </div>
           ) : subscriptions.length === 0 ? (
@@ -226,7 +264,7 @@ export default function SubscriptionsPage() {
               }
             />
           ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {subscriptions.map((subscription) => {
                 const upcoming =
                   subscription.is_active &&
@@ -235,9 +273,9 @@ export default function SubscriptionsPage() {
                 return (
                   <article
                     key={subscription.id}
-                    className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
+                    className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                   >
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex flex-col gap-3">
                       <div className="flex items-start gap-3">
                         <div
                           className="grid h-10 w-10 place-items-center rounded-2xl"
@@ -278,61 +316,57 @@ export default function SubscriptionsPage() {
                           <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
                             {subscription.name}
                           </strong>
-                          <span className="text-sm text-text-3">
-                            {t("subscriptions.billingOn")}{" "}
-                            {subscription.billing_day}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2 text-[0.82rem] text-text-2">
+                            <span>
+                              {t("subscriptions.billingOn")}{" "}
+                              {subscription.billing_day}
+                            </span>
+                            <span aria-hidden="true">/</span>
+                            <strong className="font-semibold tracking-[-0.02em] text-text-1">
+                              {formatCurrency(subscription.amount)}
+                            </strong>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 lg:justify-end">
-                        <Button
-                          type="button"
-                          variant={
-                            subscription.is_active ? "secondary" : "primary"
-                          }
-                          size="sm"
-                          onClick={() =>
-                            toggleStatus(
-                              subscription.id,
-                              subscription.is_active,
-                            )
-                          }
-                        >
-                          {subscription.is_active ? (
-                            <>
-                              <Pause size={14} />
-                              {t("subscriptions.pause")}
-                            </>
-                          ) : (
-                            <>
-                              <Play size={14} />
-                              {t("subscriptions.resume")}
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 rounded-2xl text-danger"
-                          onClick={() => {
-                            void handleDelete(subscription.id);
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-text-3">
-                      <span>
-                        {t("subscriptions.form.billingDay")}{" "}
-                        {subscription.billing_day}
-                      </span>
-                      <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
-                        {formatCurrency(subscription.amount)}
-                      </strong>
+                    <div className="flex flex-wrap gap-2 lg:col-span-2 lg:justify-end">
+                      <Button
+                        type="button"
+                        variant={
+                          subscription.is_active ? "secondary" : "primary"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          toggleStatus(
+                            subscription.id,
+                            subscription.is_active,
+                          )
+                        }
+                      >
+                        {subscription.is_active ? (
+                          <>
+                            <Pause size={14} />
+                            {t("subscriptions.pause")}
+                          </>
+                        ) : (
+                          <>
+                            <Play size={14} />
+                            {t("subscriptions.resume")}
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-2xl text-danger"
+                        onClick={() => {
+                          void handleDelete(subscription.id);
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
                   </article>
                 );
@@ -354,7 +388,7 @@ export default function SubscriptionsPage() {
           <form className="grid gap-4 pt-2" onSubmit={handleSubmit}>
             <div className="grid gap-2">
               <label
-                className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                 htmlFor="subscription-name"
               >
                 {t("subscriptions.form.name")}
@@ -372,7 +406,7 @@ export default function SubscriptionsPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="subscription-price"
                 >
                   {t("subscriptions.form.price")}
@@ -389,7 +423,7 @@ export default function SubscriptionsPage() {
 
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="subscription-billing-day"
                 >
                   {t("subscriptions.form.billingDay")}

@@ -284,10 +284,11 @@ export default function QuickAddComposer({
       : ['coffee 18k cash', 'salary 5m bca', 'fuel 50k dana'];
   const statusBadgeVariant =
     preview?.status === 'ready' ? 'success' : preview?.status === 'partial' ? 'warning' : 'default';
+  const isPanel = variant === 'panel';
 
   return (
-    <div className={cn('grid gap-2.5', variant === 'sheet' && 'gap-2.5')}>
-      <form className="grid gap-2.5" onSubmit={handleSubmit}>
+    <div className={cn('grid', isPanel ? 'gap-2' : 'gap-2.5')}>
+      <form className={cn('grid', isPanel ? 'gap-2' : 'gap-2.5')} onSubmit={handleSubmit}>
         <Input
           ref={inputRef}
           type="text"
@@ -303,8 +304,9 @@ export default function QuickAddComposer({
 
         {preview ? (
           <Card
-              className={cn(
-                'grid gap-2.5 border p-3 shadow-none md:p-3.5',
+            className={cn(
+                'grid border shadow-none',
+                isPanel ? 'gap-2 p-2.5 md:p-3' : 'gap-2.5 p-3 md:p-3.5',
                 preview.status === 'ready'
                   ? 'border-success/18 bg-success-soft/35'
                   : 'border-border-subtle bg-surface-2/55'
@@ -321,7 +323,7 @@ export default function QuickAddComposer({
             </div>
 
             <div className="grid gap-2">
-              <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
+              <strong className={cn('font-semibold tracking-[-0.03em] text-text-1', isPanel ? 'text-[0.95rem]' : 'text-base')}>
                 {preview.title || t('dashboard.quickAdd.missingTitle')}
               </strong>
 
@@ -350,7 +352,12 @@ export default function QuickAddComposer({
         ) : null}
 
         {showSuggestions || showTransferHint ? (
-            <div className="grid gap-2.5 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-3 animate-fade-in">
+          <div
+            className={cn(
+              'grid rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 animate-fade-in',
+              isPanel ? 'gap-2 p-2.5' : 'gap-2.5 p-3',
+            )}
+          >
             {showTransferHint ? (
               <Button asChild variant="secondary" className="justify-start">
                 <Link href="/transfer">
@@ -375,7 +382,10 @@ export default function QuickAddComposer({
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
-                        className={cn('min-h-[2.45rem] rounded-[var(--radius-control)] px-3', selected && 'ring-2 ring-accent-soft')}
+                        className={cn(
+                          isPanel ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3' : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
+                          selected && 'ring-2 ring-accent-soft',
+                        )}
                         onClick={() => setOverrideCategoryId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -403,7 +413,10 @@ export default function QuickAddComposer({
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
-                        className={cn('min-h-[2.45rem] rounded-[var(--radius-control)] px-3', selected && 'ring-2 ring-accent-soft')}
+                        className={cn(
+                          isPanel ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3' : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
+                          selected && 'ring-2 ring-accent-soft',
+                        )}
                         onClick={() => setOverrideWalletId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -453,7 +466,11 @@ export default function QuickAddComposer({
               type="button"
               variant="secondary"
               size="sm"
-              className="min-h-[2.15rem] rounded-[var(--radius-control)] px-3 text-accent-strong"
+              className={cn(
+                isPanel
+                  ? 'min-h-[2rem] rounded-[var(--radius-control)] px-3 text-accent-strong'
+                  : 'min-h-[2.15rem] rounded-[var(--radius-control)] px-3 text-accent-strong',
+              )}
               onClick={() => {
                 setInput(example);
                 setOverrideCategoryId(null);
@@ -479,7 +496,7 @@ export default function QuickAddComposer({
 
 function QuickAddChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex min-h-[1.9rem] items-center rounded-full border border-border-subtle bg-surface-1 px-2.75 py-1 text-[0.84rem] font-medium text-text-2">
+    <span className="inline-flex min-h-[var(--chip-height)] items-center rounded-full border border-border-subtle bg-surface-1 px-3 py-1 text-[0.84rem] font-medium text-text-2">
       {children}
     </span>
   );

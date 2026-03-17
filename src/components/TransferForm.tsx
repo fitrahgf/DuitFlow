@@ -190,19 +190,19 @@ export default function TransferForm({
 
   return (
     <form
-      className="grid gap-4 rounded-[inherit] bg-surface-1 p-4 md:p-5"
+      className="grid gap-3 rounded-[inherit] bg-surface-1 p-3 md:gap-4 md:p-5"
       onSubmit={handleSubmit((values) => transferMutation.mutate(values))}
     >
-      <div className="grid gap-1">
+      <div className="grid gap-0.5">
         <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
           {transfer ? t("transfers.form.edit") : t("transfers.form.new")}
         </span>
-        <h3 className="text-lg font-semibold tracking-[-0.03em]">
+        <h3 className="text-[1.02rem] font-semibold tracking-[-0.03em] md:text-lg">
           {formTitle}
         </h3>
       </div>
 
-      <FormSection step="01" title={essentialTitle} contentClassName="gap-3">
+      <FormSection step="01" title={essentialTitle} contentClassName="gap-2.5">
         <FieldRow>
           <FormField>
             <FormLabel htmlFor="transfer-from-wallet">
@@ -210,6 +210,7 @@ export default function TransferForm({
             </FormLabel>
             <NativeSelect
               id="transfer-from-wallet"
+              aria-invalid={errors.from_wallet_id ? "true" : "false"}
               {...register("from_wallet_id")}
               disabled={walletsQuery.isLoading}
             >
@@ -235,6 +236,7 @@ export default function TransferForm({
             </FormLabel>
             <NativeSelect
               id="transfer-to-wallet"
+              aria-invalid={errors.to_wallet_id ? "true" : "false"}
               {...register("to_wallet_id")}
               disabled={walletsQuery.isLoading}
             >
@@ -270,7 +272,8 @@ export default function TransferForm({
                   onBlur={field.onBlur}
                   onNumberValueChange={field.onChange}
                   ref={field.ref}
-                  className="min-h-[2.85rem] px-3.5 py-2.5"
+                  aria-invalid={errors.amount ? "true" : "false"}
+                  className="min-h-[2.8rem] px-3.5 py-2"
                 />
               )}
             />
@@ -283,7 +286,7 @@ export default function TransferForm({
         </FieldRow>
       </FormSection>
 
-      <FormSection step="02" title={detailsTitle} contentClassName="gap-3">
+      <FormSection step="02" title={detailsTitle} contentClassName="gap-2.5">
         <FieldRow>
           <FormField>
             <FormLabel htmlFor="transfer-date">
@@ -292,7 +295,8 @@ export default function TransferForm({
             <Input
               id="transfer-date"
               type="date"
-              className="min-h-[2.85rem] px-3.5 py-2.5"
+              aria-invalid={errors.transfer_date ? "true" : "false"}
+              className="min-h-[2.8rem] px-3.5 py-2"
               {...register("transfer_date")}
             />
           </FormField>
@@ -313,7 +317,8 @@ export default function TransferForm({
                   onBlur={field.onBlur}
                   onNumberValueChange={field.onChange}
                   ref={field.ref}
-                  className="min-h-[2.85rem] px-3.5 py-2.5"
+                  aria-invalid={errors.fee_amount ? "true" : "false"}
+                  className="min-h-[2.8rem] px-3.5 py-2"
                 />
               )}
             />
@@ -334,14 +339,14 @@ export default function TransferForm({
           <Input
             id="transfer-note"
             type="text"
-            className="min-h-[2.85rem] px-3.5 py-2.5"
+            className="min-h-[2.8rem] px-3.5 py-2"
             placeholder={t("transfers.form.notePlaceholder")}
             {...register("note")}
           />
         </FormField>
       </FormSection>
 
-      <SaveHints>
+      <SaveHints className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <FormMetaChip
           icon={<ArrowLeftRight size={15} />}
           value={transferRouteLabel}
@@ -356,7 +361,7 @@ export default function TransferForm({
         />
       </SaveHints>
 
-      <FormActions className="md:grid-cols-2">
+      <FormActions className="sm:grid-cols-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>

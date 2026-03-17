@@ -10,16 +10,16 @@ import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider
 import { useLanguage } from '@/components/LanguageProvider';
 import {
   PageHeader,
+  PageHeaderActions,
   PageHeading,
   PageShell,
 } from '@/components/shared/PagePrimitives';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  DashboardDesktopInsightsSection,
   DashboardMobilePanelsSection,
   DashboardOnboardingSection,
   DashboardQuickTransactionDialog,
-  DashboardRecentTransactionsSection,
   DashboardTopSection,
 } from '@/features/dashboard/components/DashboardSections';
 import { TRANSACTIONS_CHANGED_EVENT } from '@/lib/events';
@@ -219,15 +219,28 @@ export function DashboardPageContent() {
   const hasCategoryBreakdown = categoryData.labels.length > 0;
 
   return (
-    <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading eyebrow="Workspace" title={t('dashboard.title')} />
-        <Button asChild variant="secondary" className="hidden sm:inline-flex">
-          <Link href="/wallets">
-            <Wallet size={16} />
-            {t('nav.wallets')}
-          </Link>
-        </Button>
+    <PageShell className="animate-fade-in gap-3 xl:gap-3.5">
+      <PageHeader className="gap-2.5">
+        <PageHeading
+          eyebrow="Workspace"
+          title={t('dashboard.title')}
+          subtitle={
+            language === 'id'
+              ? 'Saldo, aktivitas, dan fokus bulan ini dalam satu ringkasan singkat.'
+              : 'Balance, activity, and monthly focus in one compact overview.'
+          }
+        />
+        <PageHeaderActions className="max-sm:hidden">
+          <Badge variant="accent" className="hidden lg:inline-flex">
+            {data?.monthKey ?? '---- --'}
+          </Badge>
+          <Button asChild variant="secondary" className="hidden sm:inline-flex">
+            <Link href="/wallets">
+              <Wallet size={16} />
+              {t('nav.wallets')}
+            </Link>
+          </Button>
+        </PageHeaderActions>
       </PageHeader>
 
       <DashboardTopSection
@@ -237,6 +250,7 @@ export function DashboardPageContent() {
         totalIncome={totalIncome}
         totalExpense={totalExpense}
         totalTransfers={totalTransfers}
+        recentTransactions={recentTransactions}
         wallets={wallets}
         topWallets={topWallets}
         totalWalletBalance={totalBalance}
@@ -251,6 +265,11 @@ export function DashboardPageContent() {
         language={language}
         t={t}
         formatCurrency={formatCurrency}
+        insightView={insightView}
+        onInsightViewChange={setInsightView}
+        barData={barData}
+        categoryData={categoryData}
+        hasCategoryBreakdown={hasCategoryBreakdown}
         onReviewQuickAdd={(draft) => {
           setQuickFormPrefill(draft);
           setQuickFormOpen(true);
@@ -264,25 +283,6 @@ export function DashboardPageContent() {
         nextSetupStep={nextSetupStep}
         t={t}
       />
-
-      <section className="grid gap-2.5 xl:items-start xl:grid-cols-[minmax(0,1.08fr)_minmax(18.25rem,0.86fr)]">
-        <DashboardRecentTransactionsSection
-          loading={loading}
-          recentTransactions={recentTransactions}
-          language={language}
-          t={t}
-          formatCurrency={formatCurrency}
-        />
-        <DashboardDesktopInsightsSection
-          insightView={insightView}
-          onInsightViewChange={setInsightView}
-          language={language}
-          t={t}
-          barData={barData}
-          categoryData={categoryData}
-          hasCategoryBreakdown={hasCategoryBreakdown}
-        />
-      </section>
 
       <DashboardQuickTransactionDialog
         open={quickFormOpen}

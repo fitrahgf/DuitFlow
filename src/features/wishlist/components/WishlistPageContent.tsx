@@ -348,7 +348,7 @@ export function WishlistPageContent() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t("wishlist.title")} />
+        <PageHeading title={t("wishlist.title")} subtitle={t("wishlist.subtitle")} />
         <PageHeaderActions>
           <Button
             type="button"

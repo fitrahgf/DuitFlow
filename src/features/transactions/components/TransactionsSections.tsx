@@ -75,10 +75,22 @@ export function TransactionsFiltersSection({
   onResetAll,
   getPeriodLabel,
 }: TransactionsFiltersSectionProps) {
+  const mobileFilterSummary =
+    hasActiveFilters && activeFilterChips.length > 0
+      ? language === "id"
+        ? `${activeFilterChips.length} filter aktif`
+        : `${activeFilterChips.length} active filters`
+      : language === "id"
+        ? "Tipe dan periode cepat"
+        : "Quick type and period";
+
   return (
-    <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
-      <FilterToolbar>
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+    <SurfaceCard
+      padding="compact"
+      className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
+    >
+      <FilterToolbar className="gap-2.5">
+        <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <FilterSearchField
             id="transaction-search"
             value={filters.search}
@@ -96,10 +108,11 @@ export function TransactionsFiltersSection({
             }
             clearLabel={t("transactions.clearSearch")}
             placeholder={t("transactions.searchPlaceholder")}
-            className="bg-surface-2/55"
+            className="bg-surface-1"
+            inputClassName="text-[0.82rem]"
           />
 
-          <ToolbarActions>
+          <ToolbarActions className="sm:justify-end">
             <Button
               type="button"
               variant="secondary"
@@ -125,14 +138,120 @@ export function TransactionsFiltersSection({
           </ToolbarActions>
         </div>
 
-        <div className="grid gap-3">
+        <details className="group rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-2/35 sm:hidden">
+          <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
+            <div className="grid gap-0.5">
+              <strong className="text-[0.78rem] font-semibold tracking-[-0.03em] text-text-1">
+                {language === "id" ? "Filter cepat" : "Quick filters"}
+              </strong>
+              <span className="text-[0.72rem] text-text-3">{mobileFilterSummary}</span>
+            </div>
+            <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">
+              v
+            </span>
+          </summary>
+
+          <div className="grid gap-2.5 border-t border-border-subtle px-3 py-2.5">
+            <FilterGroup
+              label={t("transactions.quickType")}
+              labelClassName="text-[0.64rem]"
+              contentClassName="gap-1.5"
+            >
+              {(["all", "expense", "income", "transfer"] as const).map((type) => (
+                <Button
+                  key={type}
+                  type="button"
+                  size="sm"
+                  variant={filters.type === type ? "primary" : "ghost"}
+                  className={cn(
+                    "px-2.5",
+                    filters.type !== type &&
+                      "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
+                  )}
+                  onClick={() =>
+                    onReplaceFilters({
+                      ...filters,
+                      type,
+                    })
+                  }
+                >
+                  {t(`transactions.${type}`)}
+                </Button>
+              ))}
+            </FilterGroup>
+
+            <FilterGroup
+              label={t("transactions.quickPeriod")}
+              labelClassName="text-[0.64rem]"
+              contentClassName="gap-1.5"
+            >
+              {(["all", "30d", "7d", "month"] as const).map((period) => (
+                <Button
+                  key={period}
+                  type="button"
+                  size="sm"
+                  variant={filters.period === period ? "primary" : "ghost"}
+                  className={cn(
+                    "px-2.5",
+                    filters.period !== period &&
+                      "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
+                  )}
+                  onClick={() =>
+                    onReplaceFilters({
+                      ...filters,
+                      period,
+                      customFrom: "",
+                      customTo: "",
+                    })
+                  }
+                >
+                  {getPeriodLabel(period, t)}
+                </Button>
+              ))}
+            </FilterGroup>
+
+            {activeFilterChips.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-border-subtle/80 pt-2">
+                {visibleFilterChips.map((chip) => (
+                  <Badge
+                    key={chip}
+                    className="min-h-0 whitespace-nowrap border-border-subtle/80 bg-surface-2/80 px-2 py-0 text-[0.64rem] font-medium text-text-2"
+                  >
+                    {chip}
+                  </Badge>
+                ))}
+                {hiddenChipCount > 0 ? (
+                  <span className="whitespace-nowrap text-[0.72rem] text-text-3">
+                    +{hiddenChipCount} {language === "id" ? "filter lain" : "more"}
+                  </span>
+                ) : null}
+                {hasActiveFilters ? (
+                  <button
+                    type="button"
+                    className="whitespace-nowrap text-[0.72rem] font-medium text-text-3 transition hover:text-text-1"
+                    onClick={onResetAll}
+                  >
+                    {t("transactions.resetAll")}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </details>
+
+        <div className="hidden gap-2.5 lg:grid-cols-2 lg:gap-3 sm:grid">
           <FilterGroup label={t("transactions.quickType")}>
             {(["all", "expense", "income", "transfer"] as const).map((type) => (
               <Button
                 key={type}
                 type="button"
                 size="sm"
-                variant={filters.type === type ? "primary" : "secondary"}
+                variant={filters.type === type ? "primary" : "ghost"}
+                className={cn(
+                  "px-2.5",
+                  filters.type !== type &&
+                    "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
+                )}
                 onClick={() =>
                   onReplaceFilters({
                     ...filters,
@@ -151,7 +270,12 @@ export function TransactionsFiltersSection({
                 key={period}
                 type="button"
                 size="sm"
-                variant={filters.period === period ? "primary" : "secondary"}
+                variant={filters.period === period ? "primary" : "ghost"}
+                className={cn(
+                  "px-2.5",
+                  filters.period !== period &&
+                    "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
+                )}
                 onClick={() =>
                   onReplaceFilters({
                     ...filters,
@@ -168,24 +292,24 @@ export function TransactionsFiltersSection({
         </div>
 
         {activeFilterChips.length > 0 ? (
-          <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="hidden flex-wrap items-center gap-1.5 border-t border-border-subtle/80 pt-2 sm:flex">
             {visibleFilterChips.map((chip) => (
               <Badge
                 key={chip}
-                className="bg-surface-2 text-text-2 whitespace-nowrap"
+                className="min-h-0 whitespace-nowrap border-border-subtle/80 bg-surface-2/80 px-2 py-0 text-[0.64rem] font-medium text-text-2"
               >
                 {chip}
               </Badge>
             ))}
             {hiddenChipCount > 0 ? (
-              <span className="whitespace-nowrap text-sm text-text-3">
+              <span className="whitespace-nowrap text-[0.72rem] text-text-3">
                 +{hiddenChipCount} {language === "id" ? "filter lain" : "more"}
               </span>
             ) : null}
             {hasActiveFilters ? (
               <button
                 type="button"
-                className="whitespace-nowrap text-sm font-medium text-text-3 transition hover:text-text-1"
+                className="whitespace-nowrap text-[0.72rem] font-medium text-text-3 transition hover:text-text-1"
                 onClick={onResetAll}
               >
                 {t("transactions.resetAll")}
@@ -226,7 +350,7 @@ export function TransactionsInsightsSection({
   return (
     <>
       <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden">
-        <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+        <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
           <div className="grid gap-0.5">
             <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
               {t("transactions.insightTitle")}
@@ -239,24 +363,28 @@ export function TransactionsInsightsSection({
             v
           </span>
         </summary>
-        <div className="border-t border-border-subtle px-3.5 py-3">
-          <div className="grid gap-3">
+        <div className="border-t border-border-subtle px-3 py-2.5">
+          <div className="grid gap-2">
             <div className="grid grid-cols-2 gap-2.5">
               <MetricCard
                 label={t("transactions.summary.currentWindow")}
                 value={formatCurrency(searchSummary.currentTotal)}
+                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
               />
               <MetricCard
                 label={t("transactions.summary.last30Days")}
                 value={formatCurrency(searchSummary.last30DaysTotal)}
+                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
               />
               <MetricCard
                 label={t("transactions.summary.average")}
                 value={formatCurrency(searchSummary.averageAmount)}
+                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
               />
               <MetricCard
                 label={t("transactions.summary.count")}
                 value={searchSummary.count}
+                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
               />
             </div>
 
@@ -276,26 +404,33 @@ export function TransactionsInsightsSection({
         </div>
       </details>
 
-      <SurfaceCard className="hidden sm:block xl:sticky xl:top-4">
-        <div className="grid gap-4">
+      <SurfaceCard
+        padding="compact"
+        className="hidden sm:block xl:sticky xl:top-[var(--page-top-space)]"
+      >
+        <div className="grid gap-2.5">
           <SectionHeading title={t("transactions.insightTitle")} />
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-2">
             <MetricCard
               label={t("transactions.summary.currentWindow")}
               value={formatCurrency(searchSummary.currentTotal)}
+              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
             />
             <MetricCard
               label={t("transactions.summary.last30Days")}
               value={formatCurrency(searchSummary.last30DaysTotal)}
+              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
             />
             <MetricCard
               label={t("transactions.summary.average")}
               value={formatCurrency(searchSummary.averageAmount)}
+              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
             />
             <MetricCard
               label={t("transactions.summary.count")}
               value={searchSummary.count}
+              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
             />
           </div>
 
@@ -632,7 +767,7 @@ export function TransactionsResultsSection({
   deleteTransferPending,
 }: TransactionsResultsSectionProps) {
   return (
-    <SurfaceCard>
+    <SurfaceCard padding="compact">
       {isLoading ? (
         <EmptyState title={t("common.loading")} compact />
       ) : isError ? (
@@ -648,7 +783,7 @@ export function TransactionsResultsSection({
           icon={<Search size={20} />}
         />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-1.5">
           {filteredTransactions.map((transaction) => (
             <TransactionRow
               key={transaction.id}
@@ -682,9 +817,9 @@ export function TransactionsInsightsLayout({
   return (
     <section
       className={cn(
-        "grid gap-3.5",
+        "grid gap-3",
         hasActiveFilters &&
-          "xl:grid-cols-[minmax(0,1.18fr)_minmax(19rem,0.82fr)] xl:items-start",
+          "xl:grid-cols-[minmax(0,1.5fr)_minmax(18.5rem,0.5fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.62fr)_minmax(20rem,0.46fr)]",
       )}
     >
       {children}

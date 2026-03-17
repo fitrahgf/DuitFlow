@@ -32,7 +32,7 @@ export default function QuickTransactionSheet({
         side="bottom"
         hideClose
         data-testid="quick-transaction-sheet"
-        className="max-w-[34rem] rounded-t-[var(--radius-sheet)] px-3.5 pb-[calc(0.85rem+var(--safe-bottom))] pt-2.5"
+        className="max-w-[34rem] rounded-t-[var(--radius-sheet)] px-[var(--page-gutter)] pb-[calc(var(--page-bottom-space)+var(--safe-bottom))] pt-2"
       >
         <div className="mx-auto mb-2 h-1 w-9 rounded-full bg-border-strong" />
         <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-border-subtle/75 pb-2">
@@ -44,7 +44,7 @@ export default function QuickTransactionSheet({
                 size="icon"
                 onClick={() => setReviewDraft(null)}
                 aria-label={t('dashboard.quickAdd.backToQuickAdd')}
-                className="h-[2.375rem] w-[2.375rem] shrink-0"
+                className="shrink-0"
               >
                 <ArrowLeft size={18} />
               </Button>
@@ -58,7 +58,6 @@ export default function QuickTransactionSheet({
               size="icon"
               onClick={handleClose}
               aria-label={t('nav.closeSheet')}
-              className="h-[2.375rem] w-[2.375rem]"
             >
               <X size={18} />
             </Button>

@@ -20,9 +20,11 @@ export function FormSection({
   ...props
 }: FormSectionProps) {
   return (
-    <section className={cn("grid gap-3", className)} {...props}>
+    <section className={cn("grid gap-2.5", className)} {...props}>
       <FormSectionHeader step={step} title={title} description={description} />
-      <div className={cn("grid gap-2.5", contentClassName)}>{children}</div>
+      <div className="rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-2/35 p-3 shadow-none sm:p-3.5">
+        <div className={cn("grid gap-2.5", contentClassName)}>{children}</div>
+      </div>
     </section>
   );
 }
@@ -32,7 +34,7 @@ export function FieldRow({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("grid gap-3 md:grid-cols-2", className)} {...props} />
+    <div className={cn("grid gap-2.5 md:grid-cols-2", className)} {...props} />
   );
 }
 
@@ -48,9 +50,9 @@ export function FormActions({
   return (
     <div
       className={cn(
-        "grid gap-2.5",
+        "grid gap-2",
         sticky &&
-          "sticky bottom-0 z-10 -mx-1 grid-cols-1 border-t border-border-subtle bg-surface-1 px-1 pb-1 pt-3",
+          "sticky bottom-0 z-10 grid-cols-1 border-t border-border-subtle/80 bg-surface-1/96 pb-[calc(0.25rem+var(--safe-bottom))] pt-3 backdrop-blur",
         className,
       )}
       {...props}
@@ -68,12 +70,12 @@ export function SaveHints({
   return (
     <Card
       className={cn(
-        "border-border-subtle bg-surface-2/55 p-3 shadow-none",
+        "border-border-subtle/90 bg-surface-2/42 p-2.5 shadow-none",
         className,
       )}
       {...props}
     >
-      <div className="flex flex-wrap items-center gap-2 text-sm text-text-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-[0.78rem] text-text-2">
         {children}
       </div>
     </Card>

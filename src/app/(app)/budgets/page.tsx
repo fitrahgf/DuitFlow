@@ -19,7 +19,6 @@ import { FieldError } from "@/components/shared/FieldError";
 import { useLanguage } from "@/components/LanguageProvider";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
-  MetricCard,
   PageHeader,
   PageHeaderActions,
   PageHeading,
@@ -48,6 +47,7 @@ import {
   TRANSACTIONS_CHANGED_EVENT,
 } from "@/lib/events";
 import { getErrorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 import { queryKeys } from "@/lib/queries/keys";
 import { fetchBudgetOverview, type BudgetRecord } from "@/lib/queries/budgets";
 import { fetchCategories } from "@/lib/queries/reference";
@@ -111,6 +111,103 @@ const toneToBadgeVariant: Record<BudgetTone, "success" | "warning" | "danger"> =
     warning: "warning",
     danger: "danger",
   };
+
+function BudgetInlineEmpty({
+  title,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-dashed border-border-subtle bg-surface-2/45 px-3 py-3">
+      <div className="flex items-start gap-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)+0.02rem)] bg-surface-1 text-text-3">
+          <Target size={17} />
+        </span>
+        <div className="grid gap-1">
+          <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+            {title}
+          </strong>
+          {actionLabel && onAction ? (
+            <div>
+              <Button type="button" variant="secondary" size="sm" onClick={onAction}>
+                {actionLabel}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BudgetSummaryStripStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "accent" | "success" | "danger";
+}) {
+  const toneClassName =
+    tone === "accent"
+      ? "text-accent-strong"
+      : tone === "success"
+        ? "text-success"
+        : tone === "danger"
+          ? "text-danger"
+          : "text-text-1";
+
+  return (
+    <div className="grid gap-0.5 px-3 py-2.5 first:pl-0 last:pr-0 sm:min-h-[4.1rem]">
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+        {label}
+      </span>
+      <strong className={cn("text-[0.98rem] font-semibold tracking-[-0.04em]", toneClassName)}>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function BudgetUtilityStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string | number;
+  tone?: "default" | "accent" | "success" | "warning" | "danger";
+}) {
+  const dotToneClassName =
+    tone === "accent"
+      ? "bg-accent"
+      : tone === "success"
+        ? "bg-success"
+        : tone === "warning"
+          ? "bg-warning"
+          : tone === "danger"
+            ? "bg-danger"
+            : "bg-text-3/35";
+
+  return (
+    <div className="grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0">
+      <div className="inline-flex items-center gap-2">
+        <span className={cn("h-1.5 w-1.5 rounded-full", dotToneClassName)} aria-hidden="true" />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+    </div>
+  );
+}
 
 export default function BudgetsPage() {
   const { t, language } = useLanguage();
@@ -388,6 +485,31 @@ export default function BudgetsPage() {
   };
 
   const monthLabel = formatMonthLabel(monthKey, language);
+  const untrackedPanel = (
+    <SurfaceCard padding="compact">
+      <div className="grid gap-2.5">
+        <SectionHeading title={t("budgets.untrackedTitle")} />
+
+        {untrackedSpending.length === 0 ? (
+          <BudgetInlineEmpty title={t("budgets.noUntracked")} />
+        ) : (
+          <div className="grid gap-0 divide-y divide-border-subtle/80">
+            {untrackedSpending.map((item) => (
+              <div
+                key={item.id}
+                className="list-row flex min-h-0 items-center justify-between gap-4 px-3 py-2 first:pt-0 last:pb-0"
+              >
+                <span className="text-[0.84rem] text-text-2">{item.name}</span>
+                <strong className="text-[0.84rem] font-semibold tracking-[-0.03em] text-text-1">
+                  {formatCurrency(item.spent)}
+                </strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </SurfaceCard>
+  );
 
   return (
     <PageShell className="animate-fade-in">
@@ -415,44 +537,71 @@ export default function BudgetsPage() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="h-10 w-10 rounded-2xl"
-            onClick={() =>
-              setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))
-            }
-            aria-label={t("budgets.previousMonth")}
-            title={t("budgets.previousMonth")}
-          >
-            <ChevronLeft size={16} />
-          </Button>
+      <SurfaceCard
+        padding="compact"
+        className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
+      >
+        <div className="grid gap-3">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-8 w-8 min-w-[2rem] rounded-full"
+              onClick={() =>
+                setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))
+              }
+              aria-label={t("budgets.previousMonth")}
+              title={t("budgets.previousMonth")}
+            >
+              <ChevronLeft size={16} />
+            </Button>
 
-          <div className="grid min-w-0 gap-0.5 text-center">
-            <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-              {t("budgets.currentMonth")}
-            </span>
-            <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1 sm:text-base">
-              {monthLabel}
-            </strong>
+            <div className="grid min-w-0 gap-0.5 text-center">
+              <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                {t("budgets.currentMonth")}
+              </span>
+              <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[1rem]">
+                {monthLabel}
+              </strong>
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-8 w-8 min-w-[2rem] rounded-full"
+              onClick={() =>
+                setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))
+              }
+              aria-label={t("budgets.nextMonth")}
+              title={t("budgets.nextMonth")}
+            >
+              <ChevronRight size={16} />
+            </Button>
           </div>
 
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="h-10 w-10 rounded-2xl"
-            onClick={() =>
-              setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))
-            }
-            aria-label={t("budgets.nextMonth")}
-            title={t("budgets.nextMonth")}
-          >
-            <ChevronRight size={16} />
-          </Button>
+          <div className="grid gap-0 border-t border-border-subtle/85 pt-2 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/85 xl:pt-3">
+            <BudgetUtilityStat
+              label={t("budgets.summary.spent")}
+              value={formatCurrency(totalSpent)}
+              tone="danger"
+            />
+            <BudgetUtilityStat
+              label={t("budgets.summary.limit")}
+              value={overallLimit > 0 ? formatCurrency(overallLimit) : "-"}
+              tone="accent"
+            />
+            <BudgetUtilityStat
+              label={t("budgets.summary.remaining")}
+              value={overallLimit > 0 ? formatCurrency(remaining) : "-"}
+              tone={overallTone === "danger" ? "danger" : "success"}
+            />
+            <BudgetUtilityStat
+              label={t("budgets.summary.tracked")}
+              value={categoryBudgets.length}
+            />
+          </div>
         </div>
       </SurfaceCard>
 
@@ -483,7 +632,7 @@ export default function BudgetsPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="budget-mode"
                 >
                   {t("budgets.form.scope")}
@@ -512,7 +661,7 @@ export default function BudgetsPage() {
                 {formMode === "category" ? (
                   <>
                     <label
-                      className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                      className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                       htmlFor="budget-category"
                     >
                       {t("budgets.form.categoryLabel")}
@@ -547,7 +696,7 @@ export default function BudgetsPage() {
 
             <div className="grid gap-2">
               <label
-                className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
                 htmlFor="budget-limit"
               >
                 {t("budgets.form.limit")}
@@ -597,155 +746,143 @@ export default function BudgetsPage() {
         </DialogContent>
       </Dialog>
 
-      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label={t("budgets.summary.spent")}
-          value={formatCurrency(totalSpent)}
-          tone="danger"
-        />
-        <MetricCard
-          label={t("budgets.summary.limit")}
-          value={overallLimit > 0 ? formatCurrency(overallLimit) : "-"}
-          tone="accent"
-        />
-        <MetricCard
-          label={t("budgets.summary.remaining")}
-          value={overallLimit > 0 ? formatCurrency(remaining) : "-"}
-          tone={overallTone === "danger" ? "danger" : "success"}
-        />
-        <MetricCard
-          label={t("budgets.summary.tracked")}
-          value={categoryBudgets.length}
-        />
-      </section>
-
       {budgetQuery.isLoading ? (
-        <SurfaceCard>
+        <SurfaceCard padding="compact">
           <EmptyState title={t("common.loading")} compact />
         </SurfaceCard>
       ) : budgetQuery.isError ? (
-        <SurfaceCard>
+        <SurfaceCard padding="compact">
           <EmptyState title={t("budgets.loadError")} compact />
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid gap-3.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <SurfaceCard>
-              <div className="grid gap-3">
-                <SectionHeading
-                  title={t("budgets.overallTitle")}
-                  actions={
-                    globalBudget ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 rounded-2xl"
-                          onClick={() => openEditForm(globalBudget)}
-                        >
-                          <Pencil size={16} />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 rounded-2xl text-danger"
-                          onClick={() => {
-                            void handleDelete(globalBudget.id);
-                          }}
-                          disabled={deleteBudgetMutation.isPending}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </>
-                    ) : null
-                  }
-                />
+          <section className="grid gap-3 xl:grid-cols-[minmax(18.5rem,0.78fr)_minmax(0,1.22fr)] xl:items-start">
+            <div className="grid gap-3">
+              <SurfaceCard padding="compact">
+                <div className="grid gap-2.5">
+                  <SectionHeading
+                    title={t("budgets.overallTitle")}
+                    actions={
+                      globalBudget ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 min-w-[2rem] rounded-full"
+                            onClick={() => openEditForm(globalBudget)}
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 min-w-[2rem] rounded-full text-danger"
+                            onClick={() => {
+                              void handleDelete(globalBudget.id);
+                            }}
+                            disabled={deleteBudgetMutation.isPending}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </>
+                      ) : null
+                    }
+                  />
 
-                {globalBudget ? (
-                  <div className="grid gap-3">
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                      <MetricCard
-                        label={t("budgets.summary.limit")}
-                        value={formatCurrency(globalBudget.total_limit ?? 0)}
-                        tone="accent"
-                      />
-                      <MetricCard
-                        label={t("budgets.summary.spent")}
-                        value={formatCurrency(totalSpent)}
-                        tone="danger"
-                      />
-                      <MetricCard
-                        label={t("budgets.summary.remaining")}
-                        value={formatCurrency(remaining)}
-                        tone={overallTone === "danger" ? "danger" : "success"}
-                      />
-                    </div>
+                  {globalBudget ? (
+                    <div className="grid gap-2.5">
+                      <div className="grid gap-0 border-y border-border-subtle/85 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/85">
+                        <BudgetSummaryStripStat
+                          label={t("budgets.summary.limit")}
+                          value={formatCurrency(globalBudget.total_limit ?? 0)}
+                          tone="accent"
+                        />
+                        <BudgetSummaryStripStat
+                          label={t("budgets.summary.spent")}
+                          value={formatCurrency(totalSpent)}
+                          tone="danger"
+                        />
+                        <BudgetSummaryStripStat
+                          label={t("budgets.summary.remaining")}
+                          value={formatCurrency(remaining)}
+                          tone={overallTone === "danger" ? "danger" : "success"}
+                        />
+                      </div>
 
-                    <div className="grid gap-3">
-                      <ProgressMeter
-                        value={overallRatio}
-                        tone={toneToProgressTone[overallTone]}
-                        className="h-2.5 bg-surface-2"
-                        ariaLabel={t("budgets.overallTitle")}
-                      />
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <Badge variant={toneToBadgeVariant[overallTone]}>
-                          {overallRatio >= 1
-                            ? t("budgets.status.exceeded")
-                            : overallRatio >= 0.8
-                              ? t("budgets.status.warning")
-                              : t("budgets.status.ok")}
-                        </Badge>
+                      <div className="grid gap-2 border-t border-border-subtle/80 pt-3">
+                        <ProgressMeter
+                          value={overallRatio}
+                          tone={toneToProgressTone[overallTone]}
+                          className="h-2.5 bg-surface-2"
+                          ariaLabel={t("budgets.overallTitle")}
+                        />
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Badge
+                            variant={toneToBadgeVariant[overallTone]}
+                            className="min-h-0 px-2 py-0 text-[0.64rem] font-medium"
+                          >
+                            {overallRatio >= 1
+                              ? t("budgets.status.exceeded")
+                              : overallRatio >= 0.8
+                                ? t("budgets.status.warning")
+                                : t("budgets.status.ok")}
+                          </Badge>
+                          <span className="text-[0.72rem] text-text-3">
+                            {Math.round(overallRatio * 100)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <EmptyState
-                    title={t("budgets.noOverall")}
-                    compact
-                    icon={<Target size={18} />}
-                  />
-                )}
-              </div>
-            </SurfaceCard>
+                  ) : (
+                    <BudgetInlineEmpty
+                      title={t("budgets.noOverall")}
+                      actionLabel={t("budgets.addOverall")}
+                      onAction={() => openCreateForm("overall")}
+                    />
+                  )}
+                </div>
+              </SurfaceCard>
 
-            <SurfaceCard>
-              <div className="grid gap-3">
+              <div className="hidden xl:block">{untrackedPanel}</div>
+            </div>
+
+            <SurfaceCard padding="compact" className="xl:min-h-full">
+              <div className="grid gap-2.5">
                 <SectionHeading title={t("budgets.categoryTitle")} />
 
                 {categoryRows.length === 0 ? (
-                  <EmptyState
+                  <BudgetInlineEmpty
                     title={t("budgets.noCategories")}
-                    compact
-                    icon={<Target size={18} />}
+                    actionLabel={t("budgets.addCategory")}
+                    onAction={() => openCreateForm("category")}
                   />
                 ) : (
-                  <div className="grid gap-2.5">
+                  <div className="grid gap-0 divide-y divide-border-subtle/80">
                     {categoryRows.map(
                       ({ budget, spent, limit, ratio, tone }) => (
                         <div
                           key={budget.id}
-                          className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
+                          className="grid gap-2.5 py-3 first:pt-0 last:pb-0"
                         >
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="grid gap-1">
-                              <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                              <strong className="text-[0.9rem] font-semibold tracking-[-0.02em] text-text-1">
                                 {budget.categories?.name ||
                                   t("common.uncategorized")}
                               </strong>
-                              <span className="text-xs text-text-3">
+                              <span className="text-[0.76rem] leading-4 text-text-2">
                                 {formatCurrency(spent)} /{" "}
                                 {formatCurrency(limit)}
                               </span>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex items-center gap-1">
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-9 w-9 rounded-2xl"
+                                className="h-8 w-8 min-w-[2rem] rounded-full"
                                 onClick={() => openEditForm(budget)}
                               >
                                 <Pencil size={16} />
@@ -754,7 +891,7 @@ export default function BudgetsPage() {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-9 w-9 rounded-2xl text-danger"
+                                className="h-8 w-8 min-w-[2rem] rounded-full text-danger"
                                 onClick={() => {
                                   void handleDelete(budget.id);
                                 }}
@@ -764,18 +901,21 @@ export default function BudgetsPage() {
                               </Button>
                             </div>
                           </div>
-                          <div className="grid gap-2">
+                          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                             <ProgressMeter
                               value={ratio}
                               tone={toneToProgressTone[tone]}
-                              className="h-2 bg-surface-1"
+                              className="h-2 bg-surface-2"
                               ariaLabel={
                                 budget.categories?.name ||
                                 t("common.uncategorized")
                               }
                             />
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <Badge variant={toneToBadgeVariant[tone]}>
+                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                              <Badge
+                                variant={toneToBadgeVariant[tone]}
+                                className="min-h-0 px-2 py-0 text-[0.64rem] font-medium"
+                              >
                                 {ratio >= 1
                                   ? t("budgets.status.exceeded")
                                   : ratio >= 0.8
@@ -796,33 +936,7 @@ export default function BudgetsPage() {
             </SurfaceCard>
           </section>
 
-          <SurfaceCard>
-            <div className="grid gap-3">
-              <SectionHeading title={t("budgets.untrackedTitle")} />
-
-              {untrackedSpending.length === 0 ? (
-                <EmptyState
-                  title={t("budgets.noUntracked")}
-                  compact
-                  icon={<Target size={18} />}
-                />
-              ) : (
-                <div className="grid gap-2.5">
-                  {untrackedSpending.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 px-3.5 py-2.5"
-                    >
-                      <span className="text-sm text-text-2">{item.name}</span>
-                      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                        {formatCurrency(item.spent)}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </SurfaceCard>
+          <div className="xl:hidden">{untrackedPanel}</div>
         </>
       )}
     </PageShell>

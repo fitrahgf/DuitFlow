@@ -227,48 +227,82 @@ export default function TransactionForm({
   return (
     <form
       className={cn(
-        "grid gap-3.5 rounded-[inherit] bg-surface-1 p-3.5 md:p-5",
-        compactSheet && "gap-3 p-0",
+        "grid gap-3 rounded-[inherit] bg-surface-1 p-3 md:p-4",
+        compactSheet && "gap-2.5 p-0",
       )}
       onSubmit={handleSubmit((values) => transactionMutation.mutate(values))}
     >
       {!compactSheet ? (
-        <div className="grid gap-1.5">
-          <span className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-text-3">
+        <div className="grid gap-1">
+          <span className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-text-3">
             {transaction
               ? t("transactions.form.edit")
               : t("transactions.form.new")}
           </span>
-          <h3 className="text-lg font-semibold tracking-[-0.04em]">
+          <h3 className="text-[1.02rem] font-semibold tracking-[-0.04em] text-text-1">
             {formTitle}
           </h3>
         </div>
       ) : null}
 
-      <FormSection step="01" title={essentialTitle} contentClassName="gap-3">
-        <fieldset className="grid gap-2.5">
+      <FormSection step="01" title={essentialTitle} contentClassName="gap-2.5">
+        <fieldset className="grid gap-2">
           <FormLegend>{t("transactions.form.type")}</FormLegend>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Button
+          <div className="grid grid-cols-2 gap-1 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1/88 p-1">
+            <button
               type="button"
-              variant={selectedType === "expense" ? "danger" : "secondary"}
-              fullWidth
-              className="min-h-[2.9rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
-              onClick={() => setValue("type", "expense", { shouldDirty: true })}
+              className={cn(
+                "inline-flex min-h-[2.7rem] items-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-left transition-[background-color,color,box-shadow] duration-200",
+                selectedType === "expense"
+                  ? "bg-danger-soft text-danger shadow-xs"
+                  : "text-text-2 hover:bg-surface-2/72 hover:text-text-1",
+              )}
+              onClick={() =>
+                setValue("type", "expense", {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
             >
-              <ArrowDownLeft size={18} />
-              {t("transactions.expense")}
-            </Button>
-            <Button
+              <span
+                className={cn(
+                  "grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] transition-colors",
+                  selectedType === "expense" ? "bg-white/80" : "bg-surface-2/65",
+                )}
+              >
+                <ArrowDownLeft size={16} />
+              </span>
+              <span className="text-[0.8rem] font-semibold">
+                {t("transactions.expense")}
+              </span>
+            </button>
+            <button
               type="button"
-              variant={selectedType === "income" ? "primary" : "secondary"}
-              fullWidth
-              className="min-h-[2.9rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
-              onClick={() => setValue("type", "income", { shouldDirty: true })}
+              className={cn(
+                "inline-flex min-h-[2.7rem] items-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-left transition-[background-color,color,box-shadow] duration-200",
+                selectedType === "income"
+                  ? "bg-accent-soft text-accent-strong shadow-xs"
+                  : "text-text-2 hover:bg-surface-2/72 hover:text-text-1",
+              )}
+              onClick={() =>
+                setValue("type", "income", {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
             >
-              <ArrowUpRight size={18} />
-              {t("transactions.income")}
-            </Button>
+              <span
+                className={cn(
+                  "grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] transition-colors",
+                  selectedType === "income" ? "bg-white/82" : "bg-surface-2/65",
+                )}
+              >
+                <ArrowUpRight size={16} />
+              </span>
+              <span className="text-[0.8rem] font-semibold">
+                {t("transactions.income")}
+              </span>
+            </button>
           </div>
         </fieldset>
 
@@ -289,7 +323,8 @@ export default function TransactionForm({
                   onBlur={field.onBlur}
                   onNumberValueChange={field.onChange}
                   ref={field.ref}
-                  className="min-h-[2.95rem] px-3.5 py-2.5"
+                  aria-invalid={errors.amount ? "true" : "false"}
+                  className="min-h-[2.8rem] px-3.5 py-2"
                   required
                 />
               )}
@@ -308,7 +343,8 @@ export default function TransactionForm({
             <Input
               id="transaction-title"
               type="text"
-              className="min-h-[2.95rem] px-3.5 py-2.5"
+              aria-invalid={errors.title ? "true" : "false"}
+              className="min-h-[2.8rem] px-3.5 py-2"
               placeholder={t("transactions.form.titlePlaceholder")}
               {...register("title")}
               required
@@ -326,6 +362,7 @@ export default function TransactionForm({
             </FormLabel>
             <NativeSelect
               id="transaction-wallet"
+              aria-invalid={errors.wallet_id ? "true" : "false"}
               {...register("wallet_id")}
               disabled={walletsLoading}
               required
@@ -377,7 +414,7 @@ export default function TransactionForm({
             <Input
               id="transaction-date"
               type="date"
-              className="min-h-[2.95rem] px-3.5 py-2.5"
+              className="min-h-[2.8rem] px-3.5 py-2"
               {...register("date")}
               required
             />
@@ -392,14 +429,15 @@ export default function TransactionForm({
           </FormLabel>
           <Textarea
             id="transaction-note"
-            className="min-h-[5rem] px-3.5 py-2.5"
+            aria-invalid={errors.note ? "true" : "false"}
+            className="min-h-[4.5rem] px-3.5 py-2.5"
             placeholder={t("transactions.form.notePlaceholder")}
             {...register("note")}
           />
         </FormField>
       </FormSection>
 
-      <SaveHints className={cn(compactSheet && "p-3")}>
+      <SaveHints className={cn(compactSheet && "p-2.5")}>
         <FormMetaChip
           icon={
             transactionType === "income" ? (
@@ -423,14 +461,23 @@ export default function TransactionForm({
 
       <FormActions
         sticky={compactSheet}
-        className={cn(!compactSheet && "md:grid-cols-2")}
+        className={cn(
+          "sm:grid-cols-2",
+          !compactSheet && "md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]",
+        )}
       >
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="secondary"
+          className="shadow-none"
+          onClick={onCancel}
+        >
           {t("common.cancel")}
         </Button>
         <Button
           type="submit"
           variant="primary"
+          className="shadow-xs"
           disabled={transactionMutation.isPending}
         >
           {transactionMutation.isPending

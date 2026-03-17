@@ -609,6 +609,8 @@ export const dictionaries = {
       subtitle: 'Track specific goals like vacations or renovations.',
       createProject: 'Create Project',
       noProjects: 'No projects yet. Create one to start tracking specific budgets!',
+      emptyTitle: 'No projects yet.',
+      emptyDescription: 'Create one project to track a focused budget target.',
       form: {
         new: 'New Project',
         name: 'Project Name',
@@ -636,7 +638,11 @@ export const dictionaries = {
       subtitle: 'Give each purchase urge a review window before it becomes a real expense.',
       addItem: 'Add Item',
       noItems: 'Your wishlist is empty. Start parking purchase ideas here before spending.',
+      emptyTitle: 'No wishlist items yet.',
+      emptyDescription: 'Park purchase ideas here before they turn into real spending.',
       emptyTab: 'No items match this wishlist tab yet.',
+      emptyTabTitle: 'Nothing in this tab yet.',
+      emptyTabDescription: 'Try another status or add a new item to keep the board moving.',
       loadError: 'Failed to load the wishlist.',
       tabs: {
         all: 'All',
@@ -1386,6 +1392,8 @@ export const dictionaries = {
       subtitle: 'Pantau tujuan spesifik seperti liburan atau renovasi.',
       createProject: 'Buat Proyek',
       noProjects: 'Belum ada proyek. Buat satu untuk mulai memantau anggaran spesifik!',
+      emptyTitle: 'Belum ada proyek.',
+      emptyDescription: 'Buat satu proyek untuk memantau target anggaran yang spesifik.',
       form: {
         new: 'Proyek Baru',
         name: 'Nama Proyek',
@@ -1413,7 +1421,11 @@ export const dictionaries = {
       subtitle: 'Beri jeda pada keinginan belanja sebelum benar-benar menjadi pengeluaran.',
       addItem: 'Tambah Barang',
       noItems: 'Wishlist Anda kosong. Simpan ide belanja di sini sebelum mengeluarkan uang.',
+      emptyTitle: 'Belum ada item wishlist.',
+      emptyDescription: 'Simpan ide belanja di sini sebelum berubah jadi pengeluaran nyata.',
       emptyTab: 'Belum ada item yang cocok dengan tab ini.',
+      emptyTabTitle: 'Belum ada item di tab ini.',
+      emptyTabDescription: 'Coba status lain atau tambahkan item baru agar board tetap terisi.',
       loadError: 'Gagal memuat wishlist.',
       tabs: {
         all: 'Semua',

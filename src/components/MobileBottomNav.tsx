@@ -28,14 +28,14 @@ function NavLinkItem({ href, label, icon, active }: MobileBottomNavItem) {
     <Link
       href={href}
       className={cn(
-        'grid min-h-[3.2rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.58rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
+        'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.55rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
         active && 'text-text-1'
       )}
       aria-current={active ? 'page' : undefined}
     >
       <span
         className={cn(
-          'grid h-[2.15rem] w-[2.15rem] place-items-center rounded-[calc(var(--radius-control)+0.08rem)] border border-transparent transition-all duration-300',
+          'grid h-[2.02rem] w-[2.02rem] place-items-center rounded-[0.78rem] border border-transparent transition-all duration-300',
           active
             ? 'border-border-subtle bg-surface-1 text-text-1 shadow-xs'
             : 'text-text-3'
@@ -61,21 +61,21 @@ export default function MobileBottomNav({
 }: MobileBottomNavProps) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(0.45rem+var(--safe-bottom))] pt-1 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(0.4rem+var(--safe-bottom))] pt-1 md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="mx-auto grid max-w-[27.5rem] grid-cols-[minmax(0,1fr)_minmax(0,1fr)_3.7rem_minmax(0,1fr)_minmax(0,1fr)] items-center rounded-[1.2rem] border border-border-subtle bg-[color:hsla(0,0%,100%,0.9)] px-1 py-0.5 shadow-sm backdrop-blur-xl dark:bg-[color:hsla(156,14%,12%,0.94)]">
+      <div className="mx-auto grid max-w-[25rem] grid-cols-[minmax(0,1fr)_minmax(0,1fr)_3.65rem_minmax(0,1fr)_minmax(0,1fr)] items-end rounded-[1rem] border border-border-subtle/90 bg-[color:hsla(0,0%,100%,0.94)] px-1.5 pb-1 pt-[0.85rem] shadow-[0_16px_36px_-24px_rgba(15,23,42,0.28)] backdrop-blur-xl dark:bg-[color:hsla(156,14%,12%,0.96)]">
         {leftItems.map((item) => (
           <NavLinkItem key={item.href} {...item} />
         ))}
 
         <button
           type="button"
-          className="grid min-h-[3.2rem] justify-items-center gap-0.5 text-center text-[0.58rem] font-semibold tracking-[-0.01em] text-text-1"
+          className="grid min-h-[3.15rem] -translate-y-1 justify-items-center gap-0.5 text-center text-[0.53rem] font-semibold tracking-[-0.01em] text-text-1"
           onClick={onAction}
           aria-label={actionLabel}
         >
-          <span className="grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.95rem] bg-accent text-white shadow-sm">
+          <span className="grid h-[2.56rem] w-[2.56rem] place-items-center rounded-[0.92rem] bg-accent text-white shadow-[0_14px_24px_-16px_rgba(21,128,94,0.8)]">
             {actionIcon}
           </span>
           <span>{actionLabel}</span>
@@ -88,7 +88,7 @@ export default function MobileBottomNav({
         <button
           type="button"
           className={cn(
-            'grid min-h-[3.2rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.58rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
+            'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.55rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
             moreActive && 'text-text-1'
           )}
           onClick={onMore}
@@ -96,7 +96,7 @@ export default function MobileBottomNav({
         >
           <span
             className={cn(
-              'grid h-[2.15rem] w-[2.15rem] place-items-center rounded-[calc(var(--radius-control)+0.08rem)] border border-transparent transition-all duration-300',
+              'grid h-[2.02rem] w-[2.02rem] place-items-center rounded-[0.78rem] border border-transparent transition-all duration-300',
               moreActive ? 'border-border-subtle bg-surface-1 text-text-1 shadow-xs' : 'text-text-3'
             )}
           >

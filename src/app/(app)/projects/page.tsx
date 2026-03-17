@@ -12,7 +12,7 @@ import {
   useUpdateProjectStatusMutation,
 } from "@/features/projects/hooks";
 import type { ProjectRecord } from "@/features/projects/queries";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateWorkspace } from "@/components/shared/EmptyState";
 import {
   MetricCard,
   PageHeader,
@@ -126,11 +126,19 @@ export default function ProjectsPage() {
   const templatePreview = projectTemplates[
     selectedTemplate
   ].subcategoryKeys.map((key) => t(key));
+  const emptyStateTemplates = Object.entries(projectTemplates)
+    .filter(([key]) => key !== "custom")
+    .slice(0, 3)
+    .map(([key, template]) => ({
+      key,
+      title: t(template.nameKey),
+      categories: template.subcategoryKeys.slice(0, 3).map((categoryKey) => t(categoryKey)),
+    }));
 
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t("projects.title")} />
+        <PageHeading title={t("projects.title")} subtitle={t("projects.subtitle")} />
         <PageHeaderActions>
           <Button
             type="button"
@@ -149,16 +157,19 @@ export default function ProjectsPage() {
         <MetricCard
           label={t("projects.title")}
           value={loading ? "..." : projects.length}
+          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
         />
         <MetricCard
           label={t("projects.status.active")}
           value={loading ? "..." : activeProjects.length}
           tone="accent"
+          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
         />
         <MetricCard
           label={t("projects.totalBudget")}
           value={loading ? "..." : formatCurrency(totalBudget)}
           tone="success"
+          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
         />
         <MetricCard
           label={t("projects.categoriesText")}
@@ -171,11 +182,12 @@ export default function ProjectsPage() {
                   0,
                 )
           }
+          className="min-h-[4.15rem] p-[var(--space-panel-tight)]"
         />
       </section>
 
-      <SurfaceCard>
-        <div className="grid gap-3">
+      <SurfaceCard padding="compact">
+        <div className="grid gap-2.5">
           <SectionHeading
             title={language === "id" ? "Daftar proyek" : "Project list"}
           />
@@ -194,8 +206,10 @@ export default function ProjectsPage() {
               ))}
             </div>
           ) : projects.length === 0 ? (
-            <EmptyState
-              title={t("projects.noProjects")}
+            <EmptyStateWorkspace
+              eyebrow={language === "id" ? "Workspace proyek" : "Project workspace"}
+              title={t("projects.emptyTitle")}
+              description={t("projects.emptyDescription")}
               icon={<FolderKanban size={20} />}
               action={
                 <Button
@@ -206,6 +220,12 @@ export default function ProjectsPage() {
                   <FolderKanban size={16} />
                   {t("projects.createProject")}
                 </Button>
+              }
+              supporting={
+                <ProjectTemplatesAside
+                  language={language}
+                  templates={emptyStateTemplates}
+                />
               }
             />
           ) : (
@@ -366,18 +386,16 @@ export default function ProjectsPage() {
               </NativeSelect>
             </div>
 
-            <Card className="border-border-subtle bg-surface-2/55 p-3 shadow-none">
-              <div className="grid gap-2">
-                <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                  {t("projects.form.templateHint")}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {templatePreview.map((label) => (
-                    <Badge key={label}>{label}</Badge>
-                  ))}
-                </div>
+            <div className="grid gap-2 border-t border-border-subtle/80 pt-3">
+              <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                {t("projects.form.templateHint")}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {templatePreview.map((label) => (
+                  <Badge key={label}>{label}</Badge>
+                ))}
               </div>
-            </Card>
+            </div>
 
             <div className="grid gap-2.5 pt-1 sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={resetForm}>
@@ -393,5 +411,42 @@ export default function ProjectsPage() {
         </DialogContent>
       </Dialog>
     </PageShell>
+  );
+}
+
+function ProjectTemplatesAside({
+  language,
+  templates,
+}: {
+  language: "en" | "id";
+  templates: Array<{
+    key: string;
+    title: string;
+    categories: string[];
+  }>;
+}) {
+  return (
+    <>
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+        {language === "id" ? "Template cepat" : "Quick templates"}
+      </span>
+      <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {templates.map((template) => (
+          <div
+            key={template.key}
+            className="grid gap-2 py-2.5 first:pt-0 last:pb-0"
+          >
+            <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+              {template.title}
+            </strong>
+            <div className="flex flex-wrap gap-1.5">
+              {template.categories.map((category) => (
+                <Badge key={category}>{category}</Badge>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

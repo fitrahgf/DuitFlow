@@ -15,8 +15,8 @@ type ModalShellPadding = 'default' | 'flush';
 
 const modalShellSizeClassName: Record<ModalShellSize, string> = {
   sm: 'max-w-[30rem]',
-  md: 'max-w-[36rem]',
-  lg: 'max-w-[42rem]',
+  md: 'max-w-[35rem]',
+  lg: 'max-w-[40rem]',
   xl: 'max-w-[56rem]',
   full: 'max-w-[72rem]',
 };
@@ -53,6 +53,7 @@ export function ModalShell({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        {...(!description ? { 'aria-describedby': undefined } : {})}
         className={cn(
           modalShellSizeClassName[size],
           padding === 'flush' && 'overflow-hidden p-0',

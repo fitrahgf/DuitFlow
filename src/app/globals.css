@@ -6,15 +6,15 @@
   :root {
     color-scheme: light;
 
-    --bg-canvas-channel: 42 30% 98%;
-    --bg-subtle-channel: 42 22% 95%;
+    --bg-canvas-channel: 154 18% 97%;
+    --bg-subtle-channel: 154 14% 95%;
     --surface-1-channel: 0 0% 100%;
-    --surface-2-channel: 42 26% 97%;
-    --surface-3-channel: 42 18% 93%;
+    --surface-2-channel: 154 16% 97%;
+    --surface-3-channel: 154 12% 93%;
     --surface-accent-channel: 145 42% 95%;
 
-    --border-subtle-channel: 150 12% 85%;
-    --border-strong-channel: 150 10% 70%;
+    --border-subtle-channel: 154 10% 84%;
+    --border-strong-channel: 154 10% 72%;
 
     --text-1-channel: 154 18% 14%;
     --text-2-channel: 154 11% 31%;
@@ -62,30 +62,45 @@
     --danger: hsl(var(--danger-channel));
     --danger-soft: hsl(var(--danger-soft-channel));
 
-    --shadow-xs: 0 2px 8px hsla(156, 18%, 14%, 0.022);
-    --shadow-sm: 0 8px 18px hsla(156, 18%, 14%, 0.04);
-    --shadow-md: 0 16px 34px hsla(156, 18%, 10%, 0.065);
+    --shadow-xs: 0 1px 2px hsla(156, 18%, 14%, 0.05),
+      0 10px 24px hsla(156, 18%, 14%, 0.03);
+    --shadow-sm: 0 14px 32px hsla(156, 18%, 12%, 0.05);
+    --shadow-md: 0 20px 44px hsla(156, 18%, 10%, 0.08);
 
-    --radius-card: 1.3rem;
-    --radius-control: 0.95rem;
-    --radius-sheet: 1.5rem;
+    --radius-card: 1.1rem;
+    --radius-control: 0.82rem;
+    --radius-sheet: 1.3rem;
     --radius-full: 999px;
 
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --mobile-header-height: 4rem;
+    --mobile-header-height: 3.25rem;
     --fab-size: 3.75rem;
-    --sidebar-width: 14.75rem;
-    --max-content-width: 63rem;
-    --space-stack: 0.75rem;
-    --space-stack-lg: 0.9rem;
-    --space-panel: 0.82rem;
-    --space-panel-lg: 0.96rem;
-    --control-height: 2.5rem;
-    --control-height-sm: 2.1rem;
+    --sidebar-width: 13.75rem;
+    --max-content-width: clamp(68rem, calc(100vw - 21.5rem), 74rem);
+    --page-gutter: 0.8125rem;
+    --page-top-space: 0.75rem;
+    --page-bottom-space: 0.875rem;
+    --page-section-gap: 0.875rem;
+    --page-section-gap-lg: 1.25rem;
+    --page-header-gap: 0.625rem;
+    --page-header-padding-bottom: 0.75rem;
+    --space-stack: var(--page-section-gap);
+    --space-stack-lg: var(--page-section-gap-lg);
+    --space-panel-tight: 0.75rem;
+    --space-panel: 0.875rem;
+    --space-panel-lg: 1rem;
+    --space-cluster-tight: 0.5rem;
+    --space-cluster: 0.625rem;
+    --control-height: 2.625rem;
+    --control-height-sm: 2.25rem;
     --control-height-icon: 2.25rem;
-    --tab-height: 2.05rem;
-    --empty-state-height: 7.5rem;
+    --tab-height: 2.25rem;
+    --chip-height: 1.75rem;
+    --empty-state-height: 6.25rem;
+    --panel-header-min-height: 2.5rem;
+    --list-row-min-height: 3.75rem;
+    --shell-sticky-offset: calc(var(--mobile-header-height) + 0.375rem);
 
     --transition-fast: 160ms ease;
     --transition-base: 220ms ease;
@@ -171,9 +186,10 @@
     --danger-channel: 7 78% 62%;
     --danger-soft-channel: 7 30% 20%;
 
-    --shadow-xs: 0 4px 12px hsla(156, 28%, 4%, 0.12);
-    --shadow-sm: 0 10px 22px hsla(156, 28%, 4%, 0.16);
-    --shadow-md: 0 18px 36px hsla(156, 28%, 2%, 0.22);
+    --shadow-xs: 0 1px 2px hsla(156, 28%, 2%, 0.24),
+      0 12px 28px hsla(156, 28%, 2%, 0.18);
+    --shadow-sm: 0 16px 34px hsla(156, 28%, 2%, 0.2);
+    --shadow-md: 0 24px 48px hsla(156, 28%, 0%, 0.28);
 
     --color-login-card-border: hsla(156, 10%, 32%, 0.72);
     --color-login-kicker-bg: hsla(149, 28%, 20%, 0.94);
@@ -259,6 +275,32 @@
   }
 }
 
+@media (min-width: 768px) {
+  @layer base {
+    :root {
+      --page-gutter: 1.125rem;
+      --page-top-space: 1rem;
+      --page-bottom-space: 1.125rem;
+      --page-section-gap: 1.125rem;
+      --page-section-gap-lg: 1.375rem;
+      --space-panel: 0.9375rem;
+      --space-panel-lg: 1.0625rem;
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  @layer base {
+    :root {
+      --page-gutter: 1.375rem;
+      --page-top-space: 1rem;
+      --page-bottom-space: 1.125rem;
+      --page-section-gap: 1rem;
+      --page-section-gap-lg: 1.25rem;
+    }
+  }
+}
+
 @layer components {
   .sr-only {
     @apply absolute h-px w-px -m-px overflow-hidden whitespace-nowrap border-0 p-0;
@@ -270,12 +312,12 @@
   }
 
   .card {
-    @apply rounded-2xl border border-border-subtle/90 bg-surface-1 shadow-xs;
+    @apply rounded-[var(--radius-card)] border border-border-subtle/90 bg-surface-1 shadow-xs;
   }
 
   .badge {
-    @apply inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold;
-    min-height: 1.65rem;
+    @apply inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-[0.68rem] font-semibold;
+    min-height: var(--chip-height);
   }
 
   .skeleton {
@@ -309,6 +351,11 @@
 
   .skeleton-line--lg {
     width: 82%;
+  }
+
+  .list-row {
+    @apply rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45;
+    min-height: var(--list-row-min-height);
   }
 
   .animate-fade-in {

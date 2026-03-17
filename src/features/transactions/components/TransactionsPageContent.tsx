@@ -312,7 +312,7 @@ export function TransactionsPageContent() {
             type="button"
             variant="secondary"
             size="sm"
-            className="max-sm:min-w-max"
+            className="hidden sm:inline-flex"
             onClick={handleExportCsv}
             disabled={
               transactionsQuery.isLoading || filteredTransactions.length === 0
@@ -328,7 +328,7 @@ export function TransactionsPageContent() {
             type="button"
             variant="secondary"
             size="sm"
-            className="max-sm:min-w-max"
+            className="hidden sm:inline-flex"
             onClick={() => router.push("/transfer")}
           >
             <ArrowLeftRight size={16} />
@@ -338,7 +338,7 @@ export function TransactionsPageContent() {
             type="button"
             variant="primary"
             size="sm"
-            className="max-sm:min-w-max"
+            className="w-full sm:w-auto"
             onClick={() => {
               setEditingTransaction(null);
               setIsFormOpen(true);

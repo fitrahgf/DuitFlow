@@ -20,7 +20,7 @@ export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
     <div
       ref={ref}
       className={cn(
-        'flex items-start justify-between gap-1.5 p-[var(--space-panel)] pb-0 md:p-[var(--space-panel-lg)] md:pb-0',
+        'flex min-h-[var(--panel-header-min-height)] items-start justify-between gap-3 p-[var(--space-panel)] pb-0 lg:p-[var(--space-panel-lg)] lg:pb-0',
         className
       )}
       {...props}
@@ -31,7 +31,7 @@ CardHeader.displayName = 'CardHeader';
 
 export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn('text-[0.94rem] font-semibold tracking-[-0.02em]', className)} {...props} />
+    <h3 ref={ref} className={cn('text-[0.95rem] font-semibold tracking-[-0.03em]', className)} {...props} />
   )
 );
 CardTitle.displayName = 'CardTitle';
@@ -60,7 +60,7 @@ export const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
     <div
       ref={ref}
       className={cn(
-        'flex items-center gap-1.5 p-[var(--space-panel)] pt-0 md:p-[var(--space-panel-lg)] md:pt-0',
+        'flex items-center gap-2 p-[var(--space-panel)] pt-0 lg:p-[var(--space-panel-lg)] lg:pt-0',
         className
       )}
       {...props}

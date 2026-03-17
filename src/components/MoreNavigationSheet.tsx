@@ -47,7 +47,7 @@ export default function MoreNavigationSheet({
 
   return (
     <Sheet open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : null)}>
-      <SheetContent side="bottom" hideClose className="max-w-[29rem] rounded-t-[var(--radius-sheet)] px-3 pb-[calc(0.75rem+var(--safe-bottom))] pt-2">
+      <SheetContent side="bottom" hideClose className="max-w-[29rem] rounded-t-[var(--radius-sheet)] px-[var(--page-gutter)] pb-[calc(var(--page-bottom-space)+var(--safe-bottom))] pt-2">
         <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-border-strong" />
 
         <div className="mb-2 flex items-start justify-between gap-3 border-b border-border-subtle/75 pb-2">
@@ -56,7 +56,7 @@ export default function MoreNavigationSheet({
             <SheetTitle className="text-[0.92rem] tracking-[-0.04em]">DuitFlow</SheetTitle>
           </div>
 
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={title} title={title} className="h-[2.15rem] w-[2.15rem]">
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={title} title={title}>
             <X size={18} />
           </Button>
         </div>

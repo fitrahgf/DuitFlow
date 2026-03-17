@@ -7,7 +7,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCheck, CircleAlert, Clock3, Inbox, Sparkles, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/components/LanguageProvider';
-import { EmptyState } from '@/components/shared/EmptyState';
+import {
+  EmptyState,
+  EmptyStateWorkspace,
+} from '@/components/shared/EmptyState';
 import {
   PageHeader,
   PageHeaderActions,
@@ -57,6 +60,40 @@ function getPriorityBadgeVariant(priority: NotificationPriority) {
   }
 
   return 'default';
+}
+
+function NotificationOverviewStat({
+  label,
+  value,
+  meta,
+  tone = 'default',
+}: {
+  label: string;
+  value: React.ReactNode;
+  meta?: React.ReactNode;
+  tone?: 'default' | 'accent' | 'warning';
+}) {
+  const dotClassName =
+    tone === 'accent'
+      ? 'bg-accent'
+      : tone === 'warning'
+        ? 'bg-warning'
+        : 'bg-text-3/35';
+
+  return (
+    <div className="grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0">
+      <div className="inline-flex items-center gap-2">
+        <span className={cn('h-1.5 w-1.5 rounded-full', dotClassName)} aria-hidden="true" />
+        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+          {label}
+        </span>
+      </div>
+      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+        {value}
+      </strong>
+      {meta ? <span className="text-[0.78rem] text-text-2">{meta}</span> : null}
+    </div>
+  );
 }
 
 function NotificationsPageContent() {
@@ -158,6 +195,10 @@ function NotificationsPageContent() {
     { key: 'budget_warning', label: t('notifications.filters.budgetWarning') },
     { key: 'budget_exceeded', label: t('notifications.filters.budgetExceeded') },
   ];
+  const activeScopeLabel =
+    tabs.find((tab) => tab.key === scope)?.label ?? t('notifications.tabs.all');
+  const activeTypeLabel =
+    typeFilters.find((filter) => filter.key === typeFilter)?.label ?? t('notifications.filters.all');
   const replaceNotificationsState = (nextScope: typeof scope, nextType: typeof typeFilter) => {
     const nextQueryString = serializeNotificationsUrlState({
       scope: nextScope,
@@ -177,7 +218,7 @@ function NotificationsPageContent() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t('notifications.title')} />
+        <PageHeading title={t('notifications.title')} subtitle={t('notifications.subtitle')} />
         <PageHeaderActions>
           <Button
             type="button"
@@ -191,76 +232,116 @@ function NotificationsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard>
-        <div className="grid gap-2.5">
-          {tabsReady ? (
-            <Tabs value={scope} onValueChange={(value) => replaceNotificationsState(value as typeof scope, typeFilter)}>
-              <div className="pb-1">
-                <TabsList className="!grid !w-full grid-cols-3 justify-start overflow-hidden rounded-2xl">
-                  {tabs.map((tab) => (
-                    <TabsTrigger
-                      key={tab.key}
-                      value={tab.key}
-                      className="min-w-0 w-full gap-2 rounded-xl px-2.5 py-2 text-sm"
-                    >
-                      <span>{tab.label}</span>
-                      {tab.key === 'unread' ? (
-                        <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
-                          {unreadCount}
-                        </span>
-                      ) : null}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+      <SurfaceCard padding="compact">
+        <div className="grid gap-3">
+          <div className="grid gap-2.5 border-b border-border-subtle pb-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <SectionHeading title={t('notifications.feedTitle')} />
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="accent">{activeScopeLabel}</Badge>
+                {typeFilter !== 'all' ? <Badge>{activeTypeLabel}</Badge> : null}
               </div>
-            </Tabs>
-          ) : (
-            <div className="grid w-full grid-cols-3 gap-2 pb-1">
-              {tabs.map((tab) => (
-                <div
-                  key={tab.key}
-                  className="flex min-h-[2.75rem] items-center justify-center rounded-xl border border-border-subtle bg-surface-2/85 px-2.5 text-sm font-semibold text-text-3"
-                >
-                  {tab.label}
+            </div>
+
+            <div className="grid gap-0 border-t border-border-subtle/80 pt-2 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/80">
+              <NotificationOverviewStat
+                label={t('notifications.summary.total')}
+                value={notificationsQuery.isLoading ? '...' : notifications.length}
+              />
+              <NotificationOverviewStat
+                label={t('notifications.summary.unread')}
+                value={unreadCountQuery.isLoading ? '...' : unreadCount}
+                tone={unreadCount > 0 ? 'warning' : 'default'}
+              />
+              <NotificationOverviewStat
+                label={t('notifications.summary.scope')}
+                value={activeScopeLabel}
+                meta={activeTypeLabel}
+                tone="accent"
+              />
+            </div>
+
+            {tabsReady ? (
+              <Tabs value={scope} onValueChange={(value) => replaceNotificationsState(value as typeof scope, typeFilter)}>
+                <div className="pb-1">
+                  <TabsList className="!grid !w-full grid-cols-3 justify-start overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)]">
+                    {tabs.map((tab) => (
+                      <TabsTrigger
+                        key={tab.key}
+                        value={tab.key}
+                        className="min-w-0 w-full gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-2.5 py-1.5 text-[0.78rem]"
+                      >
+                        <span>{tab.label}</span>
+                        {tab.key === 'unread' ? (
+                          <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
+                            {unreadCount}
+                          </span>
+                        ) : null}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
                 </div>
+              </Tabs>
+            ) : (
+              <div className="grid w-full grid-cols-3 gap-2 pb-1">
+                {tabs.map((tab) => (
+                  <div
+                    key={tab.key}
+                    className="flex min-h-[2.75rem] items-center justify-center rounded-xl border border-border-subtle bg-surface-2/85 px-2.5 text-sm font-semibold text-text-3"
+                  >
+                    {tab.label}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {typeFilters.map((filter) => (
+                <Button
+                  key={filter.key}
+                  type="button"
+                  size="sm"
+                  variant={typeFilter === filter.key ? 'primary' : 'ghost'}
+                  className={cn(
+                    'justify-center px-2.5 sm:justify-start',
+                    typeFilter !== filter.key &&
+                      'border-transparent text-text-2 hover:bg-surface-2/88 hover:text-text-1',
+                  )}
+                  onClick={() => replaceNotificationsState(scope, filter.key)}
+                >
+                  {filter.label}
+                </Button>
               ))}
             </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            {typeFilters.map((filter) => (
-              <Button
-                key={filter.key}
-                type="button"
-                size="sm"
-                variant={typeFilter === filter.key ? 'primary' : 'ghost'}
-                className="justify-center sm:justify-start"
-                onClick={() => replaceNotificationsState(scope, filter.key)}
-              >
-                {filter.label}
-              </Button>
-            ))}
           </div>
-        </div>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <div className="grid gap-3">
-          <SectionHeading title={t('notifications.feedTitle')} />
 
           {notificationsQuery.isLoading ? (
             <EmptyState title={t('common.loading')} compact />
           ) : notificationsQuery.isError ? (
             <EmptyState title={t('notifications.loadError')} compact />
           ) : notifications.length === 0 ? (
-            <EmptyState
+            <EmptyStateWorkspace
+              eyebrow={t('notifications.feedTitle')}
               title={t('notifications.empty')}
+              description={t('notifications.emptyHint')}
               icon={<Inbox size={20} />}
+              meta={
+                <>
+                  <Badge variant="accent">{activeScopeLabel}</Badge>
+                  {typeFilter !== 'all' ? <Badge>{activeTypeLabel}</Badge> : null}
+                </>
+              }
+              supporting={
+                <NotificationSignalsAside
+                  language={language}
+                  signals={typeFilters.slice(1).map((filter) => filter.label)}
+                />
+              }
             />
           ) : (
-              <div className="grid gap-2">
-                {notifications.map((notification) => (
-                  <NotificationRow
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
+              {notifications.map((notification) => (
+                <NotificationRow
                   key={notification.id}
                   notification={notification}
                   language={language}
@@ -326,12 +407,18 @@ function NotificationRow({
         : 'bg-accent-soft text-accent-strong';
 
   const surfaceClassName = notification.is_read
-    ? 'border-border-subtle bg-surface-1'
+    ? 'bg-transparent'
     : notification.priority === 'critical'
-      ? 'border-danger/25 bg-danger-soft/25'
+      ? 'bg-danger-soft/18'
       : notification.priority === 'important'
-        ? 'border-warning/25 bg-warning-soft/25'
-        : 'border-accent/25 bg-surface-accent/45';
+        ? 'bg-warning-soft/18'
+        : 'bg-surface-accent/35';
+  const indicatorToneClassName =
+    notification.priority === 'critical'
+      ? 'bg-danger'
+      : notification.priority === 'important'
+        ? 'bg-warning'
+        : 'bg-accent';
 
   const Icon =
     notification.type === 'wishlist_due'
@@ -343,10 +430,19 @@ function NotificationRow({
   return (
     <article
       className={cn(
-        'grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border p-3.5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
+        'relative grid gap-3 px-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
         surfaceClassName
       )}
     >
+      {!notification.is_read ? (
+        <span
+          className={cn(
+            'absolute bottom-3 left-0 top-3 w-1 rounded-full',
+            indicatorToneClassName
+          )}
+          aria-hidden="true"
+        />
+      ) : null}
       <div className={cn('grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)]', iconToneClassName)}>
         <Icon size={18} />
       </div>
@@ -356,7 +452,7 @@ function NotificationRow({
           <Badge variant={getPriorityBadgeVariant(notification.priority)}>
             {t(`notifications.priority.${notification.priority}`)}
           </Badge>
-          <span className="text-xs text-text-3">{t(`notifications.type.${notification.type}`)}</span>
+          <span className="text-[0.74rem] font-medium text-text-2">{t(`notifications.type.${notification.type}`)}</span>
           {!notification.is_read ? (
             <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
           ) : null}
@@ -371,7 +467,7 @@ function NotificationRow({
           </p>
         </div>
 
-        <span className="inline-flex items-center gap-2 text-xs text-text-3">
+        <span className="inline-flex items-center gap-2 text-[0.74rem] text-text-2">
           <Clock3 size={14} />
           {formatDate(notification.created_at, language)}
         </span>
@@ -405,5 +501,32 @@ function NotificationRow({
         ) : null}
       </div>
     </article>
+  );
+}
+
+function NotificationSignalsAside({
+  language,
+  signals,
+}: {
+  language: 'en' | 'id';
+  signals: string[];
+}) {
+  return (
+    <>
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+        {language === 'id' ? 'Sinyal yang masuk' : 'Signals that land here'}
+      </span>
+      <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {signals.map((signal) => (
+          <div
+            key={signal}
+            className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+          >
+            <span className="text-sm font-medium text-text-2">{signal}</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-accent/65" aria-hidden="true" />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

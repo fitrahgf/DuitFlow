@@ -27,19 +27,19 @@ interface SidebarProps {
 }
 
 const sectionLabelClass =
-  "flex items-center gap-2 px-2 pb-1 text-[0.54rem] font-semibold uppercase tracking-[0.2em] text-text-3/80 before:content-[''] before:h-1 before:w-1 before:rounded-full before:bg-accent/65 after:content-[''] after:h-px after:flex-1 after:bg-gradient-to-r after:from-border-subtle/65 after:to-transparent";
+  "px-2 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.18em] text-text-3/82";
 
 const navLinkClass = (active: boolean) =>
   cn(
-    "group relative inline-flex min-h-[2.1rem] items-center gap-2 rounded-[calc(var(--radius-control)-0.08rem)] px-2 py-[0.4rem] text-[0.76rem] font-medium tracking-[-0.01em] text-text-2 transition-[background-color,color] duration-200 hover:bg-surface-1/72 hover:text-text-1",
+    "group relative inline-flex min-h-[2.2rem] items-center gap-2.5 rounded-[calc(var(--radius-control)-0.02rem)] border border-transparent px-2.5 py-[0.42rem] text-[0.76rem] font-medium tracking-[-0.01em] text-text-2 transition-[background-color,border-color,color] duration-200 hover:bg-surface-1/74 hover:text-text-1",
     active &&
-      "bg-accent-soft/38 text-text-1 before:absolute before:left-0.5 before:top-1/2 before:h-3 before:w-px before:-translate-y-1/2 before:rounded-full before:bg-accent/80 before:content-['']",
+      "border-border-subtle bg-surface-1 text-text-1 before:absolute before:left-1 before:top-1/2 before:h-3 before:w-px before:-translate-y-1/2 before:rounded-full before:bg-accent/80 before:content-['']",
   );
 
 const navIconClass = (active: boolean) =>
   cn(
-    "grid h-6 w-6 shrink-0 place-items-center rounded-[0.78rem] text-text-3 transition-[background-color,color] duration-200 group-hover:bg-surface-1 group-hover:text-text-1",
-    active && "bg-surface-1/88 text-accent-strong",
+    "grid h-5.5 w-5.5 shrink-0 place-items-center rounded-[0.72rem] text-text-3 transition-[background-color,color] duration-200 group-hover:bg-surface-1 group-hover:text-text-1",
+    active && "bg-surface-2 text-accent-strong",
   );
 
 export default function Sidebar({
@@ -62,15 +62,15 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <>
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle/72 bg-canvas/88 px-2.5 py-3 backdrop-blur-xl lg:flex dark:bg-canvas/92">
-        <div className="flex items-center gap-2 rounded-[calc(var(--radius-card)-0.18rem)] px-1.5 py-1.5">
-          <span className="grid h-8 w-8 place-items-center rounded-[0.9rem] bg-accent text-[0.64rem] font-extrabold tracking-[-0.04em] text-white shadow-xs">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle/72 bg-canvas/92 px-2.5 py-2.5 backdrop-blur-md lg:flex dark:bg-canvas/94">
+        <div className="flex items-center gap-2 px-1.5 py-1">
+          <span className="grid h-8 w-8 place-items-center rounded-[0.88rem] bg-accent text-[0.64rem] font-extrabold tracking-[-0.04em] text-white shadow-xs">
             DF
           </span>
           <div className="grid min-w-0 flex-1 gap-0.5">
             <Link
               href="/dashboard"
-              className="truncate text-[0.84rem] font-semibold tracking-[-0.04em] text-text-1"
+              className="truncate text-[0.82rem] font-semibold tracking-[-0.04em] text-text-1"
             >
               DuitFlow
             </Link>
@@ -81,7 +81,7 @@ export default function Sidebar({
         </div>
 
         <div className="mt-2 flex min-h-0 flex-1 flex-col">
-          <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-0.5">
+          <div className="grid min-h-0 flex-1 content-start gap-2.5 overflow-y-auto pr-0.5">
             {desktopSections.map((section) => (
               <div key={section.key} className="grid gap-0.5">
                 <span className={sectionLabelClass}>{section.label}</span>
@@ -122,10 +122,10 @@ export default function Sidebar({
         </div>
       </aside>
 
-      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-2 border-r border-border-subtle/72 bg-canvas/88 px-2 py-3 backdrop-blur-xl md:flex lg:hidden dark:bg-canvas/92">
+      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-2 border-r border-border-subtle/72 bg-canvas/92 px-2 py-2.5 backdrop-blur-md md:flex lg:hidden dark:bg-canvas/94">
         <Link
           href="/dashboard"
-          className="grid h-[2.45rem] w-[2.45rem] place-items-center rounded-[0.95rem] border border-border-subtle/80 bg-surface-1 text-[0.6rem] font-extrabold tracking-[-0.04em] shadow-xs"
+          className="grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.88rem] border border-border-subtle/80 bg-surface-1 text-[0.6rem] font-extrabold tracking-[-0.04em] shadow-xs"
           aria-label="DuitFlow"
         >
           DF
@@ -135,7 +135,7 @@ export default function Sidebar({
           type="button"
           variant="secondary"
           size="icon"
-          className="h-[2.45rem] w-[2.45rem] rounded-[0.95rem] border-accent/10 bg-accent-soft/90 text-accent-strong shadow-none hover:bg-accent-soft"
+          className="h-[2.35rem] w-[2.35rem] rounded-[0.88rem] border-accent/10 bg-accent-soft/90 text-accent-strong shadow-none hover:bg-accent-soft"
           onClick={onOpenQuickTransaction}
           aria-label={quickTransactionLabel}
           title={quickTransactionLabel}
@@ -149,8 +149,8 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "relative grid h-[2.45rem] w-[2.45rem] place-items-center rounded-[0.95rem] border border-transparent text-text-3 transition hover:bg-surface-1/80 hover:text-text-1",
-                item.active && "bg-accent-soft/40 text-text-1",
+                "relative grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.88rem] border border-transparent text-text-3 transition hover:bg-surface-1/80 hover:text-text-1",
+                item.active && "border-border-subtle bg-surface-1 text-text-1",
               )}
               aria-current={item.active ? "page" : undefined}
               title={item.label}
@@ -167,8 +167,8 @@ export default function Sidebar({
           <button
             type="button"
             className={cn(
-              "grid h-[2.45rem] w-[2.45rem] place-items-center rounded-[0.95rem] border border-transparent text-text-3 transition hover:bg-surface-1/80 hover:text-text-1",
-              moreOpen && "bg-accent-soft/40 text-text-1",
+              "grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.88rem] border border-transparent text-text-3 transition hover:bg-surface-1/80 hover:text-text-1",
+              moreOpen && "border-border-subtle bg-surface-1 text-text-1",
             )}
             onClick={onOpenMore}
             title={moreLabel}

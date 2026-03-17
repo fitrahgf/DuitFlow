@@ -167,6 +167,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const userEmail = profileQuery.data?.email || user?.email || null;
   const userInitials = user ? getInitials(user.email || "U") : "?";
   const unreadCount = unreadNotificationsQuery.data ?? 0;
+  const wideContentRoutes = [
+    "/dashboard",
+    "/transactions",
+    "/wallets",
+    "/reports",
+    "/budgets",
+    "/transfer",
+  ];
+  const contentSize = wideContentRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
+    ? "wide"
+    : "default";
 
   const {
     desktopSections,
@@ -190,6 +203,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       currencyCode={profileQuery.data?.profile.currency_code}
     >
       <AppShell
+        contentSize={contentSize}
         sidebar={
           <Sidebar
             accountLabel={accountLabel}

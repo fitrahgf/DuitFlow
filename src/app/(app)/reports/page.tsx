@@ -386,8 +386,8 @@ function ReportsPageContent() {
 
   const filterGridClassName =
     filters.period === "custom"
-      ? "grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-      : "grid gap-4 md:grid-cols-2 xl:grid-cols-2";
+      ? "grid gap-2.5 md:grid-cols-2 xl:grid-cols-4"
+      : "grid gap-2.5 md:grid-cols-2 xl:grid-cols-2";
   const replaceReportsState = (nextState: ReportsUrlState) => {
     const nextQueryString = serializeReportsUrlState(nextState);
     const currentQueryString = searchParams.toString();
@@ -431,8 +431,11 @@ function ReportsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
-        <FilterToolbar>
+      <SurfaceCard
+        padding="compact"
+        className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
+      >
+        <FilterToolbar className="gap-2.5">
           <FilterGroup label={t("reports.filters.period")}>
             {(["month", "30d", "7d", "all", "custom"] as const).map(
               (period) => (
@@ -441,6 +444,11 @@ function ReportsPageContent() {
                   type="button"
                   size="sm"
                   variant={filters.period === period ? "primary" : "ghost"}
+                  className={cn(
+                    "px-2.5",
+                    filters.period !== period &&
+                      "border-transparent text-text-2 hover:bg-surface-2/88 hover:text-text-1",
+                  )}
                   onClick={() =>
                     replaceReportsState({
                       ...urlState,
@@ -544,39 +552,48 @@ function ReportsPageContent() {
       </SurfaceCard>
 
       {reportsQuery.isLoading ? (
-        <SurfaceCard>
+        <SurfaceCard padding="compact">
           <EmptyState title={t("common.loading")} compact />
         </SurfaceCard>
       ) : reportsQuery.isError ? (
-        <SurfaceCard>
+        <SurfaceCard padding="compact">
           <EmptyState title={t("reports.loadError")} compact />
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1.22fr)_repeat(3,minmax(13.5rem,0.92fr))] 2xl:grid-cols-[minmax(0,1.28fr)_repeat(3,minmax(14rem,0.9fr))]">
+            <MetricCard
+              label={t("reports.summary.net")}
+              value={
+                <span className="text-[1.24rem] font-semibold tracking-[-0.055em] sm:text-[1.34rem]">
+                  {formatCurrency(netFlow)}
+                </span>
+              }
+              meta={getPeriodLabel(filters.period, t)}
+              tone="accent"
+              className="min-h-[4.95rem] p-[var(--space-panel-tight)]"
+            />
             <MetricCard
               label={t("reports.summary.income")}
               value={formatCurrency(totalIncome)}
               tone="success"
+              className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
             />
             <MetricCard
               label={t("reports.summary.expense")}
               value={formatCurrency(totalExpense)}
               tone="danger"
-            />
-            <MetricCard
-              label={t("reports.summary.net")}
-              value={formatCurrency(netFlow)}
-              tone="accent"
+              className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
             />
             <MetricCard
               label={t("reports.summary.balance")}
               value={formatCurrency(totalBalance)}
+              className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
             />
           </section>
 
           <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden">
-            <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+            <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
               <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
                 {language === "id" ? "Charts & insight" : "Charts & insights"}
               </strong>
@@ -584,12 +601,26 @@ function ReportsPageContent() {
                 v
               </span>
             </summary>
-            <div className="grid gap-3 border-t border-border-subtle px-3.5 py-3">
-              <section className="grid gap-3">
-                <SurfaceCard>
-                  <div className="grid gap-3">
+            <div className="grid gap-2.5 border-t border-border-subtle px-3 py-2.5">
+              <section className="grid gap-2.5">
+                <SurfaceCard padding="compact">
+                  <div className="grid gap-2.5">
+                    <SectionHeading title={t("reports.charts.trend")} />
+                    <div className="h-[14rem]">
+                      <TransactionBarChart
+                        data={{
+                          labels: trendLabels,
+                          income: trendIncome,
+                          expense: trendExpense,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </SurfaceCard>
+                <SurfaceCard padding="compact">
+                  <div className="grid gap-2.5">
                     <SectionHeading title={t("reports.charts.category")} />
-                    <div className="h-[16rem]">
+                    <div className="h-[14.5rem]">
                       {categoryRows.length > 0 ? (
                         <CategoryDoughnutChart
                           data={{
@@ -605,20 +636,6 @@ function ReportsPageContent() {
                           icon={<PieChart size={18} />}
                         />
                       )}
-                    </div>
-                  </div>
-                </SurfaceCard>
-                <SurfaceCard>
-                  <div className="grid gap-3">
-                    <SectionHeading title={t("reports.charts.trend")} />
-                    <div className="h-[16rem]">
-                      <TransactionBarChart
-                        data={{
-                          labels: trendLabels,
-                          income: trendIncome,
-                          expense: trendExpense,
-                        }}
-                      />
                     </div>
                   </div>
                 </SurfaceCard>
@@ -654,12 +671,28 @@ function ReportsPageContent() {
             </div>
           </details>
 
-          <section className="hidden gap-4 sm:grid xl:grid-cols-2">
-            <SurfaceCard>
-              <div className="grid gap-4">
+          <section className="hidden gap-2.5 sm:grid xl:grid-cols-[minmax(0,1.24fr)_minmax(21rem,0.76fr)] 2xl:grid-cols-[minmax(0,1.32fr)_minmax(22.5rem,0.68fr)]">
+            <SurfaceCard padding="compact">
+              <div className="grid gap-2.5">
+                <SectionHeading title={t("reports.charts.trend")} />
+
+                <div className="h-[15.5rem]">
+                  <TransactionBarChart
+                    data={{
+                      labels: trendLabels,
+                      income: trendIncome,
+                      expense: trendExpense,
+                    }}
+                  />
+                </div>
+              </div>
+            </SurfaceCard>
+
+            <SurfaceCard padding="compact">
+              <div className="grid gap-2.5">
                 <SectionHeading title={t("reports.charts.category")} />
 
-                <div className="h-[18rem]">
+                <div className="h-[15.5rem]">
                   {categoryRows.length > 0 ? (
                     <CategoryDoughnutChart
                       data={{
@@ -678,25 +711,9 @@ function ReportsPageContent() {
                 </div>
               </div>
             </SurfaceCard>
-
-            <SurfaceCard>
-              <div className="grid gap-4">
-                <SectionHeading title={t("reports.charts.trend")} />
-
-                <div className="h-[18rem]">
-                  <TransactionBarChart
-                    data={{
-                      labels: trendLabels,
-                      income: trendIncome,
-                      expense: trendExpense,
-                    }}
-                  />
-                </div>
-              </div>
-            </SurfaceCard>
           </section>
 
-          <section className="hidden gap-3 md:grid-cols-3 sm:grid">
+          <section className="hidden gap-2.5 md:grid-cols-3 sm:grid">
             <InsightCard
               icon={<TrendingUp size={18} />}
               label={t("reports.insights.topCategory")}
@@ -725,8 +742,8 @@ function ReportsPageContent() {
             />
           </section>
 
-          <SurfaceCard>
-            <div className="grid gap-3">
+          <SurfaceCard padding="compact">
+            <div className="grid gap-2.5">
               <SectionHeading title={t("reports.keyword.title")} />
 
               <FilterSearchField
@@ -739,7 +756,8 @@ function ReportsPageContent() {
                   })
                 }
                 placeholder={t("reports.keyword.placeholder")}
-                className="rounded-2xl bg-surface-2/70 sm:min-h-[3.2rem]"
+                className="bg-surface-1"
+                inputClassName="text-[0.82rem]"
               />
 
               {!deferredKeyword ? (
@@ -756,30 +774,34 @@ function ReportsPageContent() {
                 />
               ) : (
                 <>
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
                     <MetricCard
                       label={t("reports.keyword.currentWindow")}
                       value={formatCurrency(keywordCurrentTotal)}
+                      className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
                     />
                     <MetricCard
                       label={t("reports.keyword.last30Days")}
                       value={formatCurrency(keywordLast30Total)}
+                      className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
                     />
                     <MetricCard
                       label={t("reports.keyword.count")}
                       value={keywordVisibleMatches.length}
+                      className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
                     />
                     <MetricCard
                       label={t("reports.keyword.average")}
                       value={formatCurrency(keywordAverage)}
+                      className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
                     />
                   </div>
 
                   <div className="grid gap-1">
-                    <span className="text-sm text-text-3">
+                    <span className="text-[0.78rem] text-text-3">
                       {t("reports.keyword.latest")}
                     </span>
-                    <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                    <strong className="text-[0.86rem] font-semibold tracking-[-0.025em] text-text-1">
                       {keywordLatest
                         ? `${keywordLatest.title || keywordLatest.note || t("common.noNote")} - ${formatDate(
                             getTransactionDateValue(keywordLatest),
@@ -828,17 +850,21 @@ function InsightCard({
   meta: string;
 }) {
   return (
-    <Card className="grid gap-2.5 border-border-subtle bg-surface-1 p-3.5 shadow-none">
-      <div className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
-        {icon}
+    <Card className="grid gap-2 border-border-subtle bg-surface-1 p-3 shadow-none">
+      <div className="flex items-start gap-2.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.02rem)] bg-accent-soft text-accent-strong">
+          {icon}
+        </div>
+        <div className="grid min-w-0 gap-0.5">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+            {label}
+          </span>
+          <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+            {title}
+          </strong>
+        </div>
       </div>
-      <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-        {label}
-      </span>
-      <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
-        {title}
-      </strong>
-      <span className="text-sm text-text-3">{meta}</span>
+      <span className="text-[0.72rem] leading-4 text-text-3">{meta}</span>
     </Card>
   );
 }
