@@ -195,17 +195,17 @@ export default function CategoriesPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('categories.title')} />
-        <PageHeaderActions>
-          <Button type="button" variant="primary" onClick={() => handleOpenForm()}>
+        <PageHeader>
+          <PageHeading title={t('categories.title')} />
+          <PageHeaderActions>
+          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => handleOpenForm()}>
             <Tags size={16} />
             {t('categories.addCategory')}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard label={t('categories.title')} value={loading ? '...' : categories.length} />
         <MetricCard
           label={t('categories.systemDefault')}
@@ -220,13 +220,13 @@ export default function CategoriesPage() {
       </section>
 
       <SurfaceCard>
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           <SectionHeading title={language === 'id' ? 'Daftar kategori' : 'Category list'} />
 
           {loading ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={`category-skeleton-${index}`} className="grid gap-4 p-5 shadow-none">
+                <Card key={`category-skeleton-${index}`} className="grid gap-4 p-4 shadow-none">
                   <div className="skeleton h-12 w-12 rounded-2xl" />
                   <div className="grid gap-2">
                     <div className="skeleton skeleton-line skeleton-line--sm" />
@@ -247,15 +247,15 @@ export default function CategoriesPage() {
               }
             />
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
               {categories.map((category) => (
                 <article
                   key={category.id}
-                  className="grid gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-5"
+                  className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div
-                      className="grid h-12 w-12 place-items-center rounded-2xl border"
+                      className="grid h-10 w-10 place-items-center rounded-2xl border"
                       style={{
                         backgroundColor: `${category.color}18`,
                         color: category.color,
@@ -270,7 +270,7 @@ export default function CategoriesPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 rounded-2xl"
+                        className="h-9 w-9 rounded-2xl"
                         onClick={() => handleOpenForm(category)}
                         aria-label={t('categories.form.edit')}
                         title={t('categories.form.edit')}
@@ -282,7 +282,7 @@ export default function CategoriesPage() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-10 w-10 rounded-2xl text-danger"
+                          className="h-9 w-9 rounded-2xl text-danger"
                           onClick={() => {
                             void handleDelete(category.id);
                           }}

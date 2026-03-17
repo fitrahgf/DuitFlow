@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useSyncExternalStore } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCheck, CircleAlert, Clock3, Inbox, Sparkles, Target } from 'lucide-react';
 import { toast } from 'sonner';
@@ -68,6 +68,11 @@ function NotificationsPageContent() {
   const urlState = parseNotificationsUrlState(searchParams);
   const scope = urlState.scope;
   const typeFilter = urlState.type;
+  const tabsReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const notificationsQuery = useQuery({
     queryKey: queryKeys.notifications.list(scope, typeFilter),
@@ -186,28 +191,41 @@ function NotificationsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="p-4 md:p-5">
-        <div className="grid gap-4">
-          <Tabs value={scope} onValueChange={(value) => replaceNotificationsState(value as typeof scope, typeFilter)}>
-            <div className="overflow-x-auto pb-1">
-              <TabsList className="w-max min-w-full justify-start rounded-2xl">
-                {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.key}
-                    value={tab.key}
-                    className="gap-2 rounded-xl px-4 py-2 text-sm"
-                  >
-                    <span>{tab.label}</span>
-                    {tab.key === 'unread' ? (
-                      <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
-                        {unreadCount}
-                      </span>
-                    ) : null}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+      <SurfaceCard>
+        <div className="grid gap-2.5">
+          {tabsReady ? (
+            <Tabs value={scope} onValueChange={(value) => replaceNotificationsState(value as typeof scope, typeFilter)}>
+              <div className="pb-1">
+                <TabsList className="!grid !w-full grid-cols-3 justify-start overflow-hidden rounded-2xl">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.key}
+                      value={tab.key}
+                      className="min-w-0 w-full gap-2 rounded-xl px-2.5 py-2 text-sm"
+                    >
+                      <span>{tab.label}</span>
+                      {tab.key === 'unread' ? (
+                        <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
+                          {unreadCount}
+                        </span>
+                      ) : null}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+            </Tabs>
+          ) : (
+            <div className="grid w-full grid-cols-3 gap-2 pb-1">
+              {tabs.map((tab) => (
+                <div
+                  key={tab.key}
+                  className="flex min-h-[2.75rem] items-center justify-center rounded-xl border border-border-subtle bg-surface-2/85 px-2.5 text-sm font-semibold text-text-3"
+                >
+                  {tab.label}
+                </div>
+              ))}
             </div>
-          </Tabs>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {typeFilters.map((filter) => (
@@ -216,6 +234,7 @@ function NotificationsPageContent() {
                 type="button"
                 size="sm"
                 variant={typeFilter === filter.key ? 'primary' : 'ghost'}
+                className="justify-center sm:justify-start"
                 onClick={() => replaceNotificationsState(scope, filter.key)}
               >
                 {filter.label}
@@ -226,7 +245,7 @@ function NotificationsPageContent() {
       </SurfaceCard>
 
       <SurfaceCard>
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           <SectionHeading title={t('notifications.feedTitle')} />
 
           {notificationsQuery.isLoading ? (
@@ -239,9 +258,9 @@ function NotificationsPageContent() {
               icon={<Inbox size={20} />}
             />
           ) : (
-            <div className="grid gap-3">
-              {notifications.map((notification) => (
-                <NotificationRow
+              <div className="grid gap-2">
+                {notifications.map((notification) => (
+                  <NotificationRow
                   key={notification.id}
                   notification={notification}
                   language={language}
@@ -324,15 +343,15 @@ function NotificationRow({
   return (
     <article
       className={cn(
-        'grid gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border p-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
+        'grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border p-3.5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
         surfaceClassName
       )}
     >
-      <div className={cn('grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.05rem)]', iconToneClassName)}>
+      <div className={cn('grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)]', iconToneClassName)}>
         <Icon size={18} />
       </div>
 
-      <div className="grid min-w-0 gap-3">
+      <div className="grid min-w-0 gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={getPriorityBadgeVariant(notification.priority)}>
             {t(`notifications.priority.${notification.priority}`)}
@@ -347,7 +366,9 @@ function NotificationRow({
           <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
             {notification.title}
           </strong>
-          <p className="m-0 text-sm leading-6 text-text-2">{notification.body}</p>
+          <p className="m-0 text-sm leading-5 text-text-2 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
+            {notification.body}
+          </p>
         </div>
 
         <span className="inline-flex items-center gap-2 text-xs text-text-3">
@@ -361,6 +382,7 @@ function NotificationRow({
           <Button
             type="button"
             variant="ghost"
+            size="sm"
             onClick={() => onMarkRead(notification.id)}
             disabled={markReadPending}
           >
@@ -368,7 +390,7 @@ function NotificationRow({
           </Button>
         ) : null}
         {notification.action_url ? (
-          <Button asChild variant="secondary">
+          <Button asChild variant="secondary" size="sm">
             <Link
               href={notification.action_url}
               onClick={() => {

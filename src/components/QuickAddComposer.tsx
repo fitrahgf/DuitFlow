@@ -286,7 +286,7 @@ export default function QuickAddComposer({
     preview?.status === 'ready' ? 'success' : preview?.status === 'partial' ? 'warning' : 'default';
 
   return (
-    <div className={cn('grid gap-4', variant === 'sheet' && 'gap-5')}>
+    <div className={cn('grid gap-3', variant === 'sheet' && 'gap-3')}>
       <form className="grid gap-3" onSubmit={handleSubmit}>
         <Input
           ref={inputRef}
@@ -303,11 +303,11 @@ export default function QuickAddComposer({
 
         {preview ? (
           <Card
-            className={cn(
-              'grid gap-3 border p-4 shadow-none',
-              preview.status === 'ready'
-                ? 'border-success/22 bg-success-soft/35'
-                : 'border-border-subtle bg-surface-2/55'
+              className={cn(
+                'grid gap-3 border p-3.5 shadow-none md:p-5',
+                preview.status === 'ready'
+                  ? 'border-success/18 bg-success-soft/35'
+                  : 'border-border-subtle bg-surface-2/55'
             )}
           >
             <div className="flex flex-wrap items-center gap-2">
@@ -320,8 +320,8 @@ export default function QuickAddComposer({
               ) : null}
             </div>
 
-            <div className="grid gap-2">
-              <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+            <div className="grid gap-2.5">
+              <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
                 {preview.title || t('dashboard.quickAdd.missingTitle')}
               </strong>
 
@@ -350,11 +350,7 @@ export default function QuickAddComposer({
         ) : null}
 
         {showSuggestions || showTransferHint ? (
-          <div className="grid gap-3 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-4 animate-fade-in">
-            {showSuggestions ? (
-              <p className="text-sm text-text-3">{t('dashboard.quickAdd.basedOnHistory')}</p>
-            ) : null}
-
+            <div className="grid gap-3 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-3.5 animate-fade-in">
             {showTransferHint ? (
               <Button asChild variant="secondary" className="justify-start">
                 <Link href="/transfer">
@@ -366,7 +362,9 @@ export default function QuickAddComposer({
 
             {categorySuggestions.length > 0 ? (
               <div className="grid gap-2">
-                <p className="kicker">{t('dashboard.quickAdd.suggestedCategories')}</p>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                  {t('dashboard.quickAdd.suggestedCategories')}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {categorySuggestions.map((suggestion) => {
                     const selected = overrideCategoryId === suggestion.id;
@@ -376,6 +374,8 @@ export default function QuickAddComposer({
                         key={suggestion.id}
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
+                        size="sm"
+                        className={cn('min-h-[2.75rem] rounded-[var(--radius-control)] px-3.5', selected && 'ring-2 ring-accent-soft')}
                         onClick={() => setOverrideCategoryId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -390,7 +390,9 @@ export default function QuickAddComposer({
 
             {walletSuggestions.length > 0 ? (
               <div className="grid gap-2">
-                <p className="kicker">{t('dashboard.quickAdd.suggestedWallets')}</p>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                  {t('dashboard.quickAdd.suggestedWallets')}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {walletSuggestions.map((suggestion) => {
                     const selected = overrideWalletId === suggestion.id;
@@ -400,6 +402,8 @@ export default function QuickAddComposer({
                         key={suggestion.id}
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
+                        size="sm"
+                        className={cn('min-h-[2.75rem] rounded-[var(--radius-control)] px-3.5', selected && 'ring-2 ring-accent-soft')}
                         onClick={() => setOverrideWalletId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -444,10 +448,12 @@ export default function QuickAddComposer({
       {!preview ? (
         <div className="flex flex-wrap gap-2">
           {examples.map((example) => (
-            <button
+            <Button
               key={example}
               type="button"
-              className="inline-flex items-center rounded-full border border-border-subtle bg-surface-2/55 px-3 py-1.5 text-sm text-accent-strong transition hover:border-border-strong hover:bg-surface-2"
+              variant="secondary"
+              size="sm"
+              className="min-h-[2.4rem] rounded-[var(--radius-control)] px-3.5 text-accent-strong"
               onClick={() => {
                 setInput(example);
                 setOverrideCategoryId(null);
@@ -456,7 +462,7 @@ export default function QuickAddComposer({
               }}
             >
               {example}
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
@@ -473,7 +479,7 @@ export default function QuickAddComposer({
 
 function QuickAddChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-surface-1 px-3 py-1.5 text-sm font-medium text-text-2">
+    <span className="inline-flex min-h-[2.1rem] items-center rounded-full border border-border-subtle bg-surface-1 px-3 py-1.5 text-sm font-medium text-text-2">
       {children}
     </span>
   );

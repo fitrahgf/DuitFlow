@@ -126,15 +126,17 @@ function TransferPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('transfers.title')} />
-        <PageHeaderActions>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => {
-              setLocalEditId(null);
-              setLocalFromWalletId(null);
+        <PageHeader>
+          <PageHeading title={t('transfers.title')} />
+          <PageHeaderActions>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="max-sm:min-w-max"
+              onClick={() => {
+                setLocalEditId(null);
+                setLocalFromWalletId(null);
               setLocalFormOpen(true);
             }}
           >
@@ -164,7 +166,7 @@ function TransferPageContent() {
         </DialogContent>
       </Dialog>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           label={t('transfers.summary.totalMoved')}
           value={formatCurrency(totalMoved)}
@@ -179,7 +181,7 @@ function TransferPageContent() {
       </section>
 
       <SurfaceCard>
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           <SectionHeading title={t('transfers.list.title')} />
 
           {transfersQuery.isLoading ? (
@@ -206,7 +208,7 @@ function TransferPageContent() {
               }
             />
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2.5">
               {transfers.map((transfer) => (
                 <TransferRow
                   key={transfer.id}
@@ -249,10 +251,10 @@ function TransferRow({
   const totalDeducted = transfer.amount + transfer.fee_amount;
 
   return (
-    <article className="group grid gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-      <div className="grid gap-4">
+    <article className="group grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <div className="grid gap-3">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
+          <span className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
             <ArrowLeftRight size={18} />
           </span>
 
@@ -266,7 +268,7 @@ function TransferRow({
               </span>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2.5 sm:grid-cols-3">
               <TransferMetric
                 label={t('transfers.list.totalDeducted')}
                 value={formatCurrency(totalDeducted)}
@@ -285,7 +287,7 @@ function TransferRow({
               />
             </div>
 
-            {transfer.note ? <p className="m-0 text-sm leading-6 text-text-2">{transfer.note}</p> : null}
+            {transfer.note ? <p className="m-0 text-sm leading-5 text-text-2">{transfer.note}</p> : null}
           </div>
         </div>
       </div>
@@ -296,7 +298,7 @@ function TransferRow({
             type="button"
             variant="ghost"
             size="icon"
-            className="justify-self-start text-text-3 md:justify-self-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
+            className="h-9 w-9 justify-self-start text-text-3 md:justify-self-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
             aria-label={t('nav.more')}
           >
             <MoreHorizontal size={16} />

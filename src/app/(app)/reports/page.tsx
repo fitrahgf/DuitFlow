@@ -27,6 +27,7 @@ import { queryKeys } from '@/lib/queries/keys';
 import { fetchReportsOverview, type ReportTransaction } from '@/lib/queries/reports';
 import { fetchCategories } from '@/lib/queries/reference';
 import { parseReportsUrlState, serializeReportsUrlState, type ReportsUrlState } from '@/lib/url-state';
+import { cn } from '@/lib/utils';
 
 type ReportPeriodFilter = 'all' | 'month' | '30d' | '7d' | 'custom';
 
@@ -302,6 +303,8 @@ function ReportsPageContent() {
           <Button
             type="button"
             variant="secondary"
+            size="sm"
+            className="max-sm:min-w-max"
             onClick={() =>
               replaceReportsState({
                 period: defaultReportFilters.period,
@@ -319,8 +322,8 @@ function ReportsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="p-4 md:p-5">
-        <div className="grid gap-5">
+      <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
+        <div className="grid gap-3">
           <Toolbar className="items-stretch border-0 bg-transparent p-0 shadow-none">
             <FilterGroup label={t('reports.filters.period')}>
               {(['month', '30d', '7d', 'all', 'custom'] as const).map((period) => (
@@ -343,7 +346,7 @@ function ReportsPageContent() {
               ))}
             </FilterGroup>
 
-            <div className={filterGridClassName}>
+            <div className={cn(filterGridClassName, 'gap-3')}>
               <FilterField label={t('reports.filters.wallet')} htmlFor="reports-wallet">
                 <select
                   id="reports-wallet"
@@ -432,16 +435,79 @@ function ReportsPageContent() {
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard label={t('reports.summary.income')} value={formatCurrency(totalIncome)} tone="success" />
             <MetricCard label={t('reports.summary.expense')} value={formatCurrency(totalExpense)} tone="danger" />
             <MetricCard label={t('reports.summary.net')} value={formatCurrency(netFlow)} tone="accent" />
             <MetricCard label={t('reports.summary.balance')} value={formatCurrency(totalBalance)} />
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-2">
+          <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden">
+            <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+              <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">{language === 'id' ? 'Charts & insight' : 'Charts & insights'}</strong>
+              <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+            </summary>
+            <div className="grid gap-3 border-t border-border-subtle px-3.5 py-3">
+              <section className="grid gap-3">
+                <SurfaceCard>
+                  <div className="grid gap-3">
+                    <SectionHeading title={t('reports.charts.category')} />
+                    <div className="h-[16rem]">
+                      {categoryRows.length > 0 ? (
+                        <CategoryDoughnutChart
+                          data={{
+                            labels: categoryRows.map((row) => row.name),
+                            values: categoryRows.map((row) => row.total),
+                            colors: categoryRows.map((row) => row.color),
+                          }}
+                        />
+                      ) : (
+                        <EmptyState title={t('reports.charts.categoryEmpty')} compact icon={<PieChart size={18} />} />
+                      )}
+                    </div>
+                  </div>
+                </SurfaceCard>
+                <SurfaceCard>
+                  <div className="grid gap-3">
+                    <SectionHeading title={t('reports.charts.trend')} />
+                    <div className="h-[16rem]">
+                      <TransactionBarChart
+                        data={{
+                          labels: trendLabels,
+                          income: trendIncome,
+                          expense: trendExpense,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </SurfaceCard>
+                <section className="grid grid-cols-2 gap-2.5">
+                  <InsightCard
+                    icon={<TrendingUp size={18} />}
+                    label={t('reports.insights.topCategory')}
+                    title={topCategory ? topCategory.name : t('reports.insights.noCategory')}
+                    meta={topCategory ? formatCurrency(topCategory.total) : '-'}
+                  />
+                  <InsightCard
+                    icon={<Wallet size={18} />}
+                    label={t('reports.insights.activeWallet')}
+                    title={mostActiveWallet ? mostActiveWallet.name : t('reports.insights.noWallet')}
+                    meta={mostActiveWallet ? `${mostActiveWallet.count}` : '-'}
+                  />
+                  <InsightCard
+                    icon={<BarChart3 size={18} />}
+                    label={t('reports.insights.averageDaily')}
+                    title={formatCurrency(averageDailyExpense)}
+                    meta={`${visibleExpenseTransactions.length} ${t('transactions.summary.count').toLowerCase()}`}
+                  />
+                </section>
+              </section>
+            </div>
+          </details>
+
+          <section className="hidden gap-4 sm:grid xl:grid-cols-2">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-4">
                 <SectionHeading title={t('reports.charts.category')} />
 
                 <div className="h-[18rem]">
@@ -461,7 +527,7 @@ function ReportsPageContent() {
             </SurfaceCard>
 
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-4">
                 <SectionHeading title={t('reports.charts.trend')} />
 
                 <div className="h-[18rem]">
@@ -477,7 +543,7 @@ function ReportsPageContent() {
             </SurfaceCard>
           </section>
 
-          <section className="grid gap-3 md:grid-cols-3">
+          <section className="hidden gap-3 md:grid-cols-3 sm:grid">
             <InsightCard
               icon={<TrendingUp size={18} />}
               label={t('reports.insights.topCategory')}
@@ -499,12 +565,12 @@ function ReportsPageContent() {
           </section>
 
           <SurfaceCard>
-            <div className="grid gap-5">
+            <div className="grid gap-3">
               <SectionHeading title={t('reports.keyword.title')} />
 
               <label
                 htmlFor="reports-keyword"
-                className="flex min-h-[3.2rem] items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 transition focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/70"
+                className="flex min-h-[2.95rem] items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-3.5 transition focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/70 sm:min-h-[3.2rem] sm:px-4"
               >
                 <Search size={18} className="text-text-3" />
                 <Input
@@ -586,9 +652,9 @@ function FilterGroup({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-      <span className="text-sm font-medium text-text-3">{label}</span>
-      <div className="flex flex-wrap gap-2">{children}</div>
+    <div className="grid gap-1.5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+      <span className="text-[0.74rem] font-semibold uppercase tracking-[0.14em] text-text-3 md:text-sm md:font-medium md:normal-case md:tracking-normal">{label}</span>
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible md:pb-0">{children}</div>
     </div>
   );
 }
@@ -627,8 +693,8 @@ function InsightCard({
   meta: string;
 }) {
   return (
-    <Card className="grid gap-3 border-border-subtle bg-surface-1 p-5 shadow-none">
-      <div className="grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
+    <Card className="grid gap-2.5 border-border-subtle bg-surface-1 p-3.5 shadow-none">
+      <div className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)] bg-accent-soft text-accent-strong">
         {icon}
       </div>
       <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">{label}</span>

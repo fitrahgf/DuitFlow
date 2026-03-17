@@ -63,6 +63,7 @@ import {
   transactionFiltersToUrlState,
   transactionUrlStateToFilters,
 } from '@/lib/url-state';
+import { cn } from '@/lib/utils';
 
 type TransactionSearchSummary = {
   allTimeTotal: number;
@@ -75,7 +76,7 @@ type TransactionSearchSummary = {
 };
 
 const MIN_DATE_STRING_LENGTH = 10;
-const FILTER_CHIP_PREVIEW_COUNT = 4;
+const FILTER_CHIP_PREVIEW_COUNT = 2;
 const selectClassName =
   'flex min-h-[3rem] w-full rounded-[var(--radius-control)] border border-border-subtle bg-surface-1 px-4 py-3 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70';
 
@@ -532,24 +533,32 @@ function TransactionsPageContent() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t('transactions.title')} />
+        <PageHeading
+          eyebrow="Ledger"
+          title={t('transactions.title')}
+        />
         <PageHeaderActions>
           <Button
             type="button"
             variant="secondary"
+            size="sm"
+            className="max-sm:min-w-max"
             onClick={handleExportCsv}
             disabled={transactionsQuery.isLoading || filteredTransactions.length === 0}
           >
             <Download size={16} />
-            {t('transactions.exportCsv')}
+            <span className="sm:hidden">CSV</span>
+            <span className="hidden sm:inline">{t('transactions.exportCsv')}</span>
           </Button>
-          <Button type="button" variant="secondary" onClick={() => router.push('/transfer')}>
+          <Button type="button" variant="secondary" size="sm" className="max-sm:min-w-max" onClick={() => router.push('/transfer')}>
             <ArrowLeftRight size={16} />
             {t('transfers.addTransfer')}
           </Button>
           <Button
             type="button"
             variant="primary"
+            size="sm"
+            className="max-sm:min-w-max"
             onClick={() => {
               setEditingTransaction(null);
               setIsFormOpen(true);
@@ -560,154 +569,207 @@ function TransactionsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="p-4 md:p-5">
-        <div className="grid gap-5">
-          <Toolbar className="items-stretch border-0 bg-transparent p-0 shadow-none sm:flex-col sm:items-stretch sm:justify-start xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center xl:gap-3">
-            <label
-              htmlFor="transaction-search"
-              className="flex min-h-[3.1rem] items-center gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 px-4 transition focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/70"
-            >
-              <Search size={18} className="text-text-3" />
-              <Input
-                id="transaction-search"
-                type="search"
-                value={filters.search}
-                onChange={(event) =>
-                  replaceTransactionState({
-                    ...filters,
-                    search: event.target.value,
-                  })
-                }
-                placeholder={t('transactions.searchPlaceholder')}
-                className="min-h-0 border-0 bg-transparent px-0 py-0 shadow-none ring-0 focus:ring-0"
-              />
-              {filters.search ? (
-                <button
-                  type="button"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-text-3 transition hover:bg-surface-1 hover:text-text-1"
-                  onClick={() =>
-                    replaceTransactionState({
-                      ...filters,
-                      search: '',
-                    })
-                  }
-                  aria-label={t('transactions.clearSearch')}
-                >
-                  <X size={16} />
-                </button>
-              ) : null}
-            </label>
-
-            <div className="flex flex-wrap gap-2 max-sm:flex-col">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setDraftFilters(filters);
-                  setIsFilterOpen(true);
-                }}
+      <section className={cn('grid gap-3.5', hasActiveFilters && 'xl:grid-cols-[minmax(0,1.18fr)_minmax(19rem,0.82fr)] xl:items-start')}>
+        <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
+          <div className="grid gap-3">
+            <Toolbar className="items-stretch border-0 bg-transparent p-0 shadow-none sm:flex-col sm:items-stretch sm:justify-start xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center xl:gap-3">
+              <label
+                htmlFor="transaction-search"
+                className="flex min-h-[2.95rem] items-center gap-3 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/55 px-3.5 transition-all duration-300 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft/70 sm:min-h-[3.15rem] sm:px-4"
               >
-                <Filter size={16} />
-                {t('transactions.advancedFilters')}
-              </Button>
-              {hasActiveFilters ? (
-                <Button type="button" variant="ghost" onClick={handleResetAll}>
-                  <RotateCcw size={16} />
-                  {t('transactions.resetAll')}
-                </Button>
-              ) : null}
-            </div>
-          </Toolbar>
-
-          <div className="grid gap-4">
-            <FilterGroup label={t('transactions.quickType')}>
-              {(['all', 'expense', 'income', 'transfer'] as const).map((type) => (
-                <Button
-                  key={type}
-                  type="button"
-                  size="sm"
-                  variant={filters.type === type ? 'primary' : 'secondary'}
-                  onClick={() =>
+                <Search size={18} className="text-text-3" />
+                <Input
+                  id="transaction-search"
+                  type="search"
+                  value={filters.search}
+                  onChange={(event) =>
                     replaceTransactionState({
                       ...filters,
-                      type,
+                      search: event.target.value,
                     })
                   }
-                >
-                  {t(`transactions.${type}`)}
-                </Button>
-              ))}
-            </FilterGroup>
+                  placeholder={t('transactions.searchPlaceholder')}
+                  className="min-h-0 border-0 bg-transparent px-0 py-0 shadow-none ring-0 focus:ring-0"
+                />
+                {filters.search ? (
+                  <button
+                    type="button"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-text-3 transition hover:bg-surface-1 hover:text-text-1"
+                    onClick={() =>
+                      replaceTransactionState({
+                        ...filters,
+                        search: '',
+                      })
+                    }
+                    aria-label={t('transactions.clearSearch')}
+                  >
+                    <X size={16} />
+                  </button>
+                ) : null}
+              </label>
 
-            <FilterGroup label={t('transactions.quickPeriod')}>
-              {(['all', '30d', '7d', 'month'] as const).map((period) => (
+              <div className="flex gap-2 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
                 <Button
-                  key={period}
                   type="button"
+                  variant="secondary"
                   size="sm"
-                  variant={filters.period === period ? 'primary' : 'secondary'}
-                  onClick={() =>
-                    replaceTransactionState({
-                      ...filters,
-                      period,
-                      customFrom: '',
-                      customTo: '',
-                    })
-                  }
+                  className="max-sm:min-w-max"
+                  onClick={() => {
+                    setDraftFilters(filters);
+                    setIsFilterOpen(true);
+                  }}
                 >
-                  {getPeriodLabel(period, t)}
+                  <Filter size={16} />
+                  {t('transactions.advancedFilters')}
                 </Button>
-              ))}
-            </FilterGroup>
-          </div>
+                {hasActiveFilters ? (
+                  <Button type="button" variant="ghost" size="sm" className="max-sm:min-w-max" onClick={handleResetAll}>
+                    <RotateCcw size={16} />
+                    {t('transactions.resetAll')}
+                  </Button>
+                ) : null}
+              </div>
+            </Toolbar>
 
-          {activeFilterChips.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {visibleFilterChips.map((chip) => (
-                <Badge key={chip} className="bg-surface-2 text-text-2">
-                  {chip}
-                </Badge>
-              ))}
-              {hiddenChipCount > 0 ? (
-                <span className="text-sm text-text-3">
-                  +{hiddenChipCount} {language === 'id' ? 'filter lain' : 'more'}
-                </span>
-              ) : null}
+            <div className="grid gap-3">
+              <FilterGroup label={t('transactions.quickType')}>
+                {(['all', 'expense', 'income', 'transfer'] as const).map((type) => (
+                  <Button
+                    key={type}
+                    type="button"
+                    size="sm"
+                    variant={filters.type === type ? 'primary' : 'secondary'}
+                    onClick={() =>
+                      replaceTransactionState({
+                        ...filters,
+                        type,
+                      })
+                    }
+                  >
+                    {t(`transactions.${type}`)}
+                  </Button>
+                ))}
+              </FilterGroup>
+
+              <FilterGroup label={t('transactions.quickPeriod')}>
+                {(['all', '30d', '7d', 'month'] as const).map((period) => (
+                  <Button
+                    key={period}
+                    type="button"
+                    size="sm"
+                    variant={filters.period === period ? 'primary' : 'secondary'}
+                    onClick={() =>
+                      replaceTransactionState({
+                        ...filters,
+                        period,
+                        customFrom: '',
+                        customTo: '',
+                      })
+                    }
+                  >
+                    {getPeriodLabel(period, t)}
+                  </Button>
+                ))}
+              </FilterGroup>
             </div>
-          ) : null}
-        </div>
-      </SurfaceCard>
 
-      {hasActiveFilters ? (
-        <SurfaceCard className="p-5">
-          <div className="grid gap-5">
-            <SectionHeading title={t('transactions.insightTitle')} />
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                label={t('transactions.summary.currentWindow')}
-                value={formatCurrency(searchSummary.currentTotal)}
-              />
-              <MetricCard
-                label={t('transactions.summary.last30Days')}
-                value={formatCurrency(searchSummary.last30DaysTotal)}
-              />
-              <MetricCard
-                label={t('transactions.summary.average')}
-                value={formatCurrency(searchSummary.averageAmount)}
-              />
-              <MetricCard label={t('transactions.summary.count')} value={searchSummary.count} />
-            </div>
-
-            <div className="grid gap-1">
-              <span className="text-sm text-text-3">{t('transactions.summary.latest')}</span>
-              <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
-                {getDisplayLatestLabel(searchSummary.latestTransaction, formatDate, t)}
-              </strong>
-            </div>
+            {activeFilterChips.length > 0 ? (
+              <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {visibleFilterChips.map((chip) => (
+                  <Badge key={chip} className="bg-surface-2 text-text-2 whitespace-nowrap">
+                    {chip}
+                  </Badge>
+                ))}
+                {hiddenChipCount > 0 ? (
+                  <span className="whitespace-nowrap text-sm text-text-3">
+                    +{hiddenChipCount} {language === 'id' ? 'filter lain' : 'more'}
+                  </span>
+                ) : null}
+                {hasActiveFilters ? (
+                  <button
+                    type="button"
+                    className="whitespace-nowrap text-sm font-medium text-text-3 transition hover:text-text-1"
+                    onClick={handleResetAll}
+                  >
+                    {t('transactions.resetAll')}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </SurfaceCard>
-      ) : null}
+
+        {hasActiveFilters ? (
+          <>
+            <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden">
+              <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+                <div className="grid gap-0.5">
+                  <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">{t('transactions.insightTitle')}</strong>
+                  <span className="text-xs text-text-3">
+                    {t('transactions.summary.count')}: {searchSummary.count}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+              </summary>
+              <div className="border-t border-border-subtle px-3.5 py-3">
+                <div className="grid gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <MetricCard
+                      label={t('transactions.summary.currentWindow')}
+                      value={formatCurrency(searchSummary.currentTotal)}
+                    />
+                    <MetricCard
+                      label={t('transactions.summary.last30Days')}
+                      value={formatCurrency(searchSummary.last30DaysTotal)}
+                    />
+                    <MetricCard
+                      label={t('transactions.summary.average')}
+                      value={formatCurrency(searchSummary.averageAmount)}
+                    />
+                    <MetricCard label={t('transactions.summary.count')} value={searchSummary.count} />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <span className="text-sm text-text-3">{t('transactions.summary.latest')}</span>
+                    <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                      {getDisplayLatestLabel(searchSummary.latestTransaction, formatDate, t)}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <SurfaceCard className="hidden sm:block xl:sticky xl:top-4">
+              <div className="grid gap-4">
+                <SectionHeading title={t('transactions.insightTitle')} />
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+                  <MetricCard
+                    label={t('transactions.summary.currentWindow')}
+                    value={formatCurrency(searchSummary.currentTotal)}
+                  />
+                  <MetricCard
+                    label={t('transactions.summary.last30Days')}
+                    value={formatCurrency(searchSummary.last30DaysTotal)}
+                  />
+                  <MetricCard
+                    label={t('transactions.summary.average')}
+                    value={formatCurrency(searchSummary.averageAmount)}
+                  />
+                  <MetricCard label={t('transactions.summary.count')} value={searchSummary.count} />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <span className="text-sm text-text-3">{t('transactions.summary.latest')}</span>
+                  <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                    {getDisplayLatestLabel(searchSummary.latestTransaction, formatDate, t)}
+                  </strong>
+                </div>
+              </div>
+            </SurfaceCard>
+          </>
+        ) : null}
+      </section>
 
       <Dialog
         open={isFormOpen}
@@ -719,6 +781,9 @@ function TransactionsPageContent() {
         }}
       >
         <DialogContent className="max-w-[42rem] overflow-hidden p-0" hideClose>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{editingTransaction ? t('transactions.form.edit') : t('transactions.form.new')}</DialogTitle>
+          </DialogHeader>
           <TransactionForm
             transaction={editingTransaction}
             onSuccess={() => {
@@ -1010,9 +1075,11 @@ function FilterGroup({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-      <span className="text-sm font-medium text-text-3">{label}</span>
-      <div className="flex flex-wrap gap-2">{children}</div>
+    <div className="grid gap-1.5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+      <span className="text-[0.74rem] font-semibold uppercase tracking-[0.14em] text-text-3 md:text-sm md:font-medium md:normal-case md:tracking-normal">{label}</span>
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible md:pb-0">
+        {children}
+      </div>
     </div>
   );
 }

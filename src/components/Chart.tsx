@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Bar,
   BarChart,
@@ -8,7 +8,6 @@ import {
   Cell,
   Pie,
   PieChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -52,6 +51,40 @@ function useHasClientLayout() {
     () => true,
     () => false
   );
+}
+
+function useChartContainerReady<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return;
+    }
+
+    const sync = () => {
+      const rect = element.getBoundingClientRect();
+      setSize({
+        width: Math.max(0, Math.floor(rect.width)),
+        height: Math.max(0, Math.floor(rect.height)),
+      });
+    };
+
+    sync();
+
+    const observer = new ResizeObserver(() => sync());
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return {
+    ref,
+    width: size.width,
+    height: size.height,
+    ready: size.width > 24 && size.height > 24,
+  };
 }
 
 function ChartTooltip({
@@ -116,6 +149,7 @@ function DonutLegend({
 
 export function TransactionBarChart({ data }: TransactionChartProps) {
   const mounted = useHasClientLayout();
+  const { ref, ready, width, height } = useChartContainerReady<HTMLDivElement>();
 
   const chartData = useMemo(
     () =>
@@ -132,26 +166,30 @@ export function TransactionBarChart({ data }: TransactionChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" minHeight={250}>
-      <BarChart data={chartData} barGap={8} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
-        <CartesianGrid vertical={false} stroke="var(--border-subtle)" strokeDasharray="3 7" />
-        <XAxis
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: 'var(--text-3)', fontSize: 12 }}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: 'var(--text-3)', fontSize: 12 }}
-          width={48}
-        />
-        <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--accent-soft)', opacity: 0.28, radius: 16 }} />
-        <Bar dataKey="Income" fill="var(--success)" radius={[10, 10, 8, 8]} maxBarSize={18} />
-        <Bar dataKey="Expense" fill="var(--danger)" radius={[10, 10, 8, 8]} maxBarSize={18} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div ref={ref} className="h-full min-h-[250px] w-full">
+      {ready ? (
+        <BarChart width={width} height={height} data={chartData} barGap={8} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="var(--border-subtle)" strokeDasharray="3 7" />
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: 'var(--text-3)', fontSize: 12 }}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: 'var(--text-3)', fontSize: 12 }}
+            width={48}
+          />
+          <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--accent-soft)', opacity: 0.28, radius: 16 }} />
+          <Bar dataKey="Income" fill="var(--success)" radius={[10, 10, 8, 8]} maxBarSize={18} />
+          <Bar dataKey="Expense" fill="var(--danger)" radius={[10, 10, 8, 8]} maxBarSize={18} />
+        </BarChart>
+      ) : (
+        <div className="h-full w-full rounded-2xl bg-surface-2" />
+      )}
+    </div>
   );
 }
 
@@ -159,6 +197,7 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
   const compact = useCompactCharts();
   const { resolvedTheme } = useTheme();
   const mounted = useHasClientLayout();
+  const { ref, ready, width, height } = useChartContainerReady<HTMLDivElement>();
 
   const chartData = useMemo(
     () =>
@@ -178,14 +217,16 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
 
   return (
     <div className={compact ? 'grid h-full gap-4' : 'grid h-full grid-cols-[minmax(0,1fr)_11rem] gap-4'}>
-      <div className="min-h-[15rem]">
-        <ResponsiveContainer width="100%" minHeight={250}>
-          <PieChart>
+      <div ref={ref} className="h-[250px] min-h-[15rem]">
+        {ready ? (
+          <PieChart width={width} height={height}>
             <Tooltip content={<ChartTooltip />} />
             <Pie
               data={chartData}
               dataKey="value"
               nameKey="name"
+              cx="50%"
+              cy="50%"
               innerRadius={compact ? 54 : 64}
               outerRadius={compact ? 82 : 92}
               paddingAngle={3}
@@ -197,7 +238,9 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
               ))}
             </Pie>
           </PieChart>
-        </ResponsiveContainer>
+        ) : (
+          <div className="h-full w-full rounded-2xl bg-surface-2" />
+        )}
       </div>
       <DonutLegend entries={chartData} compact={compact} />
     </div>

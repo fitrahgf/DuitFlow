@@ -480,15 +480,15 @@ export default function WishlistPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="p-4 md:p-5">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WishlistTab)} className="grid gap-5">
-          <div className="overflow-x-auto pb-1">
-            <TabsList className="w-max min-w-full justify-start rounded-2xl">
+      <SurfaceCard>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WishlistTab)} className="grid gap-3">
+          <div className="pb-1">
+            <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-2xl md:!flex md:flex-wrap">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.key}
                   value={tab.key}
-                  className="gap-2 rounded-xl px-4 py-2 text-sm"
+                  className="min-w-0 w-full gap-2 rounded-xl px-3 py-2 text-sm md:flex-1"
                 >
                   <span>{tab.label}</span>
                   <span className="inline-flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.68rem] font-bold text-text-3">
@@ -529,27 +529,54 @@ export default function WishlistPage() {
                 icon={<Clock3 size={18} />}
               />
             ) : (
-              <div className="grid gap-6">
+              <div className="grid gap-3.5">
                 {activeSections.map((section) =>
                   section.items.length > 0 ? (
-                    <section key={section.title} className="grid gap-4">
-                      <SectionHeading title={section.title} />
-                      <div className="grid gap-4 2xl:grid-cols-2">
-                        {section.items.map((item) => (
-                          <WishlistItemCard
-                            key={item.id}
-                            item={item}
-                            language={language}
-                            t={t}
-                            onEdit={() => {
-                              setEditingItem(item);
-                              setIsFormOpen(true);
-                            }}
-                            onReview={() => setReviewingItem(item)}
-                            onConvert={() => setConvertingItem(item)}
-                            convertPending={markPurchasedMutation.isPending}
-                          />
-                        ))}
+                    <section key={section.title} className="grid gap-3">
+                      <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden" open>
+                        <summary className="flex list-none items-center justify-between gap-3 px-3.5 py-3">
+                          <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">{section.title}</strong>
+                          <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+                        </summary>
+                        <div className="border-t border-border-subtle px-3.5 py-3">
+                          <div className="grid gap-3">
+                            {section.items.map((item) => (
+                              <WishlistItemCard
+                                key={item.id}
+                                item={item}
+                                language={language}
+                                t={t}
+                                onEdit={() => {
+                                  setEditingItem(item);
+                                  setIsFormOpen(true);
+                                }}
+                                onReview={() => setReviewingItem(item)}
+                                onConvert={() => setConvertingItem(item)}
+                                convertPending={markPurchasedMutation.isPending}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </details>
+                      <div className="hidden gap-4 sm:grid">
+                        <SectionHeading title={section.title} />
+                        <div className="grid gap-4 2xl:grid-cols-2">
+                          {section.items.map((item) => (
+                            <WishlistItemCard
+                              key={item.id}
+                              item={item}
+                              language={language}
+                              t={t}
+                              onEdit={() => {
+                                setEditingItem(item);
+                                setIsFormOpen(true);
+                              }}
+                              onReview={() => setReviewingItem(item)}
+                              onConvert={() => setConvertingItem(item)}
+                              convertPending={markPurchasedMutation.isPending}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </section>
                   ) : null
@@ -822,6 +849,9 @@ export default function WishlistPage() {
         }}
       >
         <DialogContent className="max-w-[42rem] overflow-hidden p-0" hideClose>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t('transactions.form.new')}</DialogTitle>
+          </DialogHeader>
           <TransactionForm
             initialValues={convertingPrefill}
             createSource="wishlist_conversion"
@@ -946,9 +976,9 @@ function WishlistItemCard({
             };
 
   return (
-    <Card className={cn('grid gap-5 p-5 md:p-6', getCardTone(item), item.status === 'purchased' && 'opacity-90')}>
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="grid gap-3">
+    <Card className={cn('grid gap-3.5 p-3.5 md:p-5', getCardTone(item), item.status === 'purchased' && 'opacity-90')}>
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div className="grid gap-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={getStatusVariant(item.status)}>{t(`wishlist.status.${item.status}`)}</Badge>
             {item.priority === 'high' ? (
@@ -957,8 +987,8 @@ function WishlistItemCard({
             {isDue ? <Badge variant="warning">{t('wishlist.actions.reviewNow')}</Badge> : null}
           </div>
 
-          <div className="grid gap-1">
-            <strong className="text-lg font-semibold tracking-[-0.04em] text-text-1">{item.item_name}</strong>
+          <div className="grid gap-0.5">
+            <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">{item.item_name}</strong>
             <span className="text-sm text-text-3">{item.target_price ? formatCurrency(item.target_price) : '-'}</span>
           </div>
         </div>
@@ -976,7 +1006,7 @@ function WishlistItemCard({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-2xl"
+            className="h-9 w-9 rounded-2xl"
             onClick={onEdit}
             aria-label={t('wishlist.form.edit')}
             title={t('wishlist.form.edit')}
@@ -1004,7 +1034,7 @@ function WishlistItemCard({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         <MetaStat label={t('wishlist.meta.reviewDate')} value={formatDate(item.review_date, language)} />
         <MetaStat
           label={t('wishlist.meta.coolingDays')}
@@ -1017,24 +1047,50 @@ function WishlistItemCard({
       </div>
 
       {item.reason || item.note ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {item.reason ? (
-            <div className="grid gap-1">
-              <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                {t('wishlist.form.reason')}
-              </span>
-              <p className="m-0 text-sm leading-6 text-text-2">{item.reason}</p>
+        <>
+          <div className="hidden gap-4 md:grid md:grid-cols-2">
+            {item.reason ? (
+              <div className="grid gap-1">
+                <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                  {t('wishlist.form.reason')}
+                </span>
+                <p className="m-0 text-sm leading-6 text-text-2">{item.reason}</p>
+              </div>
+            ) : null}
+            {item.note ? (
+              <div className="grid gap-1">
+                <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                  {t('wishlist.form.note')}
+                </span>
+                <p className="m-0 text-sm leading-6 text-text-2">{item.note}</p>
+              </div>
+            ) : null}
+          </div>
+          <details className="group rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1/70 md:hidden">
+            <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
+              <span className="text-sm font-medium text-text-2">{language === 'id' ? 'Detail' : 'Details'}</span>
+              <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+            </summary>
+            <div className="grid gap-3 border-t border-border-subtle px-3 py-3">
+              {item.reason ? (
+                <div className="grid gap-1">
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                    {t('wishlist.form.reason')}
+                  </span>
+                  <p className="m-0 text-sm leading-5 text-text-2">{item.reason}</p>
+                </div>
+              ) : null}
+              {item.note ? (
+                <div className="grid gap-1">
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                    {t('wishlist.form.note')}
+                  </span>
+                  <p className="m-0 text-sm leading-5 text-text-2">{item.note}</p>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-          {item.note ? (
-            <div className="grid gap-1">
-              <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                {t('wishlist.form.note')}
-              </span>
-              <p className="m-0 text-sm leading-6 text-text-2">{item.note}</p>
-            </div>
-          ) : null}
-        </div>
+          </details>
+        </>
       ) : null}
 
       <div className="flex flex-wrap gap-2">

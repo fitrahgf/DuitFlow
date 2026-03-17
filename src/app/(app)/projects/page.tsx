@@ -174,17 +174,17 @@ export default function ProjectsPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('projects.title')} />
-        <PageHeaderActions>
-          <Button type="button" variant="primary" onClick={() => setIsFormOpen(true)}>
+        <PageHeader>
+          <PageHeading title={t('projects.title')} />
+          <PageHeaderActions>
+          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => setIsFormOpen(true)}>
             <FolderKanban size={16} />
             {t('projects.createProject')}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label={t('projects.title')} value={loading ? '...' : projects.length} />
         <MetricCard label={t('projects.status.active')} value={loading ? '...' : activeProjects.length} tone="accent" />
         <MetricCard label={t('projects.totalBudget')} value={loading ? '...' : formatCurrency(totalBudget)} tone="success" />
@@ -195,13 +195,13 @@ export default function ProjectsPage() {
       </section>
 
       <SurfaceCard>
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           <SectionHeading title={language === 'id' ? 'Daftar proyek' : 'Project list'} />
 
           {loading ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={`project-skeleton-${index}`} className="grid gap-4 p-5 shadow-none">
+                <Card key={`project-skeleton-${index}`} className="grid gap-4 p-4 shadow-none">
                   <div className="skeleton skeleton-line skeleton-line--sm" />
                   <div className="skeleton skeleton-line skeleton-line--lg" />
                   <div className="skeleton skeleton-line skeleton-line--md" />
@@ -220,21 +220,21 @@ export default function ProjectsPage() {
               }
             />
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-3 xl:grid-cols-2">
               {projects.map((project) => (
                 <article
                   key={project.id}
-                  className="grid gap-5 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-5"
+                  className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="grid gap-2">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="grid gap-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant={project.status === 'active' ? 'accent' : 'default'}>
                           {t(`projects.status.${project.status}`)}
                         </Badge>
                         <Badge>{project.project_categories?.length ?? 0}</Badge>
                       </div>
-                      <strong className="text-lg font-semibold tracking-[-0.04em] text-text-1">
+                      <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
                         {project.name}
                       </strong>
                     </div>

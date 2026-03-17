@@ -32,7 +32,7 @@ import {
 } from '@/lib/validators/transaction';
 
 const compactSelectClassName =
-  'flex min-h-[2.75rem] w-full rounded-[var(--radius-control)] border border-border-subtle bg-surface-1 px-3.5 py-2.5 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70';
+  'flex min-h-[2.9rem] w-full rounded-[var(--radius-control)] border border-border-subtle bg-surface-1 px-3.5 py-2.5 text-sm text-text-1 outline-none transition-all duration-300 hover:border-border-strong hover:bg-surface-2/55 focus:border-accent focus:ring-4 focus:ring-accent-soft/70';
 
 interface TransactionFormData {
   id: string;
@@ -190,15 +190,15 @@ export default function TransactionForm({
 
   return (
     <form
-      className={cn('grid gap-4 rounded-[inherit] bg-surface-1 p-4 md:p-5', compactSheet && 'gap-4 p-0')}
+      className={cn('grid gap-3.5 rounded-[inherit] bg-surface-1 p-3.5 md:p-5', compactSheet && 'gap-3 p-0')}
       onSubmit={handleSubmit((values) => transactionMutation.mutate(values))}
     >
       {!compactSheet ? (
-        <div className="grid gap-1">
-          <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+        <div className="grid gap-1.5">
+          <span className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-text-3">
             {transaction ? t('transactions.form.edit') : t('transactions.form.new')}
           </span>
-          <h3 className="text-lg font-semibold tracking-[-0.03em]">{formTitle}</h3>
+          <h3 className="text-lg font-semibold tracking-[-0.04em]">{formTitle}</h3>
         </div>
       ) : null}
 
@@ -207,12 +207,12 @@ export default function TransactionForm({
 
         <fieldset className="grid gap-2.5">
           <legend className="input-label">{t('transactions.form.type')}</legend>
-          <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <Button
               type="button"
               variant={selectedType === 'expense' ? 'danger' : 'secondary'}
               fullWidth
-              className="min-h-[2.85rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
+              className="min-h-[2.9rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
               onClick={() => setValue('type', 'expense', { shouldDirty: true })}
             >
               <ArrowDownLeft size={18} />
@@ -222,7 +222,7 @@ export default function TransactionForm({
               type="button"
               variant={selectedType === 'income' ? 'primary' : 'secondary'}
               fullWidth
-              className="min-h-[2.85rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
+              className="min-h-[2.9rem] justify-start rounded-[calc(var(--radius-card)-0.18rem)] px-3.5"
               onClick={() => setValue('type', 'income', { shouldDirty: true })}
             >
               <ArrowUpRight size={18} />
@@ -231,7 +231,7 @@ export default function TransactionForm({
           </div>
         </fieldset>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <div className="input-group md:col-span-2">
             <label className="input-label" htmlFor="transaction-amount">{t('transactions.form.amount')}</label>
             <Controller
@@ -246,9 +246,9 @@ export default function TransactionForm({
                   onBlur={field.onBlur}
                   onNumberValueChange={field.onChange}
                   ref={field.ref}
-                  className="min-h-[2.85rem] px-3.5 py-2.5"
-                  required
-                />
+                    className="min-h-[2.95rem] px-3.5 py-2.5"
+                    required
+                  />
               )}
             />
             <FieldError message={errors.amount ? t('transactions.form.amountInvalid') : undefined} />
@@ -259,7 +259,7 @@ export default function TransactionForm({
             <Input
               id="transaction-title"
               type="text"
-              className="min-h-[2.85rem] px-3.5 py-2.5"
+              className="min-h-[2.95rem] px-3.5 py-2.5"
               placeholder={t('transactions.form.titlePlaceholder')}
               {...register('title')}
               required
@@ -291,7 +291,7 @@ export default function TransactionForm({
       <div className="grid gap-3">
         <FormSectionHeader step="02" title={detailsTitle} />
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <div className="input-group">
             <label className="input-label" htmlFor="transaction-category">{t('transactions.form.category')}</label>
             <select
@@ -311,7 +311,7 @@ export default function TransactionForm({
 
           <div className="input-group">
             <label className="input-label" htmlFor="transaction-date">{t('transactions.form.date')}</label>
-            <Input id="transaction-date" type="date" className="min-h-[2.85rem] px-3.5 py-2.5" {...register('date')} required />
+            <Input id="transaction-date" type="date" className="min-h-[2.95rem] px-3.5 py-2.5" {...register('date')} required />
           </div>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function TransactionForm({
         </div>
       </div>
 
-      <Card className={cn('border-border-subtle bg-surface-2/55 p-3 shadow-none', compactSheet && 'p-2.5')}>
+      <Card className={cn('border-border-subtle bg-surface-2/55 p-3 shadow-none', compactSheet && 'p-3')}>
         <div className="flex flex-wrap items-center gap-2 text-sm text-text-2">
           <SaveHint
             icon={transactionType === 'income' ? <ArrowUpRight size={15} /> : <ArrowDownLeft size={15} />}
@@ -341,7 +341,14 @@ export default function TransactionForm({
         </div>
       </Card>
 
-      <div className={cn('grid gap-2.5', compactSheet ? 'grid-cols-1' : 'md:grid-cols-2')}>
+      <div
+        className={cn(
+          'grid gap-2.5',
+          compactSheet
+            ? 'sticky bottom-0 z-10 -mx-1 grid-cols-1 border-t border-border-subtle bg-surface-1 px-1 pb-1 pt-3'
+            : 'md:grid-cols-2'
+        )}
+      >
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
@@ -364,11 +371,11 @@ function FormSectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-text-3">
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
         {step}
       </span>
       <div className="grid gap-0.5">
-        <strong className="text-sm font-semibold text-text-1">{title}</strong>
+        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">{title}</strong>
         {description ? <span className="text-sm text-text-3">{description}</span> : null}
       </div>
     </div>
@@ -383,7 +390,7 @@ function SaveHint({
   icon: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-2.5 py-1">
+    <span className="inline-flex min-h-[2rem] items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-2.5 py-1">
       <span className="text-text-3">{icon}</span>
       <span className="font-medium text-text-1">{value}</span>
     </span>

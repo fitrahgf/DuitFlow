@@ -66,6 +66,7 @@ interface RenderNavItem {
   icon: React.ReactNode;
   active: boolean;
   badgeCount: number;
+  group: NavItemConfig['group'];
 }
 
 const navItems: NavItemConfig[] = [
@@ -178,10 +179,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      setUser(currentUser);
+      try {
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        setUser(currentUser);
+      } catch {
+        setUser(null);
+      }
     };
 
     void getUser();
@@ -284,6 +289,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     icon: <item.icon size={18} />,
     active: pathname === item.href,
     badgeCount: item.href === '/notifications' ? unreadCount : 0,
+    group: item.group,
   });
 
   const getItemsByHref = (hrefs: NavHref[]) =>
@@ -298,8 +304,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     });
 
   const desktopCore = getItemsByHref(['/dashboard', '/transactions', '/wallets', '/transfer']);
-  const desktopPlanning = getItemsByHref(['/budgets', '/reports', '/wishlist']);
-  const desktopMoreItems = getItemsByHref(['/categories', '/projects', '/subscriptions']);
+  const desktopPlanning = getItemsByHref(['/budgets', '/reports', '/wishlist', '/projects']);
+  const desktopMoreItems = getItemsByHref(['/categories', '/subscriptions']);
   const desktopUtilities = getItemsByHref(['/notifications', '/settings']);
   const tabletPrimary = getItemsByHref(['/dashboard', '/transactions', '/wallets', '/notifications']);
   const mobilePrimary = getItemsByHref(['/dashboard', '/transactions', '/wallets']);
@@ -319,125 +325,167 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, {});
   const currentPage = pageMap[pathname] || 'DuitFlow';
 
-  const showFab = pathname !== '/settings';
   const unreadBadgeLabel = unreadCount > 99 ? '99+' : unreadCount;
   const desktopMoreActive = desktopMoreItems.some((item) => item.active);
 
   const navLinkClass = (active: boolean) =>
     cn(
-      'inline-flex min-h-[2.75rem] items-center gap-3 rounded-[calc(var(--radius-control)+0.1rem)] border border-transparent px-3 py-2.5 text-sm font-medium text-text-3 transition hover:border-border-subtle hover:bg-surface-1 hover:text-text-1',
+      'inline-flex min-h-[2.5rem] items-center gap-2 rounded-[calc(var(--radius-control)+0.04rem)] border border-transparent px-2.5 py-2 text-[0.88rem] font-medium text-text-3 transition-all duration-300 hover:border-border-subtle hover:bg-surface-1 hover:text-text-1',
       active && 'border-border-subtle bg-surface-1 text-text-1 shadow-xs'
     );
 
   return (
     <CurrencyPreferencesProvider currencyCode={profileQuery.data?.profile.currency_code}>
-      <div className="min-h-screen md:grid md:grid-cols-[4.75rem_minmax(0,1fr)] lg:grid-cols-[16.25rem_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle bg-canvas/80 px-4 py-5 backdrop-blur-xl lg:flex">
-        <div className="mb-7 grid gap-2">
-          <Link href="/dashboard" className="inline-flex items-center gap-1 text-[1.35rem] font-extrabold tracking-[-0.06em]">
-            <span className="text-accent-strong">Duit</span>Flow
-          </Link>
-          <span className="max-w-[12rem] truncate text-xs text-text-3">{userEmail || 'Workspace'}</span>
+      <div className="min-h-screen md:grid md:grid-cols-[4.25rem_minmax(0,1fr)] lg:grid-cols-[13.5rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle/80 bg-[color:hsla(42,30%,98%,0.82)] px-2.5 py-2.5 backdrop-blur-2xl lg:flex dark:bg-[color:hsla(156,18%,8%,0.82)]">
+        <div className="flex items-center gap-2.5 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1/90 px-2.5 py-2.5 shadow-xs">
+          <span className="grid h-9 w-9 place-items-center rounded-[0.9rem] bg-accent text-[0.7rem] font-extrabold tracking-[-0.04em] text-white">
+            DF
+          </span>
+          <div className="min-w-0 grid gap-0.5">
+            <Link href="/dashboard" className="truncate text-[0.98rem] font-semibold tracking-[-0.05em] text-text-1">
+              DuitFlow
+            </Link>
+            <span className="truncate text-xs text-text-3">{userEmail || 'Workspace'}</span>
+          </div>
         </div>
 
-        <nav className="grid gap-5">
-          <div className="grid gap-1.5">
-            <span className="px-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.core')}</span>
-            {desktopCore.map((item) => (
-              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
-                <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badgeCount > 0 ? (
-                  <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
-                    {unreadBadgeLabel}
-                  </span>
-                ) : null}
-              </Link>
-            ))}
+        <div className="mt-2.5 flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1">
+            <div className="grid gap-1.5">
+              <span className="px-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.core')}</span>
+              {desktopCore.map((item) => (
+                <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+                  <span className="grid h-7 w-7 place-items-center rounded-[0.82rem] bg-surface-2">{item.icon}</span>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badgeCount > 0 ? (
+                    <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
+                      {unreadBadgeLabel}
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+
+            <div className="grid gap-1.5 border-t border-border-subtle/70 pt-2.5">
+              <span className="px-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.planning')}</span>
+              {desktopPlanning.map((item) => (
+                <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+                  <span className="grid h-7 w-7 place-items-center rounded-[0.82rem] bg-surface-2">{item.icon}</span>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badgeCount > 0 ? (
+                    <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
+                      {unreadBadgeLabel}
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+
+            <div className="grid gap-1 border-t border-border-subtle/70 pt-2.5">
+              <span className="px-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.more')}</span>
+              <button
+                type="button"
+                className={cn(navLinkClass(desktopMoreExpanded || desktopMoreActive), 'w-full')}
+                onClick={() => setDesktopMoreExpanded((current) => !current)}
+                aria-expanded={desktopMoreExpanded}
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-[0.82rem] bg-surface-2">
+                  <Menu size={18} />
+                </span>
+                <span className="min-w-0 flex-1 truncate">{language === 'id' ? 'Menu lainnya' : 'More routes'}</span>
+              </button>
+
+              {desktopMoreExpanded || desktopMoreActive ? (
+                <div className="grid gap-1 pt-1">
+                  {desktopMoreItems.map((item) => (
+                    <Link key={item.href} href={item.href} className={cn(navLinkClass(item.active), 'pl-4')}>
+                      <span className="grid h-7 w-7 place-items-center rounded-[0.82rem] bg-surface-2">{item.icon}</span>
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-1.5 border-t border-border-subtle/70 pt-2.5">
+              <span className="px-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.settings')}</span>
+              {desktopUtilities.map((item) => (
+                <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+                  <span className="grid h-7 w-7 place-items-center rounded-[0.82rem] bg-surface-2">{item.icon}</span>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badgeCount > 0 ? (
+                    <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
+                      {unreadBadgeLabel}
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="grid gap-1.5">
-            <span className="px-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('nav.planning')}</span>
-            {desktopPlanning.map((item) => (
-              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
-                <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badgeCount > 0 ? (
-                  <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
-                    {unreadBadgeLabel}
-                  </span>
-                ) : null}
-              </Link>
-            ))}
-          </div>
+          <div className="mt-2 grid gap-2 border-t border-border-subtle/70 pt-2.5">
+            <Button type="button" variant="primary" fullWidth className="h-10" onClick={() => setQuickTransactionOpen(true)}>
+              <Plus size={16} />
+              {t('nav.quickTransaction')}
+            </Button>
 
-          <div className="grid gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              <Button asChild variant="secondary" size="sm" fullWidth className="h-9">
+                <Link href="/transfer">
+                  <ArrowLeftRight size={15} />
+                  {t('nav.transfer')}
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" size="sm" fullWidth className="h-9">
+                <Link href="/notifications">
+                  <Inbox size={15} />
+                  {unreadCount > 0 ? unreadBadgeLabel : t('nav.notifications')}
+                </Link>
+              </Button>
+            </div>
+
             <button
               type="button"
-              className={navLinkClass(desktopMoreExpanded || desktopMoreActive)}
-              onClick={() => setDesktopMoreExpanded((current) => !current)}
-              aria-expanded={desktopMoreExpanded}
+              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[calc(var(--radius-control)+0.04rem)] border border-border-subtle/80 bg-surface-1/88 px-2.5 py-2 text-left transition-all duration-300 hover:border-border-subtle hover:bg-surface-2"
+              onClick={handleSignOut}
+              title={t('nav.signOut')}
             >
-              <span className="grid h-5 w-5 place-items-center">
-                <Menu size={18} />
-              </span>
-              <span className="min-w-0 flex-1 truncate">{t('nav.more')}</span>
-            </button>
-
-            {desktopMoreExpanded ? (
-              <div className="grid gap-1">
-                {desktopMoreItems.map((item) => (
-                  <Link key={item.href} href={item.href} className={cn(navLinkClass(item.active), 'ml-3 pl-4')}>
-                    <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
-                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  </Link>
-                ))}
+              <div className="grid h-7 w-7 place-items-center rounded-full bg-surface-2 text-[0.66rem] font-semibold text-text-1">
+                {user ? getInitials(user.email || 'U') : '?'}
               </div>
-            ) : null}
+              <div className="min-w-0 grid gap-0.5">
+                <strong className="truncate text-[0.88rem]">{profileName}</strong>
+                <span className="truncate text-xs text-text-3">{userEmail || t('nav.signOut')}</span>
+              </div>
+              <LogOut size={16} className="text-text-3" />
+            </button>
           </div>
-        </nav>
-
-        <div className="mt-auto grid gap-4 border-t border-border-subtle pt-5">
-          {desktopUtilities.map((item) => (
-            <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
-              <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
-              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {item.badgeCount > 0 ? (
-                <span className="inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
-                  {unreadBadgeLabel}
-                </span>
-              ) : null}
-            </Link>
-          ))}
-
-          <button
-            type="button"
-            className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 px-3.5 py-3 text-left transition hover:border-border-strong hover:bg-surface-2"
-            onClick={handleSignOut}
-            title={t('nav.signOut')}
-          >
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-text-1">
-              {user ? getInitials(user.email || 'U') : '?'}
-            </div>
-            <div className="min-w-0 grid gap-0.5">
-              <strong className="truncate text-sm">{profileName}</strong>
-              <span className="truncate text-xs text-text-3">{userEmail || t('nav.signOut')}</span>
-            </div>
-            <LogOut size={16} className="text-text-3" />
-          </button>
         </div>
       </aside>
 
-      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-4 border-r border-border-subtle bg-canvas/80 px-3 py-4 backdrop-blur-xl md:flex lg:hidden">
+      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-2.5 border-r border-border-subtle/80 bg-[color:hsla(42,30%,98%,0.82)] px-2.5 py-3 backdrop-blur-2xl md:flex lg:hidden dark:bg-[color:hsla(156,18%,8%,0.82)]">
         <Link
           href="/dashboard"
-          className="grid h-11 w-11 place-items-center rounded-[calc(var(--radius-control)+0.1rem)] border border-border-subtle bg-surface-1 text-[0.68rem] font-extrabold tracking-[-0.04em]"
+          className="grid h-11 w-11 place-items-center rounded-[calc(var(--radius-control)+0.1rem)] border border-border-subtle bg-surface-1 text-[0.68rem] font-extrabold tracking-[-0.04em] shadow-xs"
           aria-label="DuitFlow"
         >
           DF
         </Link>
 
-        <nav className="mt-1 grid gap-2">
+        <Button
+          type="button"
+          variant="primary"
+          size="icon"
+          className="h-11 w-11 rounded-[calc(var(--radius-control)+0.1rem)]"
+          onClick={() => setQuickTransactionOpen(true)}
+          aria-label={t('nav.quickTransaction')}
+          title={t('nav.quickTransaction')}
+        >
+          <Plus size={18} />
+        </Button>
+
+        <nav className="mt-1 grid gap-1.5">
           {tabletPrimary.map((item) => (
             <Link
               key={item.href}
@@ -474,7 +522,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <button
           type="button"
-          className="mt-auto grid h-10 w-10 place-items-center rounded-full border border-border-subtle bg-surface-1 text-xs font-semibold text-text-1"
+          className="mt-auto grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.08rem)] border border-border-subtle bg-surface-1 text-xs font-semibold text-text-1"
           onClick={handleSignOut}
           title={t('nav.signOut')}
         >
@@ -483,29 +531,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="min-w-0">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border-subtle bg-canvas/82 px-4 py-3 backdrop-blur-xl md:px-6 lg:hidden">
-          <h2 className="truncate text-[0.98rem] font-semibold tracking-[-0.03em] text-text-1">{currentPage}</h2>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/notifications"
-              className={cn(
-                'relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-border-subtle bg-surface-1 text-text-3 transition hover:border-border-strong hover:bg-surface-2 hover:text-text-1',
-                pathname === '/notifications' && 'bg-surface-2 text-text-1 shadow-xs'
-              )}
-              aria-label={t('nav.notifications')}
-              title={t('nav.notifications')}
-            >
-              <Bell size={18} />
-              {unreadCount > 0 ? (
-                <span className="absolute -right-1 -top-1 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
-                  {unreadBadgeLabel}
-                </span>
-              ) : null}
-            </Link>
+        <header className="sticky top-0 z-30 border-b border-border-subtle/80 bg-[var(--gradient-header)] backdrop-blur-2xl lg:hidden">
+          <div className="mx-auto flex max-w-shell items-center justify-between gap-3 px-4 py-2 md:px-5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="grid h-9 w-9 place-items-center rounded-[0.9rem] border border-border-subtle bg-surface-1 text-[0.68rem] font-extrabold tracking-[-0.04em] text-text-1">
+                DF
+              </span>
+              <div className="min-w-0 grid gap-0.5">
+                <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-text-3">DuitFlow</span>
+                <h2 className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">{currentPage}</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/notifications"
+                className={cn(
+                  'relative inline-flex h-10 w-10 items-center justify-center rounded-[calc(var(--radius-control)+0.08rem)] border border-border-subtle bg-surface-1 text-text-3 transition-all duration-300 hover:border-border-strong hover:bg-surface-2 hover:text-text-1',
+                  pathname === '/notifications' && 'bg-surface-2 text-text-1 shadow-xs'
+                )}
+                aria-label={t('nav.notifications')}
+                title={t('nav.notifications')}
+              >
+                <Bell size={18} />
+                {unreadCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[0.58rem] font-extrabold text-white">
+                    {unreadBadgeLabel}
+                  </span>
+                ) : null}
+              </Link>
+            </div>
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-shell px-4 pb-[calc(6.25rem+var(--safe-bottom))] pt-5 md:px-6 md:pb-10 lg:px-8">
+        <div className="mx-auto w-full max-w-shell px-4 pb-[calc(5.45rem+var(--safe-bottom))] pt-3 md:px-5 md:pb-8 lg:px-5 lg:pt-4 xl:px-6">
           {children}
         </div>
       </main>
@@ -517,21 +575,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         moreIcon={<Menu size={18} />}
         moreActive={moreOpen}
         onMore={() => setMoreOpen(true)}
+        actionLabel={t('nav.quickTransaction')}
+        actionIcon={<Plus size={20} />}
+        onAction={() => setQuickTransactionOpen(true)}
       />
-
-      {showFab && (
-        <Button
-          type="button"
-          variant="primary"
-          size="icon"
-          className="fixed bottom-[calc(2.65rem+var(--safe-bottom))] left-1/2 z-50 h-14 w-14 -translate-x-1/2 rounded-[1.1rem] shadow-sm md:hidden"
-          onClick={() => setQuickTransactionOpen(true)}
-          aria-label={t('nav.quickTransaction')}
-          title={t('nav.quickTransaction')}
-        >
-          <Plus size={20} />
-        </Button>
-      )}
 
       <MoreNavigationSheet
         open={moreOpen}

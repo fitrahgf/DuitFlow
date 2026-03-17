@@ -23,11 +23,11 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        right: 'inset-y-0 right-0 h-full w-full max-w-md rounded-l-[1.75rem] p-6',
-        left: 'inset-y-0 left-0 h-full w-full max-w-md rounded-r-[1.75rem] p-6',
-        top: 'inset-x-0 top-0 rounded-b-[1.75rem] p-6',
+        right: 'inset-y-0 right-0 h-full w-full max-w-md overflow-y-auto rounded-l-[1.75rem] p-5',
+        left: 'inset-y-0 left-0 h-full w-full max-w-md overflow-y-auto rounded-r-[1.75rem] p-5',
+        top: 'inset-x-0 top-0 overflow-y-auto rounded-b-[1.75rem] p-5',
         bottom:
-          'inset-x-0 bottom-0 mx-auto w-full max-w-[36rem] rounded-t-[1.75rem] px-4 pb-6 pt-4',
+          'inset-x-0 bottom-0 mx-auto w-full max-w-[36rem] max-h-[min(90dvh,48rem)] overflow-y-auto rounded-t-[1.75rem] px-4 pb-[calc(1rem+var(--safe-bottom))] pt-3',
       },
     },
     defaultVariants: {
@@ -48,7 +48,7 @@ export const SheetContent = ({
     <SheetOverlay />
     <DialogPrimitive.Content className={cn(sheetVariants({ side }), className)} {...props}>
       {!hideClose ? (
-        <DialogPrimitive.Close className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-text-3 transition hover:bg-surface-2 hover:text-text-1">
+        <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] text-text-3 transition-all duration-300 hover:bg-surface-2 hover:text-text-1">
           <X size={18} />
         </DialogPrimitive.Close>
       ) : null}
@@ -65,7 +65,7 @@ export const SheetTitle = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) => (
-  <DialogPrimitive.Title className={cn('text-xl font-semibold tracking-[-0.03em]', className)} {...props} />
+  <DialogPrimitive.Title className={cn('text-lg font-semibold tracking-[-0.03em]', className)} {...props} />
 );
 
 export const SheetDescription = ({

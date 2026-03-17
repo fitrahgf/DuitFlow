@@ -333,22 +333,22 @@ export default function BudgetsPage() {
       <PageHeader>
         <PageHeading title={t('budgets.title')} />
         <PageHeaderActions>
-          <Button type="button" variant="secondary" onClick={() => openCreateForm('overall')}>
+          <Button type="button" variant="secondary" size="sm" className="max-sm:min-w-max" onClick={() => openCreateForm('overall')}>
             {t('budgets.addOverall')}
           </Button>
-          <Button type="button" variant="primary" onClick={() => openCreateForm('category')}>
+          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => openCreateForm('category')}>
             {t('budgets.addCategory')}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="p-4 md:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <SurfaceCard className="sticky top-[3.65rem] z-20 sm:static">
+        <div className="flex items-center justify-between gap-3">
           <Button
             type="button"
             variant="secondary"
             size="icon"
-            className="h-11 w-11 rounded-2xl"
+            className="h-10 w-10 rounded-2xl"
             onClick={() => setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))}
             aria-label={t('budgets.previousMonth')}
             title={t('budgets.previousMonth')}
@@ -356,18 +356,18 @@ export default function BudgetsPage() {
             <ChevronLeft size={16} />
           </Button>
 
-          <div className="grid gap-1 text-center">
+          <div className="grid min-w-0 gap-0.5 text-center">
             <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
               {t('budgets.currentMonth')}
             </span>
-            <strong className="text-lg font-semibold tracking-[-0.03em] text-text-1">{monthLabel}</strong>
+            <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1 sm:text-base">{monthLabel}</strong>
           </div>
 
           <Button
             type="button"
             variant="secondary"
             size="icon"
-            className="h-11 w-11 rounded-2xl"
+            className="h-10 w-10 rounded-2xl"
             onClick={() => setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))}
             aria-label={t('budgets.nextMonth')}
             title={t('budgets.nextMonth')}
@@ -490,7 +490,7 @@ export default function BudgetsPage() {
         </DialogContent>
       </Dialog>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label={t('budgets.summary.spent')} value={formatCurrency(totalSpent)} tone="danger" />
         <MetricCard
           label={t('budgets.summary.limit')}
@@ -515,9 +515,9 @@ export default function BudgetsPage() {
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <section className="grid gap-3.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading
                   title={t('budgets.overallTitle')}
                   actions={
@@ -544,8 +544,8 @@ export default function BudgetsPage() {
                 />
 
                 {globalBudget ? (
-                  <div className="grid gap-4">
-                    <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                       <MetricCard
                         label={t('budgets.summary.limit')}
                         value={formatCurrency(globalBudget.total_limit ?? 0)}
@@ -592,15 +592,15 @@ export default function BudgetsPage() {
             </SurfaceCard>
 
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading title={t('budgets.categoryTitle')} />
 
                 {categoryRows.length === 0 ? (
                   <EmptyState title={t('budgets.noCategories')} compact icon={<Target size={18} />} />
                 ) : (
-                  <div className="grid gap-3">
+                  <div className="grid gap-2.5">
                     {categoryRows.map(({ budget, spent, limit, ratio, tone }) => (
-                      <div key={budget.id} className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-4">
+                      <div key={budget.id} className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="grid gap-1">
                             <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
@@ -611,14 +611,14 @@ export default function BudgetsPage() {
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-2xl" onClick={() => openEditForm(budget)}>
+                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-2xl" onClick={() => openEditForm(budget)}>
                               <Pencil size={16} />
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-10 w-10 rounded-2xl text-danger"
+                              className="h-9 w-9 rounded-2xl text-danger"
                               onClick={() => {
                                 void handleDelete(budget.id);
                               }}
@@ -655,17 +655,17 @@ export default function BudgetsPage() {
           </section>
 
           <SurfaceCard>
-            <div className="grid gap-5">
+            <div className="grid gap-3">
               <SectionHeading title={t('budgets.untrackedTitle')} />
 
               {untrackedSpending.length === 0 ? (
                 <EmptyState title={t('budgets.noUntracked')} compact icon={<Target size={18} />} />
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-2.5">
                   {untrackedSpending.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 px-4 py-3"
+                      className="flex items-center justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 px-3.5 py-2.5"
                     >
                       <span className="text-sm text-text-2">{item.name}</span>
                       <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">

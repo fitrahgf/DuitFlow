@@ -325,36 +325,43 @@ export default function WalletsPage() {
       <PageHeader>
         <PageHeading title={t('wallets.title')} />
         <PageHeaderActions>
-          <Button type="button" variant="primary" onClick={() => handleOpenForm()}>
+          <Button type="button" variant="primary" className="max-sm:hidden" onClick={() => handleOpenForm()}>
             {t('wallets.addWallet')}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard className="p-4 md:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="grid gap-2">
-            <span className="text-sm font-medium text-text-2">{t('wallets.view')}</span>
-            <div className="flex flex-wrap gap-2">
-              {(['active', 'archived'] as const).map((value) => (
-                <Button
-                  key={value}
-                  type="button"
-                  size="sm"
-                  variant={view === value ? 'primary' : 'secondary'}
-                  onClick={() => setView(value)}
-                >
-                  {t(`wallets.tabs.${value}`)}
-                </Button>
-              ))}
+      <SurfaceCard>
+        <div className="grid gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">{t('wallets.view')}</span>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {(['active', 'archived'] as const).map((value) => (
+                  <Button
+                    key={value}
+                    type="button"
+                    size="sm"
+                    variant={view === value ? 'primary' : 'secondary'}
+                    className="min-w-max"
+                    onClick={() => setView(value)}
+                  >
+                    {t(`wallets.tabs.${value}`)}
+                  </Button>
+                ))}
+              </div>
             </div>
+
+            <Button type="button" variant="primary" size="sm" className="sm:hidden" onClick={() => handleOpenForm()}>
+              {t('wallets.addWallet')}
+            </Button>
           </div>
 
           <MetricCard
             label={t('wallets.totalBalance')}
             value={formatCurrency(totalBalance)}
             tone="accent"
-            className="min-w-[14rem] max-md:w-full"
+            className="min-w-0"
           />
         </div>
       </SurfaceCard>
@@ -489,6 +496,9 @@ export default function WalletsPage() {
 
       <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
         <DialogContent className="max-w-[42rem] overflow-hidden p-0" hideClose>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t('transactions.form.new')}</DialogTitle>
+          </DialogHeader>
           <TransactionForm
             defaultWalletId={transactionWalletId}
             onSuccess={() => setIsTransactionFormOpen(false)}
@@ -506,6 +516,9 @@ export default function WalletsPage() {
         }}
       >
       <DialogContent className="max-w-[56rem]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{walletDetail?.wallet.name ?? t('nav.wallets')}</DialogTitle>
+          </DialogHeader>
           {walletDetailQuery.isLoading ? (
             <EmptyState title={t('common.loading')} compact />
           ) : walletDetailQuery.isError || !walletDetail ? (
@@ -540,7 +553,7 @@ export default function WalletsPage() {
         </DialogContent>
       </Dialog>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {walletsQuery.isLoading ? (
           <SurfaceCard className="sm:col-span-2 xl:col-span-3">
             <EmptyState title={t('common.loading')} compact />
@@ -566,12 +579,12 @@ export default function WalletsPage() {
             >
               <button
                 type="button"
-                className="grid w-full gap-5 p-5 text-left transition hover:bg-surface-2/55"
+                className="grid w-full gap-3 p-3.5 text-left transition hover:bg-surface-2/55"
                 onClick={() => setDetailWalletId(wallet.id)}
               >
-                <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start">
+                <div className="flex items-start gap-3">
                   <div
-                    className="grid h-12 w-12 place-items-center rounded-2xl"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-[1rem]"
                     style={{
                       backgroundColor: `${wallet.color || '#16a34a'}18`,
                       color: wallet.color || '#16a34a',
@@ -580,40 +593,36 @@ export default function WalletsPage() {
                     {getWalletIcon(wallet.type)}
                   </div>
 
-                  <div className="grid min-w-0 gap-1">
-                    <h3 className="m-0 truncate text-base font-semibold tracking-[-0.03em] text-text-1">
-                      {wallet.name}
-                    </h3>
-                    <p className="m-0 text-sm text-text-3">
-                      {t(`wallets.types.${wallet.type}`)} - {wallet.transaction_count} {t('wallets.detail.transactions')}
-                    </p>
+                  <div className="grid min-w-0 flex-1 gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="grid min-w-0 gap-0.5">
+                        <h3 className="m-0 truncate text-[0.98rem] font-semibold tracking-[-0.03em] text-text-1">
+                          {wallet.name}
+                        </h3>
+                        <p className="m-0 text-xs text-text-3">{t(`wallets.types.${wallet.type}`)}</p>
+                      </div>
+
+                      <div className="grid shrink-0 justify-items-end gap-0.5">
+                        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-text-3">
+                          {t('wallets.currentBalance')}
+                        </span>
+                        <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+                          {formatCurrency(wallet.balance)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs text-text-3">
+                      <span>{wallet.transaction_count} {t('wallets.detail.transactions')}</span>
+                      <span>{t('wallets.detail.income')}: {formatCurrency(wallet.income_total)}</span>
+                      <span>{formatDate(wallet.last_transaction_date)}</span>
+                    </div>
                   </div>
-                </div>
-
-                <div className="grid gap-1">
-                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                    {t('wallets.currentBalance')}
-                  </span>
-                  <strong className="text-[clamp(1.8rem,1.4rem+1vw,2.4rem)] font-semibold tracking-[-0.06em] text-text-1">
-                    {formatCurrency(wallet.balance)}
-                  </strong>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-text-3">
-                  <span>
-                    {t('wallets.detail.income')}: {formatCurrency(wallet.income_total)}
-                  </span>
-                  <span>
-                    {t('wallets.detail.expense')}: {formatCurrency(wallet.expense_total)}
-                  </span>
-                  <span>
-                    {t('wallets.detail.lastActivity')}: {formatDate(wallet.last_transaction_date)}
-                  </span>
                 </div>
               </button>
 
-              <div className="flex flex-wrap gap-2 border-t border-border-subtle bg-surface-2/35 px-5 py-4">
-                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-2xl" onClick={() => handleOpenForm(wallet)}>
+              <div className="flex flex-wrap gap-2 border-t border-border-subtle bg-surface-2/35 px-3.5 py-2.5">
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-2xl" onClick={() => handleOpenForm(wallet)}>
                   <Pencil size={16} />
                 </Button>
                 {!wallet.is_archived ? (
@@ -622,7 +631,7 @@ export default function WalletsPage() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 rounded-2xl"
+                      className="h-9 w-9 rounded-2xl"
                       onClick={() => openTransactionFormForWallet(wallet.id)}
                     >
                       <ArrowUpRight size={16} />
@@ -631,7 +640,7 @@ export default function WalletsPage() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 rounded-2xl"
+                      className="h-9 w-9 rounded-2xl"
                       onClick={() => openTransferFormForWallet(wallet.id)}
                     >
                       <ArrowLeftRight size={16} />
@@ -642,7 +651,7 @@ export default function WalletsPage() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 rounded-2xl"
+                  className="h-9 w-9 rounded-2xl"
                   onClick={() => {
                     void handleArchiveToggle(wallet);
                   }}
@@ -654,7 +663,7 @@ export default function WalletsPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 rounded-2xl text-danger"
+                    className="h-9 w-9 rounded-2xl text-danger"
                     onClick={() => {
                       void handleDelete(wallet);
                     }}
@@ -715,12 +724,12 @@ function WalletDetailContent({
   onDelete: () => void;
 }) {
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-4">
       <DialogHeader>
         <DialogTitle>{detail.wallet.name}</DialogTitle>
       </DialogHeader>
 
-      <div className="grid gap-5 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+      <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
         <div
           className="grid h-16 w-16 place-items-center rounded-[1.4rem]"
           style={{
@@ -744,7 +753,7 @@ function WalletDetailContent({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
         <MetricCard
           label={t('wallets.detail.openingBalance')}
           value={formatCurrency(detail.wallet.initial_balance)}
@@ -766,7 +775,7 @@ function WalletDetailContent({
         />
       </div>
 
-      <div className="flex flex-wrap gap-3 max-sm:flex-col">
+      <div className="sticky bottom-0 z-10 flex flex-wrap gap-2 border-t border-border-subtle bg-surface-1 py-3">
         <Button type="button" variant="secondary" onClick={onEdit}>
           {t('wallets.actions.edit')}
         </Button>
@@ -790,21 +799,21 @@ function WalletDetailContent({
         ) : null}
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <SectionHeading title={t('wallets.detail.recentTransactions')} />
 
         {detail.transactions.length === 0 ? (
           <EmptyState title={t('wallets.detail.noTransactions')} compact icon={<Wallet size={18} />} />
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-2.5">
             {detail.transactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="grid gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start"
+                className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start"
               >
                 <span
                   className={cn(
-                    'grid h-10 w-10 place-items-center rounded-[calc(var(--radius-control)+0.05rem)]',
+                    'grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.05rem)]',
                     transaction.type === 'income'
                       ? 'bg-success-soft text-success'
                       : 'bg-danger-soft text-danger'

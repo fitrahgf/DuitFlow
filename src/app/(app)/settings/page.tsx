@@ -74,7 +74,7 @@ export default function SettingsPage() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProfileSettingsInput, undefined, ProfileSettingsValues>({
     resolver: zodResolver(profileSettingsSchema),
     defaultValues: {
@@ -278,6 +278,7 @@ export default function SettingsPage() {
             type="submit"
             form="settings-form"
             variant="primary"
+            className="max-sm:hidden"
             disabled={profileMutation.isPending}
           >
             <Save size={16} />
@@ -288,7 +289,7 @@ export default function SettingsPage() {
 
       <form
         id="settings-form"
-        className="grid gap-5"
+        className="grid gap-3.5"
         onSubmit={handleSubmit(async (values) => {
           await profileMutation.mutateAsync(values);
         })}
@@ -296,15 +297,15 @@ export default function SettingsPage() {
         <Tabs
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as ExtendedSettingsTab)}
-          className="grid gap-5"
+          className="grid gap-3.5"
         >
-          <div className="overflow-x-auto pb-1">
-            <TabsList className="w-max min-w-full justify-start rounded-2xl">
+          <div className="pb-1">
+            <TabsList className="!grid !w-full grid-cols-2 justify-start overflow-hidden rounded-2xl md:!flex md:flex-wrap">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="rounded-xl px-4 py-2 text-sm"
+                  className="min-w-0 w-full rounded-xl px-3 py-2 text-sm md:flex-1"
                 >
                   {tab.label}
                 </TabsTrigger>
@@ -314,10 +315,10 @@ export default function SettingsPage() {
 
           <TabsContent value="profile" className="mt-0">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading title={t('settings.profile.title')} />
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-2">
                   <SettingsField
                     label={t('settings.profile.fullName')}
                     htmlFor="full_name"
@@ -346,9 +347,9 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="regional" className="mt-0">
-            <div className="grid gap-5">
+            <div className="grid gap-3.5">
               <SurfaceCard>
-                <div className="grid gap-5">
+                <div className="grid gap-3">
                   <SectionHeading title={t('settings.language.title')} />
 
                   <div className="grid gap-3 md:grid-cols-2">
@@ -380,12 +381,12 @@ export default function SettingsPage() {
               </SurfaceCard>
 
               <SurfaceCard>
-                <div className="grid gap-5">
+                <div className="grid gap-3">
                   <SectionHeading
                     title={language === 'id' ? 'Zona waktu & mata uang' : 'Timezone & currency'}
                   />
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <SettingsField
                       label={t('settings.regional.timezone')}
                       htmlFor="timezone"
@@ -415,11 +416,8 @@ export default function SettingsPage() {
                     </SettingsField>
                   </div>
 
-                  <div className="rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-4">
-                    <div className="grid gap-1">
-                      <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                        {language === 'id' ? 'Preview format' : 'Format preview'}
-                      </span>
+                  <div className="rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
+                    <div className="grid gap-0.5">
                       <strong className="text-lg font-semibold tracking-[-0.03em] text-text-1">
                         {currencyPreview}
                       </strong>
@@ -432,7 +430,7 @@ export default function SettingsPage() {
 
           <TabsContent value="appearance" className="mt-0">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading title={t('settings.appearance.title')} />
 
                 <div className="grid gap-3 md:grid-cols-3">
@@ -441,7 +439,7 @@ export default function SettingsPage() {
                       key={option.value}
                       type="button"
                       className={cn(
-                        'inline-flex min-h-[6.5rem] flex-col items-start justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border px-4 py-4 text-left transition',
+                        'inline-flex min-h-[5.6rem] flex-col items-start justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-3.5 py-3.5 text-left transition',
                         selectedTheme === option.value
                           ? 'border-border-strong bg-surface-2 text-text-1'
                           : 'border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2'
@@ -453,9 +451,9 @@ export default function SettingsPage() {
                         })
                       }
                     >
-                      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-surface-1 text-text-1">
-                        {option.icon}
-                      </span>
+                        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-surface-1 text-text-1">
+                          {option.icon}
+                        </span>
                       <span className="text-sm font-semibold">{option.label}</span>
                     </button>
                   ))}
@@ -466,7 +464,7 @@ export default function SettingsPage() {
 
           <TabsContent value="notifications" className="mt-0">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading title={t('settings.notifications.title')} />
 
                 <div className="grid gap-3">
@@ -524,10 +522,10 @@ export default function SettingsPage() {
 
           <TabsContent value="integrations" className="mt-0">
             <SurfaceCard>
-              <div className="grid gap-5">
+              <div className="grid gap-3">
                 <SectionHeading title={t('settings.telegram.title')} />
 
-                <div className="flex flex-col gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-4">
+                <div className="flex flex-col gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
                   <div className="flex items-start gap-3">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-2 text-text-1">
                       <Bot size={18} />
@@ -576,6 +574,21 @@ export default function SettingsPage() {
             </SurfaceCard>
           </TabsContent>
         </Tabs>
+
+        <div className="sticky bottom-0 z-10 sm:hidden">
+          <div className="rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/95 p-2 backdrop-blur">
+            <Button
+              type="submit"
+              form="settings-form"
+              variant="primary"
+              fullWidth
+              disabled={profileMutation.isPending || !isDirty}
+            >
+              <Save size={16} />
+              {profileMutation.isPending ? t('settings.saving') : t('settings.save')}
+            </Button>
+          </div>
+        </div>
       </form>
     </PageShell>
   );
@@ -614,7 +627,7 @@ function ToggleField({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-4">
+    <div className="flex items-start justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
       <div className="grid gap-1">
         <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">{title}</strong>
       </div>

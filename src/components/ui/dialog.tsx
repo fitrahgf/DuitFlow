@@ -27,13 +27,14 @@ export const DialogContent = ({
     <DialogOverlay />
     <DialogPrimitive.Content
       className={cn(
-        'fixed left-1/2 top-1/2 z-[121] w-[calc(100%-2rem)] max-w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-subtle bg-surface-1 p-5 shadow-md outline-none max-[767px]:inset-x-0 max-[767px]:bottom-0 max-[767px]:top-auto max-[767px]:w-full max-[767px]:max-w-none max-[767px]:translate-x-0 max-[767px]:translate-y-0 max-[767px]:rounded-b-none max-[767px]:rounded-t-[1.75rem]',
+        'fixed left-1/2 top-1/2 z-[121] w-[calc(100%-2rem)] max-w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-md outline-none md:p-5 max-[767px]:inset-x-0 max-[767px]:bottom-0 max-[767px]:top-auto max-[767px]:w-full max-[767px]:max-w-none max-[767px]:max-h-[min(88dvh,48rem)] max-[767px]:translate-x-0 max-[767px]:translate-y-0 max-[767px]:overflow-y-auto max-[767px]:rounded-b-none max-[767px]:rounded-t-[1.75rem] max-[767px]:px-4 max-[767px]:pb-[calc(1rem+var(--safe-bottom))] max-[767px]:pt-3',
         className
       )}
+      style={{ backgroundImage: 'var(--gradient-shell-panel)' }}
       {...props}
     >
       {!hideClose ? (
-        <DialogPrimitive.Close className="absolute right-3.5 top-3.5 inline-flex h-9 w-9 items-center justify-center rounded-full text-text-3 transition hover:bg-surface-2 hover:text-text-1">
+        <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] text-text-3 transition-all duration-300 hover:bg-surface-2 hover:text-text-1">
           <X size={18} />
         </DialogPrimitive.Close>
       ) : null}
@@ -50,7 +51,7 @@ export const DialogTitle = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) => (
-  <DialogPrimitive.Title className={cn('text-lg font-semibold tracking-[-0.03em]', className)} {...props} />
+  <DialogPrimitive.Title className={cn('text-base font-semibold tracking-[-0.03em]', className)} {...props} />
 );
 
 export const DialogDescription = ({

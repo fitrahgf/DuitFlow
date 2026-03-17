@@ -28,8 +28,13 @@ export default function QuickTransactionSheet({
 
   return (
     <Sheet open={open} onOpenChange={(nextOpen) => (!nextOpen ? handleClose() : null)}>
-      <SheetContent side="bottom" hideClose className="max-w-[36rem] rounded-t-[var(--radius-sheet)] px-4 pb-5 pt-3">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border-strong" />
+      <SheetContent
+        side="bottom"
+        hideClose
+        data-testid="quick-transaction-sheet"
+        className="max-w-[36rem] rounded-t-[var(--radius-sheet)] px-4 pb-[calc(1rem+var(--safe-bottom))] pt-3"
+      >
+        <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-border-strong" />
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             {reviewDraft ? (
@@ -39,12 +44,12 @@ export default function QuickTransactionSheet({
                 size="icon"
                 onClick={() => setReviewDraft(null)}
                 aria-label={t('dashboard.quickAdd.backToQuickAdd')}
-                className="h-9 w-9 shrink-0"
+                className="h-10 w-10 shrink-0"
               >
                 <ArrowLeft size={18} />
               </Button>
             ) : null}
-            <SheetTitle className="truncate text-base">{title}</SheetTitle>
+            <SheetTitle className="truncate text-[0.98rem] tracking-[-0.04em]">{title}</SheetTitle>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -53,7 +58,7 @@ export default function QuickTransactionSheet({
               size="icon"
               onClick={handleClose}
               aria-label={t('nav.closeSheet')}
-              className="h-9 w-9"
+              className="h-10 w-10"
             >
               <X size={18} />
             </Button>

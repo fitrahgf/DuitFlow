@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:ux": "playwright test e2e/ui-ux.spec.ts",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {

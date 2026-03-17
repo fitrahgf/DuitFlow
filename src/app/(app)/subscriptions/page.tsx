@@ -178,17 +178,17 @@ export default function SubscriptionsPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('subscriptions.title')} />
-        <PageHeaderActions>
-          <Button type="button" variant="primary" onClick={() => setIsFormOpen(true)}>
+        <PageHeader>
+          <PageHeading title={t('subscriptions.title')} />
+          <PageHeaderActions>
+          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => setIsFormOpen(true)}>
             <CreditCard size={16} />
             {t('subscriptions.addSubscription')}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label={t('subscriptions.totalMonthly')}
           value={loading ? '...' : formatCurrency(monthlyTotal)}
@@ -208,13 +208,13 @@ export default function SubscriptionsPage() {
       </section>
 
       <SurfaceCard>
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           <SectionHeading title={language === 'id' ? 'Daftar langganan' : 'Subscription list'} />
 
           {loading ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={`subscription-skeleton-${index}`} className="grid gap-4 p-5 shadow-none">
+                <Card key={`subscription-skeleton-${index}`} className="grid gap-4 p-4 shadow-none">
                   <div className="skeleton skeleton-line skeleton-line--sm" />
                   <div className="skeleton skeleton-line skeleton-line--lg" />
                   <div className="skeleton skeleton-line skeleton-line--md" />
@@ -233,19 +233,19 @@ export default function SubscriptionsPage() {
               }
             />
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-3 xl:grid-cols-2">
               {subscriptions.map((subscription) => {
                 const upcoming = subscription.is_active && isUpcoming(subscription.billing_day);
 
                 return (
                   <article
                     key={subscription.id}
-                    className="grid gap-5 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-5"
+                    className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
                   >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex items-start gap-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex items-start gap-3">
                         <div
-                          className="grid h-12 w-12 place-items-center rounded-2xl"
+                          className="grid h-10 w-10 place-items-center rounded-2xl"
                           style={{
                             backgroundColor: subscription.is_active
                               ? 'var(--accent-soft)'
@@ -269,7 +269,7 @@ export default function SubscriptionsPage() {
                             </Badge>
                             {upcoming ? <Badge variant="warning">{t('subscriptions.upcoming')}</Badge> : null}
                           </div>
-                          <strong className="text-lg font-semibold tracking-[-0.04em] text-text-1">
+                          <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
                             {subscription.name}
                           </strong>
                           <span className="text-sm text-text-3">
