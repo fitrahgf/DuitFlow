@@ -53,7 +53,7 @@ const config: Config = {
         md: 'var(--shadow-md)',
       },
       maxWidth: {
-        shell: '82rem',
+        shell: 'var(--max-content-width)',
       },
       fontFamily: {
         sans: ['var(--font-plus-jakarta)', 'Plus Jakarta Sans', 'Segoe UI', 'sans-serif'],

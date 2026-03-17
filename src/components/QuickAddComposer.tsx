@@ -286,8 +286,8 @@ export default function QuickAddComposer({
     preview?.status === 'ready' ? 'success' : preview?.status === 'partial' ? 'warning' : 'default';
 
   return (
-    <div className={cn('grid gap-3', variant === 'sheet' && 'gap-3')}>
-      <form className="grid gap-3" onSubmit={handleSubmit}>
+    <div className={cn('grid gap-2.5', variant === 'sheet' && 'gap-2.5')}>
+      <form className="grid gap-2.5" onSubmit={handleSubmit}>
         <Input
           ref={inputRef}
           type="text"
@@ -304,7 +304,7 @@ export default function QuickAddComposer({
         {preview ? (
           <Card
               className={cn(
-                'grid gap-3 border p-3.5 shadow-none md:p-5',
+                'grid gap-2.5 border p-3 shadow-none md:p-3.5',
                 preview.status === 'ready'
                   ? 'border-success/18 bg-success-soft/35'
                   : 'border-border-subtle bg-surface-2/55'
@@ -320,7 +320,7 @@ export default function QuickAddComposer({
               ) : null}
             </div>
 
-            <div className="grid gap-2.5">
+            <div className="grid gap-2">
               <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
                 {preview.title || t('dashboard.quickAdd.missingTitle')}
               </strong>
@@ -350,7 +350,7 @@ export default function QuickAddComposer({
         ) : null}
 
         {showSuggestions || showTransferHint ? (
-            <div className="grid gap-3 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-3.5 animate-fade-in">
+            <div className="grid gap-2.5 rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 p-3 animate-fade-in">
             {showTransferHint ? (
               <Button asChild variant="secondary" className="justify-start">
                 <Link href="/transfer">
@@ -375,7 +375,7 @@ export default function QuickAddComposer({
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
-                        className={cn('min-h-[2.75rem] rounded-[var(--radius-control)] px-3.5', selected && 'ring-2 ring-accent-soft')}
+                        className={cn('min-h-[2.45rem] rounded-[var(--radius-control)] px-3', selected && 'ring-2 ring-accent-soft')}
                         onClick={() => setOverrideCategoryId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -403,7 +403,7 @@ export default function QuickAddComposer({
                         type="button"
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
-                        className={cn('min-h-[2.75rem] rounded-[var(--radius-control)] px-3.5', selected && 'ring-2 ring-accent-soft')}
+                        className={cn('min-h-[2.45rem] rounded-[var(--radius-control)] px-3', selected && 'ring-2 ring-accent-soft')}
                         onClick={() => setOverrideWalletId((current) => (current === suggestion.id ? null : suggestion.id))}
                         disabled={quickAddMutation.isPending}
                       >
@@ -418,7 +418,7 @@ export default function QuickAddComposer({
           </div>
         ) : null}
 
-        <div className={cn('grid gap-2', preview?.status === 'ready' ? 'sm:grid-cols-[minmax(0,1fr)_auto]' : 'sm:grid-cols-1')}>
+        <div className={cn('grid gap-1.5', preview?.status === 'ready' ? 'sm:grid-cols-[minmax(0,1fr)_auto]' : 'sm:grid-cols-1')}>
           <Button
             type="submit"
             variant="primary"
@@ -446,14 +446,14 @@ export default function QuickAddComposer({
       </form>
 
       {!preview ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {examples.map((example) => (
             <Button
               key={example}
               type="button"
               variant="secondary"
               size="sm"
-              className="min-h-[2.4rem] rounded-[var(--radius-control)] px-3.5 text-accent-strong"
+              className="min-h-[2.15rem] rounded-[var(--radius-control)] px-3 text-accent-strong"
               onClick={() => {
                 setInput(example);
                 setOverrideCategoryId(null);
@@ -468,7 +468,7 @@ export default function QuickAddComposer({
       ) : null}
 
       {(walletsQuery.data?.length ?? 0) === 0 && !walletsQuery.isLoading ? (
-        <Card className="grid gap-3 border-warning/30 bg-warning-soft p-4">
+        <Card className="grid gap-2.5 border-warning/30 bg-warning-soft p-3.5">
           <AlertCircle size={18} className="text-warning" />
           <p className="text-sm text-text-2">{t('dashboard.quickAdd.noWallets')}</p>
         </Card>
@@ -479,7 +479,7 @@ export default function QuickAddComposer({
 
 function QuickAddChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex min-h-[2.1rem] items-center rounded-full border border-border-subtle bg-surface-1 px-3 py-1.5 text-sm font-medium text-text-2">
+    <span className="inline-flex min-h-[1.9rem] items-center rounded-full border border-border-subtle bg-surface-1 px-2.75 py-1 text-[0.84rem] font-medium text-text-2">
       {children}
     </span>
   );

@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { addMonths } from 'date-fns';
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Pencil, Target, Trash2 } from 'lucide-react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
-import { useConfirmDialog } from '@/components/ConfirmDialogProvider';
-import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider';
-import { FieldError } from '@/components/shared/FieldError';
-import { useLanguage } from '@/components/LanguageProvider';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addMonths } from "date-fns";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Target,
+  Trash2,
+} from "lucide-react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
+import { useConfirmDialog } from "@/components/ConfirmDialogProvider";
+import { useCurrencyPreferences } from "@/components/CurrencyPreferencesProvider";
+import { FieldError } from "@/components/shared/FieldError";
+import { useLanguage } from "@/components/LanguageProvider";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   MetricCard,
   PageHeader,
@@ -21,70 +27,90 @@ import {
   ProgressMeter,
   SectionHeading,
   SurfaceCard,
-} from '@/components/shared/PagePrimitives';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from "@/components/shared/PagePrimitives";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { CurrencyInput } from '@/components/ui/currency-input';
-import { getBudgetTone, summarizeBudgetUsage, type BudgetTone } from '@/lib/budgetMath';
-import { NOTIFICATIONS_REFRESH_EVENT, TRANSACTIONS_CHANGED_EVENT } from '@/lib/events';
-import { getErrorMessage } from '@/lib/errors';
-import { queryKeys } from '@/lib/queries/keys';
-import { fetchBudgetOverview, type BudgetRecord } from '@/lib/queries/budgets';
-import { fetchCategories } from '@/lib/queries/reference';
-import { createClient } from '@/lib/supabase/client';
-import { budgetFormSchema, type BudgetFormInput, type BudgetFormValues } from '@/lib/validators/budget';
+} from "@/components/ui/dialog";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NativeSelect } from "@/components/ui/native-select";
+import {
+  getBudgetTone,
+  summarizeBudgetUsage,
+  type BudgetTone,
+} from "@/lib/budgetMath";
+import {
+  NOTIFICATIONS_REFRESH_EVENT,
+  TRANSACTIONS_CHANGED_EVENT,
+} from "@/lib/events";
+import { getErrorMessage } from "@/lib/errors";
+import { queryKeys } from "@/lib/queries/keys";
+import { fetchBudgetOverview, type BudgetRecord } from "@/lib/queries/budgets";
+import { fetchCategories } from "@/lib/queries/reference";
+import { createClient } from "@/lib/supabase/client";
+import {
+  budgetFormSchema,
+  type BudgetFormInput,
+  type BudgetFormValues,
+} from "@/lib/validators/budget";
 
 function getMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function monthKeyToDate(monthKey: string) {
-  const [year, month] = monthKey.split('-').map(Number);
+  const [year, month] = monthKey.split("-").map(Number);
   return new Date(year, month - 1, 1);
 }
 
-function formatMonthLabel(monthKey: string, language: 'en' | 'id') {
-  return monthKeyToDate(monthKey).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+function formatMonthLabel(monthKey: string, language: "en" | "id") {
+  return monthKeyToDate(monthKey).toLocaleDateString(
+    language === "id" ? "id-ID" : "en-US",
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
 }
 
-function getDefaultValues(monthKey: string, budget?: BudgetRecord | null): BudgetFormInput {
+function getDefaultValues(
+  monthKey: string,
+  budget?: BudgetRecord | null,
+): BudgetFormInput {
   if (!budget) {
     return {
       month_key: monthKey,
-      mode: 'overall',
-      category_id: '',
+      mode: "overall",
+      category_id: "",
       limit: 0,
     };
   }
 
   return {
     month_key: budget.month_key,
-    mode: budget.category_id ? 'category' : 'overall',
-    category_id: budget.category_id ?? '',
+    mode: budget.category_id ? "category" : "overall",
+    category_id: budget.category_id ?? "",
     limit: budget.total_limit ?? budget.amount_limit ?? 0,
   };
 }
 
-const toneToProgressTone: Record<BudgetTone, 'success' | 'warning' | 'danger'> = {
-  ok: 'success',
-  warning: 'warning',
-  danger: 'danger',
-};
+const toneToProgressTone: Record<BudgetTone, "success" | "warning" | "danger"> =
+  {
+    ok: "success",
+    warning: "warning",
+    danger: "danger",
+  };
 
-const toneToBadgeVariant: Record<BudgetTone, 'success' | 'warning' | 'danger'> = {
-  ok: 'success',
-  warning: 'warning',
-  danger: 'danger',
-};
+const toneToBadgeVariant: Record<BudgetTone, "success" | "warning" | "danger"> =
+  {
+    ok: "success",
+    warning: "warning",
+    danger: "danger",
+  };
 
 export default function BudgetsPage() {
   const { t, language } = useLanguage();
@@ -94,7 +120,9 @@ export default function BudgetsPage() {
   const [monthKey, setMonthKey] = useState(() => getMonthKey(new Date()));
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetRecord | null>(null);
-  const [initialMode, setInitialMode] = useState<'overall' | 'category'>('overall');
+  const [initialMode, setInitialMode] = useState<"overall" | "category">(
+    "overall",
+  );
   const [supabase] = useState(() => createClient());
 
   const budgetQuery = useQuery({
@@ -103,20 +131,29 @@ export default function BudgetsPage() {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: queryKeys.categories.list('expense'),
-    queryFn: () => fetchCategories('expense'),
+    queryKey: queryKeys.categories.list("expense"),
+    queryFn: () => fetchCategories("expense"),
   });
 
   useEffect(() => {
     const handleTransactionsChanged = () => {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.overview }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.dashboard.overview,
+        }),
       ]);
     };
 
-    window.addEventListener(TRANSACTIONS_CHANGED_EVENT, handleTransactionsChanged);
-    return () => window.removeEventListener(TRANSACTIONS_CHANGED_EVENT, handleTransactionsChanged);
+    window.addEventListener(
+      TRANSACTIONS_CHANGED_EVENT,
+      handleTransactionsChanged,
+    );
+    return () =>
+      window.removeEventListener(
+        TRANSACTIONS_CHANGED_EVENT,
+        handleTransactionsChanged,
+      );
   }, [queryClient]);
 
   const {
@@ -131,7 +168,7 @@ export default function BudgetsPage() {
     defaultValues: getDefaultValues(monthKey, null),
   });
 
-  const formMode = useWatch({ control, name: 'mode' }) ?? initialMode;
+  const formMode = useWatch({ control, name: "mode" }) ?? initialMode;
 
   useEffect(() => {
     reset(
@@ -140,9 +177,9 @@ export default function BudgetsPage() {
         : {
             month_key: monthKey,
             mode: initialMode,
-            category_id: '',
+            category_id: "",
             limit: 0,
-          }
+          },
     );
   }, [editingBudget, initialMode, monthKey, reset]);
 
@@ -151,8 +188,11 @@ export default function BudgetsPage() {
   const categories = categoriesQuery.data ?? [];
 
   const budgetSummary = summarizeBudgetUsage(budgets, expenses);
-  const globalBudget = budgets.find((budget) => budget.category_id === null) ?? null;
-  const categoryBudgets = budgets.filter((budget) => budget.category_id !== null);
+  const globalBudget =
+    budgets.find((budget) => budget.category_id === null) ?? null;
+  const categoryBudgets = budgets.filter(
+    (budget) => budget.category_id !== null,
+  );
   const totalSpent = budgetSummary.totalExpense;
   const overallLimit = budgetSummary.overallLimit;
   const remaining = budgetSummary.remaining;
@@ -166,7 +206,10 @@ export default function BudgetsPage() {
       return;
     }
 
-    spentByCategory.set(expense.category_id, (spentByCategory.get(expense.category_id) ?? 0) + expense.amount);
+    spentByCategory.set(
+      expense.category_id,
+      (spentByCategory.get(expense.category_id) ?? 0) + expense.amount,
+    );
   });
 
   const categoryRows = categoryBudgets
@@ -185,8 +228,13 @@ export default function BudgetsPage() {
     })
     .sort((left, right) => right.ratio - left.ratio);
 
-  const trackedCategoryIds = new Set(categoryBudgets.map((budget) => budget.category_id));
-  const untrackedBucket = new Map<string, { id: string; name: string; spent: number }>();
+  const trackedCategoryIds = new Set(
+    categoryBudgets.map((budget) => budget.category_id),
+  );
+  const untrackedBucket = new Map<
+    string,
+    { id: string; name: string; spent: number }
+  >();
 
   expenses.forEach((expense) => {
     if (!expense.category_id || trackedCategoryIds.has(expense.category_id)) {
@@ -195,7 +243,7 @@ export default function BudgetsPage() {
 
     const current = untrackedBucket.get(expense.category_id) ?? {
       id: expense.category_id,
-      name: expense.categories?.name || t('common.uncategorized'),
+      name: expense.categories?.name || t("common.uncategorized"),
       spent: 0,
     };
 
@@ -210,7 +258,7 @@ export default function BudgetsPage() {
   const saveBudgetMutation = useMutation({
     mutationFn: async (values: BudgetFormValues) => {
       const payload =
-        values.mode === 'overall'
+        values.mode === "overall"
           ? {
               month_key: values.month_key,
               category_id: null,
@@ -229,7 +277,7 @@ export default function BudgetsPage() {
           return false;
         }
 
-        if (values.mode === 'overall') {
+        if (values.mode === "overall") {
           return budget.category_id === null;
         }
 
@@ -237,7 +285,10 @@ export default function BudgetsPage() {
       });
 
       if (editingBudget) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', editingBudget.id);
+        const { error } = await supabase
+          .from("budgets")
+          .update(payload)
+          .eq("id", editingBudget.id);
 
         if (error) {
           throw error;
@@ -247,7 +298,10 @@ export default function BudgetsPage() {
       }
 
       if (duplicateBudget) {
-        const { error } = await supabase.from('budgets').update(payload).eq('id', duplicateBudget.id);
+        const { error } = await supabase
+          .from("budgets")
+          .update(payload)
+          .eq("id", duplicateBudget.id);
 
         if (error) {
           throw error;
@@ -256,7 +310,7 @@ export default function BudgetsPage() {
         return;
       }
 
-      const { error } = await supabase.from('budgets').insert(payload);
+      const { error } = await supabase.from("budgets").insert(payload);
 
       if (error) {
         throw error;
@@ -267,19 +321,24 @@ export default function BudgetsPage() {
       setEditingBudget(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.overview }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.dashboard.overview,
+        }),
       ]);
       window.dispatchEvent(new Event(NOTIFICATIONS_REFRESH_EVENT));
-      toast.success(t('budgets.form.saveSuccess'));
+      toast.success(t("budgets.form.saveSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('budgets.form.saveError')));
+      toast.error(getErrorMessage(error, t("budgets.form.saveError")));
     },
   });
 
   const deleteBudgetMutation = useMutation({
     mutationFn: async (budgetId: string) => {
-      const { error } = await supabase.from('budgets').delete().eq('id', budgetId);
+      const { error } = await supabase
+        .from("budgets")
+        .delete()
+        .eq("id", budgetId);
 
       if (error) {
         throw error;
@@ -288,17 +347,19 @@ export default function BudgetsPage() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.overview }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.dashboard.overview,
+        }),
       ]);
       window.dispatchEvent(new Event(NOTIFICATIONS_REFRESH_EVENT));
-      toast.success(t('budgets.deleteSuccess'));
+      toast.success(t("budgets.deleteSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('budgets.deleteError')));
+      toast.error(getErrorMessage(error, t("budgets.deleteError")));
     },
   });
 
-  const openCreateForm = (mode: 'overall' | 'category') => {
+  const openCreateForm = (mode: "overall" | "category") => {
     setEditingBudget(null);
     setInitialMode(mode);
     setIsFormOpen(true);
@@ -306,17 +367,17 @@ export default function BudgetsPage() {
 
   const openEditForm = (budget: BudgetRecord) => {
     setEditingBudget(budget);
-    setInitialMode(budget.category_id ? 'category' : 'overall');
+    setInitialMode(budget.category_id ? "category" : "overall");
     setIsFormOpen(true);
   };
 
   const handleDelete = async (budgetId: string) => {
     const accepted = await confirm({
-      title: t('common.delete'),
-      description: t('budgets.confirmDelete'),
-      confirmLabel: t('common.delete'),
-      cancelLabel: t('common.cancel'),
-      tone: 'danger',
+      title: t("common.delete"),
+      description: t("budgets.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      tone: "danger",
     });
 
     if (!accepted) {
@@ -331,13 +392,25 @@ export default function BudgetsPage() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t('budgets.title')} />
+        <PageHeading title={t("budgets.title")} />
         <PageHeaderActions>
-          <Button type="button" variant="secondary" size="sm" className="max-sm:min-w-max" onClick={() => openCreateForm('overall')}>
-            {t('budgets.addOverall')}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="max-sm:min-w-max"
+            onClick={() => openCreateForm("overall")}
+          >
+            {t("budgets.addOverall")}
           </Button>
-          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => openCreateForm('category')}>
-            {t('budgets.addCategory')}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="max-sm:min-w-max"
+            onClick={() => openCreateForm("category")}
+          >
+            {t("budgets.addCategory")}
           </Button>
         </PageHeaderActions>
       </PageHeader>
@@ -349,18 +422,22 @@ export default function BudgetsPage() {
             variant="secondary"
             size="icon"
             className="h-10 w-10 rounded-2xl"
-            onClick={() => setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))}
-            aria-label={t('budgets.previousMonth')}
-            title={t('budgets.previousMonth')}
+            onClick={() =>
+              setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))
+            }
+            aria-label={t("budgets.previousMonth")}
+            title={t("budgets.previousMonth")}
           >
             <ChevronLeft size={16} />
           </Button>
 
           <div className="grid min-w-0 gap-0.5 text-center">
             <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-              {t('budgets.currentMonth')}
+              {t("budgets.currentMonth")}
             </span>
-            <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1 sm:text-base">{monthLabel}</strong>
+            <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1 sm:text-base">
+              {monthLabel}
+            </strong>
           </div>
 
           <Button
@@ -368,9 +445,11 @@ export default function BudgetsPage() {
             variant="secondary"
             size="icon"
             className="h-10 w-10 rounded-2xl"
-            onClick={() => setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))}
-            aria-label={t('budgets.nextMonth')}
-            title={t('budgets.nextMonth')}
+            onClick={() =>
+              setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))
+            }
+            aria-label={t("budgets.nextMonth")}
+            title={t("budgets.nextMonth")}
           >
             <ChevronRight size={16} />
           </Button>
@@ -388,63 +467,77 @@ export default function BudgetsPage() {
       >
         <DialogContent className="max-w-[31rem]">
           <DialogHeader>
-            <DialogTitle>{editingBudget ? t('budgets.form.edit') : t('budgets.form.new')}</DialogTitle>
+            <DialogTitle>
+              {editingBudget ? t("budgets.form.edit") : t("budgets.form.new")}
+            </DialogTitle>
           </DialogHeader>
 
           <form
             className="grid gap-3 pt-2"
-            onSubmit={handleSubmit((values) => saveBudgetMutation.mutate(values))}
+            onSubmit={handleSubmit((values) =>
+              saveBudgetMutation.mutate(values),
+            )}
           >
-            <input type="hidden" {...register('month_key')} />
+            <input type="hidden" {...register("month_key")} />
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
-              <label
-                className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
-                htmlFor="budget-mode"
-              >
-                {t('budgets.form.scope')}
-              </label>
-              <select
-                id="budget-mode"
-                className="flex min-h-[2.85rem] w-full rounded-xl border border-border-subtle bg-surface-1 px-3.5 py-2.5 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70"
-                {...register('mode')}
-                disabled={Boolean(editingBudget)}
-                onChange={(event) =>
-                  setValue('mode', event.target.value as 'overall' | 'category', {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <option value="overall">{t('budgets.form.overall')}</option>
-                <option value="category">{t('budgets.form.category')}</option>
-              </select>
+                <label
+                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  htmlFor="budget-mode"
+                >
+                  {t("budgets.form.scope")}
+                </label>
+                <NativeSelect
+                  id="budget-mode"
+                  {...register("mode")}
+                  disabled={Boolean(editingBudget)}
+                  onChange={(event) =>
+                    setValue(
+                      "mode",
+                      event.target.value as "overall" | "category",
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      },
+                    )
+                  }
+                >
+                  <option value="overall">{t("budgets.form.overall")}</option>
+                  <option value="category">{t("budgets.form.category")}</option>
+                </NativeSelect>
               </div>
 
               <div className="grid gap-2">
-                {formMode === 'category' ? (
+                {formMode === "category" ? (
                   <>
                     <label
                       className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
                       htmlFor="budget-category"
                     >
-                      {t('budgets.form.categoryLabel')}
+                      {t("budgets.form.categoryLabel")}
                     </label>
-                    <select
+                    <NativeSelect
                       id="budget-category"
-                      className="flex min-h-[2.85rem] w-full rounded-xl border border-border-subtle bg-surface-1 px-3.5 py-2.5 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70"
-                      {...register('category_id')}
+                      {...register("category_id")}
                       disabled={Boolean(editingBudget)}
                     >
-                      <option value="">{t('budgets.form.chooseCategory')}</option>
+                      <option value="">
+                        {t("budgets.form.chooseCategory")}
+                      </option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
                         </option>
                       ))}
-                    </select>
-                    <FieldError message={errors.category_id ? t('budgets.form.categoryRequired') : undefined} />
+                    </NativeSelect>
+                    <FieldError
+                      message={
+                        errors.category_id
+                          ? t("budgets.form.categoryRequired")
+                          : undefined
+                      }
+                    />
                   </>
                 ) : (
                   <div className="hidden md:block" />
@@ -457,7 +550,7 @@ export default function BudgetsPage() {
                 className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
                 htmlFor="budget-limit"
               >
-                {t('budgets.form.limit')}
+                {t("budgets.form.limit")}
               </label>
               <Controller
                 control={control}
@@ -466,24 +559,38 @@ export default function BudgetsPage() {
                   <CurrencyInput
                     id="budget-limit"
                     name={field.name}
-                  placeholder="1000000"
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onNumberValueChange={field.onChange}
-                  ref={field.ref}
-                  className="min-h-[2.85rem] px-3.5 py-2.5"
-                />
-              )}
-            />
-              <FieldError message={errors.limit ? t('budgets.form.limitInvalid') : undefined} />
+                    placeholder="1000000"
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onNumberValueChange={field.onChange}
+                    ref={field.ref}
+                    className="min-h-[2.85rem] px-3.5 py-2.5"
+                  />
+                )}
+              />
+              <FieldError
+                message={
+                  errors.limit ? t("budgets.form.limitInvalid") : undefined
+                }
+              />
             </div>
 
             <div className="grid gap-2.5 pt-1 sm:grid-cols-2">
-              <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>
-                {t('common.cancel')}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsFormOpen(false)}
+              >
+                {t("common.cancel")}
               </Button>
-              <Button type="submit" variant="primary" disabled={saveBudgetMutation.isPending}>
-                {saveBudgetMutation.isPending ? t('common.loading') : t('common.save')}
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={saveBudgetMutation.isPending}
+              >
+                {saveBudgetMutation.isPending
+                  ? t("common.loading")
+                  : t("common.save")}
               </Button>
             </div>
           </form>
@@ -491,27 +598,34 @@ export default function BudgetsPage() {
       </Dialog>
 
       <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label={t('budgets.summary.spent')} value={formatCurrency(totalSpent)} tone="danger" />
         <MetricCard
-          label={t('budgets.summary.limit')}
-          value={overallLimit > 0 ? formatCurrency(overallLimit) : '-'}
+          label={t("budgets.summary.spent")}
+          value={formatCurrency(totalSpent)}
+          tone="danger"
+        />
+        <MetricCard
+          label={t("budgets.summary.limit")}
+          value={overallLimit > 0 ? formatCurrency(overallLimit) : "-"}
           tone="accent"
         />
         <MetricCard
-          label={t('budgets.summary.remaining')}
-          value={overallLimit > 0 ? formatCurrency(remaining) : '-'}
-          tone={overallTone === 'danger' ? 'danger' : 'success'}
+          label={t("budgets.summary.remaining")}
+          value={overallLimit > 0 ? formatCurrency(remaining) : "-"}
+          tone={overallTone === "danger" ? "danger" : "success"}
         />
-        <MetricCard label={t('budgets.summary.tracked')} value={categoryBudgets.length} />
+        <MetricCard
+          label={t("budgets.summary.tracked")}
+          value={categoryBudgets.length}
+        />
       </section>
 
       {budgetQuery.isLoading ? (
         <SurfaceCard>
-          <EmptyState title={t('common.loading')} compact />
+          <EmptyState title={t("common.loading")} compact />
         </SurfaceCard>
       ) : budgetQuery.isError ? (
         <SurfaceCard>
-          <EmptyState title={t('budgets.loadError')} compact />
+          <EmptyState title={t("budgets.loadError")} compact />
         </SurfaceCard>
       ) : (
         <>
@@ -519,11 +633,17 @@ export default function BudgetsPage() {
             <SurfaceCard>
               <div className="grid gap-3">
                 <SectionHeading
-                  title={t('budgets.overallTitle')}
+                  title={t("budgets.overallTitle")}
                   actions={
                     globalBudget ? (
                       <>
-                        <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-2xl" onClick={() => openEditForm(globalBudget)}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-2xl"
+                          onClick={() => openEditForm(globalBudget)}
+                        >
                           <Pencil size={16} />
                         </Button>
                         <Button
@@ -547,19 +667,19 @@ export default function BudgetsPage() {
                   <div className="grid gap-3">
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                       <MetricCard
-                        label={t('budgets.summary.limit')}
+                        label={t("budgets.summary.limit")}
                         value={formatCurrency(globalBudget.total_limit ?? 0)}
                         tone="accent"
                       />
                       <MetricCard
-                        label={t('budgets.summary.spent')}
+                        label={t("budgets.summary.spent")}
                         value={formatCurrency(totalSpent)}
                         tone="danger"
                       />
                       <MetricCard
-                        label={t('budgets.summary.remaining')}
+                        label={t("budgets.summary.remaining")}
                         value={formatCurrency(remaining)}
-                        tone={overallTone === 'danger' ? 'danger' : 'success'}
+                        tone={overallTone === "danger" ? "danger" : "success"}
                       />
                     </div>
 
@@ -568,22 +688,22 @@ export default function BudgetsPage() {
                         value={overallRatio}
                         tone={toneToProgressTone[overallTone]}
                         className="h-2.5 bg-surface-2"
-                        ariaLabel={t('budgets.overallTitle')}
+                        ariaLabel={t("budgets.overallTitle")}
                       />
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <Badge variant={toneToBadgeVariant[overallTone]}>
                           {overallRatio >= 1
-                            ? t('budgets.status.exceeded')
+                            ? t("budgets.status.exceeded")
                             : overallRatio >= 0.8
-                              ? t('budgets.status.warning')
-                              : t('budgets.status.ok')}
+                              ? t("budgets.status.warning")
+                              : t("budgets.status.ok")}
                         </Badge>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <EmptyState
-                    title={t('budgets.noOverall')}
+                    title={t("budgets.noOverall")}
                     compact
                     icon={<Target size={18} />}
                   />
@@ -593,61 +713,83 @@ export default function BudgetsPage() {
 
             <SurfaceCard>
               <div className="grid gap-3">
-                <SectionHeading title={t('budgets.categoryTitle')} />
+                <SectionHeading title={t("budgets.categoryTitle")} />
 
                 {categoryRows.length === 0 ? (
-                  <EmptyState title={t('budgets.noCategories')} compact icon={<Target size={18} />} />
+                  <EmptyState
+                    title={t("budgets.noCategories")}
+                    compact
+                    icon={<Target size={18} />}
+                  />
                 ) : (
                   <div className="grid gap-2.5">
-                    {categoryRows.map(({ budget, spent, limit, ratio, tone }) => (
-                      <div key={budget.id} className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="grid gap-1">
-                            <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
-                              {budget.categories?.name || t('common.uncategorized')}
-                            </strong>
-                            <span className="text-xs text-text-3">
-                              {formatCurrency(spent)} / {formatCurrency(limit)}
-                            </span>
+                    {categoryRows.map(
+                      ({ budget, spent, limit, ratio, tone }) => (
+                        <div
+                          key={budget.id}
+                          className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
+                        >
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="grid gap-1">
+                              <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+                                {budget.categories?.name ||
+                                  t("common.uncategorized")}
+                              </strong>
+                              <span className="text-xs text-text-3">
+                                {formatCurrency(spent)} /{" "}
+                                {formatCurrency(limit)}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-2xl"
+                                onClick={() => openEditForm(budget)}
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-2xl text-danger"
+                                onClick={() => {
+                                  void handleDelete(budget.id);
+                                }}
+                                disabled={deleteBudgetMutation.isPending}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-2xl" onClick={() => openEditForm(budget)}>
-                              <Pencil size={16} />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-2xl text-danger"
-                              onClick={() => {
-                                void handleDelete(budget.id);
-                              }}
-                              disabled={deleteBudgetMutation.isPending}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
+                          <div className="grid gap-2">
+                            <ProgressMeter
+                              value={ratio}
+                              tone={toneToProgressTone[tone]}
+                              className="h-2 bg-surface-1"
+                              ariaLabel={
+                                budget.categories?.name ||
+                                t("common.uncategorized")
+                              }
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <Badge variant={toneToBadgeVariant[tone]}>
+                                {ratio >= 1
+                                  ? t("budgets.status.exceeded")
+                                  : ratio >= 0.8
+                                    ? t("budgets.status.warning")
+                                    : t("budgets.status.ok")}
+                              </Badge>
+                              <span className="text-xs text-text-3">
+                                {Math.round(ratio * 100)}%
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="grid gap-2">
-                          <ProgressMeter
-                            value={ratio}
-                            tone={toneToProgressTone[tone]}
-                            className="h-2 bg-surface-1"
-                            ariaLabel={budget.categories?.name || t('common.uncategorized')}
-                          />
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <Badge variant={toneToBadgeVariant[tone]}>
-                              {ratio >= 1
-                                ? t('budgets.status.exceeded')
-                                : ratio >= 0.8
-                                  ? t('budgets.status.warning')
-                                  : t('budgets.status.ok')}
-                            </Badge>
-                            <span className="text-xs text-text-3">{Math.round(ratio * 100)}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 )}
               </div>
@@ -656,10 +798,14 @@ export default function BudgetsPage() {
 
           <SurfaceCard>
             <div className="grid gap-3">
-              <SectionHeading title={t('budgets.untrackedTitle')} />
+              <SectionHeading title={t("budgets.untrackedTitle")} />
 
               {untrackedSpending.length === 0 ? (
-                <EmptyState title={t('budgets.noUntracked')} compact icon={<Target size={18} />} />
+                <EmptyState
+                  title={t("budgets.noUntracked")}
+                  compact
+                  icon={<Target size={18} />}
+                />
               ) : (
                 <div className="grid gap-2.5">
                   {untrackedSpending.map((item) => (

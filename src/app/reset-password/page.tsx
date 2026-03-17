@@ -1,16 +1,22 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import AuthShell from '@/components/AuthShell';
-import { FieldError } from '@/components/shared/FieldError';
-import { useLanguage } from '@/components/LanguageProvider';
-import { createClient } from '@/lib/supabase/client';
-import { getErrorMessage } from '@/lib/errors';
-import { resetPasswordSchema, type ResetPasswordValues } from '@/lib/validators/auth';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import AuthShell from "@/components/AuthShell";
+import { FormField, FormLabel } from "@/components/forms/FormPrimitives";
+import { FieldError } from "@/components/shared/FieldError";
+import { useLanguage } from "@/components/LanguageProvider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  resetPasswordSchema,
+  type ResetPasswordValues,
+} from "@/lib/validators/auth";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -22,8 +28,8 @@ export default function ResetPasswordPage() {
   } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      password: '',
-      confirm_password: '',
+      password: "",
+      confirm_password: "",
     },
   });
 
@@ -34,54 +40,57 @@ export default function ResetPasswordPage() {
     });
 
     if (error) {
-      toast.error(getErrorMessage(error, t('auth.reset.error')));
+      toast.error(getErrorMessage(error, t("auth.reset.error")));
       return;
     }
 
-    toast.success(t('auth.reset.success'));
-    router.push('/dashboard');
+    toast.success(t("auth.reset.success"));
+    router.push("/dashboard");
   };
 
   return (
     <AuthShell
-      eyebrow={t('auth.reset.eyebrow')}
-      title={t('auth.reset.title')}
-      footer={<Link href="/login">{t('auth.reset.backToLogin')}</Link>}
+      eyebrow={t("auth.reset.eyebrow")}
+      title={t("auth.reset.title")}
+      footer={<Link href="/login">{t("auth.reset.backToLogin")}</Link>}
     >
       <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="input-group">
-          <label htmlFor="password" className="input-label">
-            {t('auth.fields.newPassword')}
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="password">
+            {t("auth.fields.newPassword")}
+          </FormLabel>
+          <Input
             id="password"
             type="password"
-            className="input"
             placeholder="********"
-            {...register('password')}
+            {...register("password")}
             required
           />
           <FieldError message={errors.password?.message} />
-        </div>
+        </FormField>
 
-        <div className="input-group">
-          <label htmlFor="confirm_password" className="input-label">
-            {t('auth.fields.confirmPassword')}
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="confirm_password">
+            {t("auth.fields.confirmPassword")}
+          </FormLabel>
+          <Input
             id="confirm_password"
             type="password"
-            className="input"
             placeholder="********"
-            {...register('confirm_password')}
+            {...register("confirm_password")}
             required
           />
           <FieldError message={errors.confirm_password?.message} />
-        </div>
+        </FormField>
 
-        <button type="submit" className="btn btn-primary btn-full" disabled={isSubmitting}>
-          {isSubmitting ? '...' : t('auth.reset.submit')}
-        </button>
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "..." : t("auth.reset.submit")}
+        </Button>
       </form>
     </AuthShell>
   );

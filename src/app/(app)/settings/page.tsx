@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { Bot, Link2, Moon, Palette, Save, Sun, Unlink } from 'lucide-react';
-import { toast } from 'sonner';
-import { FieldError } from '@/components/shared/FieldError';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { Bot, Link2, Moon, Palette, Save, Sun, Unlink } from "lucide-react";
+import { toast } from "sonner";
+import { FieldError } from "@/components/shared/FieldError";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   PageHeader,
   PageHeaderActions,
@@ -15,47 +15,49 @@ import {
   PageShell,
   SectionHeading,
   SurfaceCard,
-} from '@/components/shared/PagePrimitives';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Theme } from '@/components/ThemeProvider';
-import { useLanguage } from '@/components/LanguageProvider';
-import { cn } from '@/lib/utils';
+} from "@/components/shared/PagePrimitives";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { Theme } from "@/components/ThemeProvider";
+import { useLanguage } from "@/components/LanguageProvider";
+import { cn } from "@/lib/utils";
 import {
   formatCurrencyAmount,
   getCurrencyName,
   supportedCurrencyCodes,
-} from '@/lib/currency';
-import { getErrorMessage } from '@/lib/errors';
-import { queryKeys } from '@/lib/queries/keys';
-import { fetchCurrentProfile, type ProfileQueryResult } from '@/lib/queries/profile';
+} from "@/lib/currency";
+import { getErrorMessage } from "@/lib/errors";
+import { queryKeys } from "@/lib/queries/keys";
+import {
+  fetchCurrentProfile,
+  type ProfileQueryResult,
+} from "@/lib/queries/profile";
 import {
   createTelegramConnectLink,
   disconnectTelegramConnection,
   fetchTelegramConnection,
-} from '@/lib/queries/telegram';
-import { createClient } from '@/lib/supabase/client';
+} from "@/lib/queries/telegram";
+import { createClient } from "@/lib/supabase/client";
 import {
   profileSettingsSchema,
   type ProfileSettingsInput,
   type ProfileSettingsValues,
-} from '@/lib/validators/profile';
-import type { Language } from '@/lib/i18n/dictionaries';
+} from "@/lib/validators/profile";
+import type { Language } from "@/lib/i18n/dictionaries";
 
-const timezones = ['Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC'];
-const nativeSelectClassName =
-  'flex min-h-[3rem] w-full rounded-[var(--radius-control)] border border-border-subtle bg-surface-1 px-4 py-3 text-sm text-text-1 outline-none transition hover:border-border-strong focus:border-accent focus:ring-4 focus:ring-accent-soft/70';
+const timezones = ["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura", "UTC"];
 
-type SettingsTab = 'profile' | 'regional' | 'appearance' | 'notifications';
-type ExtendedSettingsTab = SettingsTab | 'integrations';
+type SettingsTab = "profile" | "regional" | "appearance" | "notifications";
+type ExtendedSettingsTab = SettingsTab | "integrations";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<ExtendedSettingsTab>('profile');
+  const [activeTab, setActiveTab] = useState<ExtendedSettingsTab>("profile");
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.me,
     queryFn: fetchCurrentProfile,
@@ -77,11 +79,11 @@ export default function SettingsPage() {
   } = useForm<ProfileSettingsInput, undefined, ProfileSettingsValues>({
     resolver: zodResolver(profileSettingsSchema),
     defaultValues: {
-      full_name: '',
-      timezone: 'Asia/Jakarta',
-      currency_code: 'IDR',
-      theme_preference: 'system',
-      preferred_language: 'id',
+      full_name: "",
+      timezone: "Asia/Jakarta",
+      currency_code: "IDR",
+      theme_preference: "system",
+      preferred_language: "id",
       notification_preferences: {
         wishlist_due: true,
         budget_warning: true,
@@ -90,9 +92,9 @@ export default function SettingsPage() {
     },
   });
 
-  const selectedTheme = useWatch({ control, name: 'theme_preference' });
-  const selectedLanguage = useWatch({ control, name: 'preferred_language' });
-  const selectedCurrency = useWatch({ control, name: 'currency_code' });
+  const selectedTheme = useWatch({ control, name: "theme_preference" });
+  const selectedLanguage = useWatch({ control, name: "preferred_language" });
+  const selectedCurrency = useWatch({ control, name: "currency_code" });
 
   useEffect(() => {
     const profile = profileQuery.data?.profile;
@@ -102,7 +104,7 @@ export default function SettingsPage() {
     }
 
     reset({
-      full_name: profile.full_name ?? '',
+      full_name: profile.full_name ?? "",
       timezone: profile.timezone,
       currency_code: profile.currency_code,
       theme_preference: profile.theme_preference,
@@ -124,10 +126,10 @@ export default function SettingsPage() {
       }
 
       if (!user) {
-        throw new Error(t('settings.loadError'));
+        throw new Error(t("settings.loadError"));
       }
 
-      const { error } = await supabase.from('profiles').upsert(
+      const { error } = await supabase.from("profiles").upsert(
         {
           id: user.id,
           full_name: values.full_name || null,
@@ -138,7 +140,7 @@ export default function SettingsPage() {
           preferred_language: values.preferred_language,
           notification_preferences: values.notification_preferences,
         },
-        { onConflict: 'id' }
+        { onConflict: "id" },
       );
 
       if (error) {
@@ -158,71 +160,92 @@ export default function SettingsPage() {
       return values;
     },
     onSuccess: async (values) => {
-      queryClient.setQueryData<ProfileQueryResult | undefined>(queryKeys.profile.me, (current) => {
-        if (!current) {
-          return current;
-        }
+      queryClient.setQueryData<ProfileQueryResult | undefined>(
+        queryKeys.profile.me,
+        (current) => {
+          if (!current) {
+            return current;
+          }
 
-        return {
-          ...current,
-          profile: {
-            ...current.profile,
-            full_name: values.full_name || null,
-            display_name: values.full_name || null,
-            timezone: values.timezone,
-            currency_code: values.currency_code,
-            theme_preference: values.theme_preference,
-            preferred_language: values.preferred_language,
-            notification_preferences: values.notification_preferences,
-          },
-        };
-      });
+          return {
+            ...current,
+            profile: {
+              ...current.profile,
+              full_name: values.full_name || null,
+              display_name: values.full_name || null,
+              timezone: values.timezone,
+              currency_code: values.currency_code,
+              theme_preference: values.theme_preference,
+              preferred_language: values.preferred_language,
+              notification_preferences: values.notification_preferences,
+            },
+          };
+        },
+      );
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.me });
-      toast.success(t('settings.saveSuccess'));
+      toast.success(t("settings.saveSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('settings.saveError')));
+      toast.error(getErrorMessage(error, t("settings.saveError")));
     },
   });
   const telegramConnectMutation = useMutation({
     mutationFn: createTelegramConnectLink,
     onSuccess: (result) => {
-      window.open(result.url, '_blank', 'noopener,noreferrer');
-      toast.success(t('settings.telegram.connectStarted'));
+      window.open(result.url, "_blank", "noopener,noreferrer");
+      toast.success(t("settings.telegram.connectStarted"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('settings.telegram.connectError')));
+      toast.error(getErrorMessage(error, t("settings.telegram.connectError")));
     },
   });
   const telegramDisconnectMutation = useMutation({
-    mutationFn: async () => disconnectTelegramConnection(profileQuery.data?.profile.id ?? ''),
+    mutationFn: async () =>
+      disconnectTelegramConnection(profileQuery.data?.profile.id ?? ""),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.telegram.connection });
-      toast.success(t('settings.telegram.disconnectSuccess'));
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.telegram.connection,
+      });
+      toast.success(t("settings.telegram.disconnectSuccess"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('settings.telegram.disconnectError')));
+      toast.error(
+        getErrorMessage(error, t("settings.telegram.disconnectError")),
+      );
     },
   });
 
-  const themeOptions: { value: Theme; label: string; icon: React.ReactNode }[] = [
-    { value: 'light', label: t('settings.appearance.light'), icon: <Sun size={18} /> },
-    { value: 'dark', label: t('settings.appearance.dark'), icon: <Moon size={18} /> },
-    { value: 'system', label: t('settings.appearance.system'), icon: <Palette size={18} /> },
-  ];
+  const themeOptions: { value: Theme; label: string; icon: React.ReactNode }[] =
+    [
+      {
+        value: "light",
+        label: t("settings.appearance.light"),
+        icon: <Sun size={18} />,
+      },
+      {
+        value: "dark",
+        label: t("settings.appearance.dark"),
+        icon: <Moon size={18} />,
+      },
+      {
+        value: "system",
+        label: t("settings.appearance.system"),
+        icon: <Palette size={18} />,
+      },
+    ];
 
   const languageOptions: { value: Language; label: string; code: string }[] = [
-    { value: 'id', label: t('settings.language.indonesian'), code: 'ID' },
-    { value: 'en', label: t('settings.language.english'), code: 'EN' },
+    { value: "id", label: t("settings.language.indonesian"), code: "ID" },
+    { value: "en", label: t("settings.language.english"), code: "EN" },
   ];
 
   const tabs: { value: ExtendedSettingsTab; label: string }[] = [
-    { value: 'profile', label: t('settings.profile.title') },
-    { value: 'regional', label: t('settings.language.title') },
-    { value: 'appearance', label: t('settings.appearance.title') },
-    { value: 'notifications', label: t('settings.notifications.title') },
-    { value: 'integrations', label: t('settings.telegram.title') },
+    { value: "profile", label: t("settings.profile.title") },
+    { value: "regional", label: t("settings.language.title") },
+    { value: "appearance", label: t("settings.appearance.title") },
+    { value: "notifications", label: t("settings.notifications.title") },
+    { value: "integrations", label: t("settings.telegram.title") },
   ];
   const currencyOptions = supportedCurrencyCodes.map((currencyCode) => ({
     value: currencyCode,
@@ -231,17 +254,17 @@ export default function SettingsPage() {
   const currencyPreview = formatCurrencyAmount(
     1234567,
     selectedLanguage ?? language,
-    selectedCurrency ?? 'IDR'
+    selectedCurrency ?? "IDR",
   );
 
   if (profileQuery.isLoading) {
     return (
       <PageShell className="animate-fade-in">
         <PageHeader>
-          <PageHeading title={t('settings.title')} />
+          <PageHeading title={t("settings.title")} />
         </PageHeader>
         <Card>
-          <EmptyState title={t('common.loading')} compact />
+          <EmptyState title={t("common.loading")} compact />
         </Card>
       </PageShell>
     );
@@ -251,10 +274,10 @@ export default function SettingsPage() {
     return (
       <PageShell className="animate-fade-in">
         <PageHeader>
-          <PageHeading title={t('settings.title')} />
+          <PageHeading title={t("settings.title")} />
         </PageHeader>
         <Card>
-          <EmptyState title={t('settings.loadError')} compact />
+          <EmptyState title={t("settings.loadError")} compact />
         </Card>
       </PageShell>
     );
@@ -263,7 +286,7 @@ export default function SettingsPage() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading title={t('settings.title')} />
+        <PageHeading title={t("settings.title")} />
         <PageHeaderActions>
           <Button
             type="submit"
@@ -273,7 +296,9 @@ export default function SettingsPage() {
             disabled={profileMutation.isPending}
           >
             <Save size={16} />
-            {profileMutation.isPending ? t('settings.saving') : t('settings.save')}
+            {profileMutation.isPending
+              ? t("settings.saving")
+              : t("settings.save")}
           </Button>
         </PageHeaderActions>
       </PageHeader>
@@ -307,27 +332,30 @@ export default function SettingsPage() {
           <TabsContent value="profile" className="mt-0">
             <SurfaceCard>
               <div className="grid gap-3">
-                <SectionHeading title={t('settings.profile.title')} />
+                <SectionHeading title={t("settings.profile.title")} />
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <SettingsField
-                    label={t('settings.profile.fullName')}
+                    label={t("settings.profile.fullName")}
                     htmlFor="full_name"
                     error={errors.full_name?.message}
                   >
                     <Input
                       id="full_name"
                       type="text"
-                      placeholder={t('settings.profile.fullNamePlaceholder')}
-                      {...register('full_name')}
+                      placeholder={t("settings.profile.fullNamePlaceholder")}
+                      {...register("full_name")}
                     />
                   </SettingsField>
 
-                  <SettingsField label={t('settings.profile.email')} htmlFor="account_email">
+                  <SettingsField
+                    label={t("settings.profile.email")}
+                    htmlFor="account_email"
+                  >
                     <Input
                       id="account_email"
                       type="email"
-                      value={profileQuery.data?.email ?? ''}
+                      value={profileQuery.data?.email ?? ""}
                       disabled
                       readOnly
                     />
@@ -341,7 +369,7 @@ export default function SettingsPage() {
             <div className="grid gap-3.5">
               <SurfaceCard>
                 <div className="grid gap-3">
-                  <SectionHeading title={t('settings.language.title')} />
+                  <SectionHeading title={t("settings.language.title")} />
 
                   <div className="grid gap-3 md:grid-cols-2">
                     {languageOptions.map((option) => (
@@ -349,13 +377,13 @@ export default function SettingsPage() {
                         key={option.value}
                         type="button"
                         className={cn(
-                          'inline-flex min-h-[3.15rem] items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-4 text-sm font-semibold transition',
+                          "inline-flex min-h-[3.15rem] items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-4 text-sm font-semibold transition",
                           selectedLanguage === option.value
-                            ? 'border-border-strong bg-surface-2 text-text-1'
-                            : 'border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2'
+                            ? "border-border-strong bg-surface-2 text-text-1"
+                            : "border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2",
                         )}
                         onClick={() =>
-                          setValue('preferred_language', option.value, {
+                          setValue("preferred_language", option.value, {
                             shouldDirty: true,
                             shouldValidate: true,
                           })
@@ -374,36 +402,48 @@ export default function SettingsPage() {
               <SurfaceCard>
                 <div className="grid gap-3">
                   <SectionHeading
-                    title={language === 'id' ? 'Zona waktu & mata uang' : 'Timezone & currency'}
+                    title={
+                      language === "id"
+                        ? "Zona waktu & mata uang"
+                        : "Timezone & currency"
+                    }
                   />
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <SettingsField
-                      label={t('settings.regional.timezone')}
+                      label={t("settings.regional.timezone")}
                       htmlFor="timezone"
                       error={errors.timezone?.message}
                     >
-                      <select id="timezone" className={nativeSelectClassName} {...register('timezone')}>
+                      <NativeSelect
+                        id="timezone"
+                        className="min-h-[3rem] px-4 py-3"
+                        {...register("timezone")}
+                      >
                         {timezones.map((timezone) => (
                           <option key={timezone} value={timezone}>
                             {timezone}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </SettingsField>
 
                     <SettingsField
-                      label={t('settings.regional.currency')}
+                      label={t("settings.regional.currency")}
                       htmlFor="currency_code"
                       error={errors.currency_code?.message}
                     >
-                      <select id="currency_code" className={nativeSelectClassName} {...register('currency_code')}>
+                      <NativeSelect
+                        id="currency_code"
+                        className="min-h-[3rem] px-4 py-3"
+                        {...register("currency_code")}
+                      >
                         {currencyOptions.map((currency) => (
                           <option key={currency.value} value={currency.value}>
                             {currency.label}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </SettingsField>
                   </div>
 
@@ -422,7 +462,7 @@ export default function SettingsPage() {
           <TabsContent value="appearance" className="mt-0">
             <SurfaceCard>
               <div className="grid gap-3">
-                <SectionHeading title={t('settings.appearance.title')} />
+                <SectionHeading title={t("settings.appearance.title")} />
 
                 <div className="grid gap-3 md:grid-cols-3">
                   {themeOptions.map((option) => (
@@ -430,22 +470,24 @@ export default function SettingsPage() {
                       key={option.value}
                       type="button"
                       className={cn(
-                        'inline-flex min-h-[5.6rem] flex-col items-start justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-3.5 py-3.5 text-left transition',
+                        "inline-flex min-h-[5.6rem] flex-col items-start justify-between gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border px-3.5 py-3.5 text-left transition",
                         selectedTheme === option.value
-                          ? 'border-border-strong bg-surface-2 text-text-1'
-                          : 'border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2'
+                          ? "border-border-strong bg-surface-2 text-text-1"
+                          : "border-border-subtle bg-surface-1 text-text-2 hover:border-border-strong hover:bg-surface-2",
                       )}
                       onClick={() =>
-                        setValue('theme_preference', option.value, {
+                        setValue("theme_preference", option.value, {
                           shouldDirty: true,
                           shouldValidate: true,
                         })
                       }
                     >
-                        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-surface-1 text-text-1">
-                          {option.icon}
-                        </span>
-                      <span className="text-sm font-semibold">{option.label}</span>
+                      <span className="grid h-9 w-9 place-items-center rounded-2xl bg-surface-1 text-text-1">
+                        {option.icon}
+                      </span>
+                      <span className="text-sm font-semibold">
+                        {option.label}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -456,12 +498,10 @@ export default function SettingsPage() {
           <TabsContent value="notifications" className="mt-0">
             <SurfaceCard>
               <div className="grid gap-3">
-                <SectionHeading title={t('settings.notifications.title')} />
+                <SectionHeading title={t("settings.notifications.title")} />
 
                 <div className="grid gap-3">
-                  <ToggleField
-                    title={t('settings.notifications.wishlistDue')}
-                  >
+                  <ToggleField title={t("settings.notifications.wishlistDue")}>
                     <Controller
                       control={control}
                       name="notification_preferences.wishlist_due"
@@ -469,14 +509,14 @@ export default function SettingsPage() {
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          aria-label={t('settings.notifications.wishlistDue')}
+                          aria-label={t("settings.notifications.wishlistDue")}
                         />
                       )}
                     />
                   </ToggleField>
 
                   <ToggleField
-                    title={t('settings.notifications.budgetWarning')}
+                    title={t("settings.notifications.budgetWarning")}
                   >
                     <Controller
                       control={control}
@@ -485,14 +525,14 @@ export default function SettingsPage() {
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          aria-label={t('settings.notifications.budgetWarning')}
+                          aria-label={t("settings.notifications.budgetWarning")}
                         />
                       )}
                     />
                   </ToggleField>
 
                   <ToggleField
-                    title={t('settings.notifications.budgetExceeded')}
+                    title={t("settings.notifications.budgetExceeded")}
                   >
                     <Controller
                       control={control}
@@ -501,7 +541,9 @@ export default function SettingsPage() {
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          aria-label={t('settings.notifications.budgetExceeded')}
+                          aria-label={t(
+                            "settings.notifications.budgetExceeded",
+                          )}
                         />
                       )}
                     />
@@ -514,7 +556,7 @@ export default function SettingsPage() {
           <TabsContent value="integrations" className="mt-0">
             <SurfaceCard>
               <div className="grid gap-3">
-                <SectionHeading title={t('settings.telegram.title')} />
+                <SectionHeading title={t("settings.telegram.title")} />
 
                 <div className="flex flex-col gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
                   <div className="flex items-start gap-3">
@@ -523,15 +565,21 @@ export default function SettingsPage() {
                     </span>
                     <div className="grid gap-1">
                       <strong className="text-sm font-semibold text-text-1">
-                        @{telegramQuery.data?.botUsername || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'DuitFlowMoneyTrack_Bot'}
+                        @
+                        {telegramQuery.data?.botUsername ||
+                          process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
+                          "DuitFlowMoneyTrack_Bot"}
                       </strong>
                       <span className="text-sm text-text-2">
                         {telegramQuery.data?.connected
-                          ? t('settings.telegram.connected')
-                          : t('settings.telegram.disconnected')}
+                          ? t("settings.telegram.connected")
+                          : t("settings.telegram.disconnected")}
                       </span>
-                      {telegramQuery.data?.connected && telegramQuery.data.username ? (
-                        <span className="text-sm text-text-3">@{telegramQuery.data.username}</span>
+                      {telegramQuery.data?.connected &&
+                      telegramQuery.data.username ? (
+                        <span className="text-sm text-text-3">
+                          @{telegramQuery.data.username}
+                        </span>
                       ) : null}
                     </div>
                   </div>
@@ -540,13 +588,16 @@ export default function SettingsPage() {
                     <Button
                       type="button"
                       variant="primary"
-                      disabled={telegramConnectMutation.isPending || !telegramQuery.data?.botUsername}
+                      disabled={
+                        telegramConnectMutation.isPending ||
+                        !telegramQuery.data?.botUsername
+                      }
                       onClick={() => telegramConnectMutation.mutate()}
                     >
                       <Link2 size={16} />
                       {telegramQuery.data?.connected
-                        ? t('settings.telegram.reconnect')
-                        : t('settings.telegram.connect')}
+                        ? t("settings.telegram.reconnect")
+                        : t("settings.telegram.connect")}
                     </Button>
                     {telegramQuery.data?.connected ? (
                       <Button
@@ -556,7 +607,7 @@ export default function SettingsPage() {
                         onClick={() => telegramDisconnectMutation.mutate()}
                       >
                         <Unlink size={16} />
-                        {t('settings.telegram.disconnect')}
+                        {t("settings.telegram.disconnect")}
                       </Button>
                     ) : null}
                   </div>
@@ -576,7 +627,9 @@ export default function SettingsPage() {
               disabled={profileMutation.isPending || !isDirty}
             >
               <Save size={16} />
-              {profileMutation.isPending ? t('settings.saving') : t('settings.save')}
+              {profileMutation.isPending
+                ? t("settings.saving")
+                : t("settings.save")}
             </Button>
           </div>
         </div>
@@ -620,7 +673,9 @@ function ToggleField({
   return (
     <div className="flex items-start justify-between gap-4 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-1 p-3.5">
       <div className="grid gap-1">
-        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">{title}</strong>
+        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+          {title}
+        </strong>
       </div>
       <div className="pt-1">{children}</div>
     </div>

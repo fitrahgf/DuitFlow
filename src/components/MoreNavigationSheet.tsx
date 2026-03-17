@@ -47,38 +47,38 @@ export default function MoreNavigationSheet({
 
   return (
     <Sheet open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : null)}>
-      <SheetContent side="bottom" hideClose className="max-w-[32rem] rounded-t-[var(--radius-sheet)] px-4 pb-[calc(1rem+var(--safe-bottom))] pt-3">
-        <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-border-strong" />
+      <SheetContent side="bottom" hideClose className="max-w-[29rem] rounded-t-[var(--radius-sheet)] px-3 pb-[calc(0.75rem+var(--safe-bottom))] pt-2">
+        <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-border-strong" />
 
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="grid gap-1">
-            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-text-3">{title}</span>
-            <SheetTitle className="text-[1rem] tracking-[-0.04em]">DuitFlow</SheetTitle>
+        <div className="mb-2 flex items-start justify-between gap-3 border-b border-border-subtle/75 pb-2">
+          <div className="grid gap-0.5">
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-text-3">{title}</span>
+            <SheetTitle className="text-[0.92rem] tracking-[-0.04em]">DuitFlow</SheetTitle>
           </div>
 
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={title} title={title} className="h-10 w-10">
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={title} title={title} className="h-[2.15rem] w-[2.15rem]">
             <X size={18} />
           </Button>
         </div>
 
-        <Card className="mb-3.5 grid gap-2.5 border-border-subtle bg-surface-2/70 p-3 shadow-none">
+        <Card className="mb-2.5 grid gap-2 border-border-subtle bg-surface-2/60 p-2 shadow-none">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-[0.95rem] bg-surface-1 text-sm font-semibold text-text-1 shadow-xs">
+            <div className="grid h-8 w-8 place-items-center rounded-[0.8rem] bg-surface-1 text-[0.78rem] font-semibold text-text-1 shadow-xs">
               {(userName || 'User').slice(0, 2).toUpperCase()}
             </div>
-            <div className="grid min-w-0 gap-0.5">
-              <strong className="truncate text-sm tracking-[-0.02em]">{userName || 'User'}</strong>
-              <span className="truncate text-xs text-text-3">{userEmail || signOutLabel}</span>
+            <div className="min-w-0">
+              <strong className="block truncate text-[0.82rem] tracking-[-0.02em]">{userName || 'User'}</strong>
+              {userEmail ? <span className="block truncate text-[0.72rem] text-text-3">{userEmail}</span> : null}
             </div>
           </div>
 
-          <Button type="button" variant="secondary" fullWidth onClick={onSignOut} className="justify-between px-3.5">
+          <Button type="button" variant="secondary" fullWidth onClick={onSignOut} className="min-h-[2.15rem] justify-between px-3 text-[0.78rem]">
             <LogOut size={16} />
             <span>{signOutLabel}</span>
           </Button>
         </Card>
 
-        <div className="grid gap-2.5">
+        <div className="grid gap-1.5">
           {sections.map((section) => {
             const sectionItems = items.filter((item) => item.group === section.key);
             if (sectionItems.length === 0) {
@@ -88,9 +88,9 @@ export default function MoreNavigationSheet({
             return (
               <div
                 key={section.key}
-                className="grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/85 p-2"
+                className="grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/90 p-1.5"
               >
-                <span className="px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                <span className="px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.18em] text-text-3">
                   {section.label}
                 </span>
                 {sectionItems.map((item) => (
@@ -98,18 +98,18 @@ export default function MoreNavigationSheet({
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'grid min-h-[3rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[calc(var(--radius-control)+0.05rem)] border border-transparent px-3 py-2 text-text-3 transition-all duration-300 hover:border-border-subtle hover:bg-surface-2 hover:text-text-1',
-                      item.active && 'border-border-subtle bg-surface-2 text-text-1'
+                      'grid min-h-[2.2rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 rounded-[calc(var(--radius-control)-0.08rem)] border border-transparent px-2 py-1 text-text-3 transition-all duration-300 hover:border-border-subtle hover:bg-surface-2 hover:text-text-1',
+                      item.active && 'border-border-subtle bg-accent-soft/30 text-text-1'
                     )}
                     onClick={onClose}
                   >
-                    <span className="grid h-8 w-8 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] bg-surface-2 text-text-1">
+                    <span className="grid h-5 w-5 place-items-center rounded-[calc(var(--radius-control)-0.16rem)] bg-surface-2 text-text-1">
                       {item.icon}
                     </span>
-                    <span className="min-w-0 truncate text-sm font-semibold tracking-[-0.02em]">{item.label}</span>
+                    <span className="min-w-0 truncate text-[0.78rem] font-semibold tracking-[-0.02em]">{item.label}</span>
                     <span
                       className={cn(
-                        'h-2 w-2 rounded-full bg-transparent',
+                        'h-1.5 w-1.5 rounded-full bg-transparent',
                         item.active && 'bg-accent'
                       )}
                       aria-hidden="true"

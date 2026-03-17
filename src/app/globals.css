@@ -62,21 +62,30 @@
     --danger: hsl(var(--danger-channel));
     --danger-soft: hsl(var(--danger-soft-channel));
 
-    --shadow-xs: 0 10px 24px hsla(156, 18%, 14%, 0.045);
-    --shadow-sm: 0 18px 42px hsla(156, 18%, 14%, 0.075);
-    --shadow-md: 0 28px 72px hsla(156, 18%, 10%, 0.12);
+    --shadow-xs: 0 2px 8px hsla(156, 18%, 14%, 0.022);
+    --shadow-sm: 0 8px 18px hsla(156, 18%, 14%, 0.04);
+    --shadow-md: 0 16px 34px hsla(156, 18%, 10%, 0.065);
 
-    --radius-card: 1.5rem;
-    --radius-control: 1rem;
-    --radius-sheet: 1.7rem;
+    --radius-card: 1.3rem;
+    --radius-control: 0.95rem;
+    --radius-sheet: 1.5rem;
     --radius-full: 999px;
 
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --mobile-header-height: 4rem;
     --fab-size: 3.75rem;
-    --sidebar-width: 18.5rem;
-    --max-content-width: 76rem;
+    --sidebar-width: 14.75rem;
+    --max-content-width: 63rem;
+    --space-stack: 0.75rem;
+    --space-stack-lg: 0.9rem;
+    --space-panel: 0.82rem;
+    --space-panel-lg: 0.96rem;
+    --control-height: 2.5rem;
+    --control-height-sm: 2.1rem;
+    --control-height-icon: 2.25rem;
+    --tab-height: 2.05rem;
+    --empty-state-height: 7.5rem;
 
     --transition-fast: 160ms ease;
     --transition-base: 220ms ease;
@@ -113,17 +122,22 @@
     --color-text-inverse: var(--text-inverse);
     --color-login-card-border: hsla(156, 12%, 84%, 0.6);
     --color-login-kicker-bg: hsla(149, 46%, 92%, 0.92);
-    --gradient-shell:
-      radial-gradient(circle at top left, hsla(149, 40%, 90%, 0.32), transparent 32%),
-      radial-gradient(circle at bottom right, hsla(42, 48%, 92%, 0.66), transparent 34%),
-      linear-gradient(180deg, hsl(var(--bg-canvas-channel)), hsl(var(--bg-subtle-channel)));
-    --gradient-surface: linear-gradient(180deg, hsla(149, 42%, 90%, 0.24), transparent 84%);
-    --gradient-glass: linear-gradient(180deg, hsla(0, 0%, 100%, 0.96), hsla(42, 20%, 97%, 0.94));
-    --gradient-shell-panel: linear-gradient(180deg, hsla(0, 0%, 100%, 0.97), hsla(42, 24%, 96%, 0.95));
-    --gradient-header: linear-gradient(180deg, hsla(42, 30%, 98%, 0.94), hsla(42, 30%, 98%, 0.78));
-    --gradient-header-desktop: linear-gradient(180deg, hsla(42, 30%, 98%, 0.9), hsla(42, 30%, 98%, 0.82));
-    --gradient-login-card: linear-gradient(145deg, hsla(0, 0%, 100%, 0.98), hsla(148, 28%, 96%, 0.94));
-    --gradient-login-title: linear-gradient(135deg, hsl(var(--text-1-channel)), hsl(var(--accent-channel)));
+    --gradient-shell: none;
+    --gradient-surface: none;
+    --gradient-glass: none;
+    --gradient-shell-panel: none;
+    --gradient-header: none;
+    --gradient-header-desktop: none;
+    --gradient-login-card: linear-gradient(
+      145deg,
+      hsla(0, 0%, 100%, 0.98),
+      hsla(148, 28%, 96%, 0.94)
+    );
+    --gradient-login-title: linear-gradient(
+      135deg,
+      hsl(var(--text-1-channel)),
+      hsl(var(--accent-channel))
+    );
   }
 
   html.dark {
@@ -157,24 +171,31 @@
     --danger-channel: 7 78% 62%;
     --danger-soft-channel: 7 30% 20%;
 
-    --shadow-xs: 0 10px 24px hsla(156, 28%, 4%, 0.2);
-    --shadow-sm: 0 18px 38px hsla(156, 28%, 4%, 0.28);
-    --shadow-md: 0 28px 62px hsla(156, 28%, 2%, 0.38);
+    --shadow-xs: 0 4px 12px hsla(156, 28%, 4%, 0.12);
+    --shadow-sm: 0 10px 22px hsla(156, 28%, 4%, 0.16);
+    --shadow-md: 0 18px 36px hsla(156, 28%, 2%, 0.22);
 
     --color-login-card-border: hsla(156, 10%, 32%, 0.72);
     --color-login-kicker-bg: hsla(149, 28%, 20%, 0.94);
     --color-overlay: hsla(156, 30%, 2%, 0.7);
     --color-overlay-soft: hsla(156, 30%, 2%, 0.56);
     --color-ghost-hover: hsla(156, 12%, 18%, 0.92);
-    --gradient-shell: radial-gradient(circle at top, hsla(149, 34%, 22%, 0.3), transparent 36%),
-      linear-gradient(180deg, hsl(var(--bg-canvas-channel)), hsl(var(--bg-subtle-channel)));
-    --gradient-surface: linear-gradient(180deg, hsla(149, 28%, 20%, 0.42), transparent 76%);
-    --gradient-glass: linear-gradient(180deg, hsla(156, 14%, 12%, 0.94), hsla(156, 13%, 15%, 0.9));
-    --gradient-shell-panel: linear-gradient(180deg, hsla(156, 14%, 12%, 0.96), hsla(156, 13%, 15%, 0.92));
-    --gradient-header: linear-gradient(180deg, hsla(156, 18%, 8%, 0.94), hsla(156, 18%, 8%, 0.84));
-    --gradient-header-desktop: linear-gradient(180deg, hsla(156, 18%, 8%, 0.9), hsla(156, 18%, 8%, 0.82));
-    --gradient-login-card: linear-gradient(145deg, hsla(156, 14%, 12%, 0.98), hsla(156, 13%, 15%, 0.94));
-    --gradient-login-title: linear-gradient(135deg, hsl(0 0% 100%), hsl(var(--accent-strong-channel)));
+    --gradient-shell: none;
+    --gradient-surface: none;
+    --gradient-glass: none;
+    --gradient-shell-panel: none;
+    --gradient-header: none;
+    --gradient-header-desktop: none;
+    --gradient-login-card: linear-gradient(
+      145deg,
+      hsla(156, 14%, 12%, 0.98),
+      hsla(156, 13%, 15%, 0.94)
+    );
+    --gradient-login-title: linear-gradient(
+      135deg,
+      hsl(0 0% 100%),
+      hsl(var(--accent-strong-channel))
+    );
   }
 
   *,
@@ -192,8 +213,6 @@
   body {
     @apply min-h-screen bg-canvas text-text-1 font-sans antialiased;
     margin: 0;
-    background-image: var(--gradient-shell);
-    background-attachment: fixed;
     text-rendering: optimizeLegibility;
   }
 
@@ -246,108 +265,17 @@
     clip: rect(0, 0, 0, 0);
   }
 
-  .text-primary {
-    color: var(--accent-strong);
-  }
-
-  .text-secondary {
-    color: var(--accent-secondary);
-  }
-
-  .text-muted {
-    color: var(--text-3);
-  }
-
   .text-danger {
     color: var(--danger);
   }
 
   .card {
     @apply rounded-2xl border border-border-subtle/90 bg-surface-1 shadow-xs;
-    background-image: var(--gradient-surface);
-  }
-
-  .card-glass {
-    @apply card;
-    background-image: var(--gradient-glass);
-  }
-
-  .btn {
-    @apply inline-flex min-h-[2.75rem] items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2.5 text-sm font-semibold tracking-[-0.01em] transition-all duration-300;
-  }
-
-  .btn:disabled {
-    @apply cursor-not-allowed opacity-60;
-  }
-
-  .btn-sm {
-    @apply min-h-[2.2rem] px-3.5 py-2 text-[0.72rem];
-  }
-
-  .btn-primary {
-    @apply border-transparent bg-accent text-white shadow-sm hover:-translate-y-px hover:bg-accent-strong;
-  }
-
-  .btn-secondary {
-    @apply border-border-subtle bg-surface-1 text-text-1 hover:-translate-y-px hover:border-border-strong hover:bg-surface-2;
-  }
-
-  .btn-ghost {
-    @apply border-transparent bg-transparent text-text-2 hover:bg-surface-2 hover:text-text-1;
-  }
-
-  .btn-danger {
-    @apply border-transparent bg-danger text-white hover:opacity-95;
-  }
-
-  .btn-full {
-    @apply w-full;
-  }
-
-  .btn-icon {
-    @apply h-11 w-11 min-w-[2.75rem] p-0;
-  }
-
-  .input-group {
-    @apply grid gap-2;
-  }
-
-  .input-label {
-    @apply inline-flex items-center gap-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-text-3;
-  }
-
-  .input {
-    @apply w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-text-1 outline-none transition-all duration-300 placeholder:text-text-3 hover:border-border-strong hover:bg-surface-2/55 focus:border-accent focus:ring-4 focus:ring-accent-soft/70;
-    min-height: 3rem;
-  }
-
-  .field-error {
-    @apply text-sm font-medium text-danger;
-    margin: 0;
   }
 
   .badge {
-    @apply inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-[0.72rem] font-bold;
-  }
-
-  .badge-income {
-    background: var(--success-soft);
-    color: var(--success);
-  }
-
-  .badge-expense {
-    background: var(--danger-soft);
-    color: var(--danger);
-  }
-
-  .divider {
-    @apply flex items-center gap-4 text-xs text-text-3;
-  }
-
-  .divider::before,
-  .divider::after {
-    content: "";
-    @apply h-px flex-1 bg-border-subtle;
+    @apply inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold;
+    min-height: 1.65rem;
   }
 
   .skeleton {
@@ -367,10 +295,6 @@
     animation: skeleton-sweep 1.4s ease-in-out infinite;
   }
 
-  .skeleton-card {
-    @apply grid gap-3 p-4;
-  }
-
   .skeleton-line {
     @apply h-3 rounded-full bg-surface-3;
   }
@@ -387,110 +311,12 @@
     width: 82%;
   }
 
-  .modal-backdrop,
-  .sheet-backdrop {
-    @apply fixed inset-0 z-[120] flex items-center justify-center p-4;
-    background: var(--color-overlay);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  .sheet-backdrop {
-    @apply items-end p-0;
-    background: var(--color-overlay-soft);
-  }
-
-  .modal-panel {
-    @apply w-full max-w-[34rem] overflow-auto rounded-2xl border border-border-subtle bg-surface-1 shadow-sm;
-    max-height: calc(100dvh - 2rem);
-    background-image: var(--gradient-shell-panel);
-  }
-
-  .modal-panel--wide {
-    max-width: 40rem;
-  }
-
-  .sheet-panel {
-    @apply w-full max-w-[36rem] overflow-auto rounded-t-[1.75rem] border border-border-subtle bg-surface-1 px-4 pb-6 pt-4 shadow-sm;
-    max-height: min(90dvh, 52rem);
-    background-image: var(--gradient-shell-panel);
-  }
-
-  .sheet-handle {
-    @apply mx-auto mb-4 h-1 w-12 rounded-full bg-border-strong;
-  }
-
-  .sheet-header {
-    @apply mb-4 flex items-start justify-between gap-3;
-  }
-
-  .sheet-header-copy {
-    @apply grid gap-1;
-  }
-
-  .sheet-label {
-    @apply text-[0.7rem] font-bold uppercase tracking-[0.16em] text-text-3;
-  }
-
-  .sheet-title {
-    @apply m-0 text-xl font-semibold tracking-[-0.03em];
-  }
-
-  .page-panel {
-    @apply p-5;
-  }
-
-  .page-panel--compact {
-    @apply p-4;
-  }
-
-  .page-stack {
-    @apply grid gap-5;
-  }
-
-  .section-head {
-    @apply flex items-start justify-between gap-3;
-  }
-
-  .section-head-copy {
-    @apply grid gap-1;
-  }
-
-  .section-head-title {
-    @apply m-0 inline-flex items-center gap-2 text-base font-semibold tracking-[-0.02em];
-  }
-
-  .section-head-subtitle {
-    @apply m-0 text-sm text-text-3;
-  }
-
-  .card-actions {
-    @apply flex flex-wrap gap-2;
-  }
-
-  .confirm-dialog {
-    max-width: 28rem;
-  }
-
-  .confirm-dialog__actions {
-    @apply grid grid-cols-2 gap-3;
-  }
-
   .animate-fade-in {
     animation: fade-in 220ms ease-out both;
   }
 
   .animate-slide-in {
     animation: slide-up 220ms ease-out both;
-  }
-}
-
-@layer utilities {
-  .bg-grid-soft {
-    background-image:
-      linear-gradient(to right, color-mix(in srgb, var(--border-subtle) 64%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in srgb, var(--border-subtle) 64%, transparent) 1px, transparent 1px);
-    background-size: 1.25rem 1.25rem;
   }
 }
 
@@ -501,20 +327,16 @@
         var(--tw-translate-x, 0),
         calc(var(--tw-translate-y, 0) + 8px)
       )
-      rotate(var(--tw-rotate, 0))
-      skewX(var(--tw-skew-x, 0))
-      skewY(var(--tw-skew-y, 0))
-      scaleX(var(--tw-scale-x, 1))
+      rotate(var(--tw-rotate, 0)) skewX(var(--tw-skew-x, 0))
+      skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1))
       scaleY(var(--tw-scale-y, 1));
   }
 
   to {
     opacity: 1;
     transform: translate(var(--tw-translate-x, 0), var(--tw-translate-y, 0))
-      rotate(var(--tw-rotate, 0))
-      skewX(var(--tw-skew-x, 0))
-      skewY(var(--tw-skew-y, 0))
-      scaleX(var(--tw-scale-x, 1))
+      rotate(var(--tw-rotate, 0)) skewX(var(--tw-skew-x, 0))
+      skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1))
       scaleY(var(--tw-scale-y, 1));
   }
 }
@@ -526,20 +348,16 @@
         var(--tw-translate-x, 0),
         calc(var(--tw-translate-y, 0) + 12px)
       )
-      rotate(var(--tw-rotate, 0))
-      skewX(var(--tw-skew-x, 0))
-      skewY(var(--tw-skew-y, 0))
-      scaleX(var(--tw-scale-x, 1))
+      rotate(var(--tw-rotate, 0)) skewX(var(--tw-skew-x, 0))
+      skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1))
       scaleY(var(--tw-scale-y, 1));
   }
 
   to {
     opacity: 1;
     transform: translate(var(--tw-translate-x, 0), var(--tw-translate-y, 0))
-      rotate(var(--tw-rotate, 0))
-      skewX(var(--tw-skew-x, 0))
-      skewY(var(--tw-skew-y, 0))
-      scaleX(var(--tw-scale-x, 1))
+      rotate(var(--tw-rotate, 0)) skewX(var(--tw-skew-x, 0))
+      skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1))
       scaleY(var(--tw-scale-y, 1));
   }
 }
@@ -553,20 +371,6 @@
 @media (max-width: 767px) {
   body {
     padding-bottom: calc(var(--safe-bottom) + 0.25rem);
-  }
-
-  .modal-backdrop {
-    @apply items-end p-0;
-  }
-
-  .modal-panel,
-  .modal-panel--wide {
-    @apply max-w-none rounded-t-[1.75rem];
-    max-height: 90dvh;
-  }
-
-  .confirm-dialog__actions {
-    @apply grid-cols-1;
   }
 }
 

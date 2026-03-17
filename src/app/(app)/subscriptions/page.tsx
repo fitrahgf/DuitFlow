@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { CreditCard, MonitorPlay, Pause, Play, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirmDialog } from '@/components/ConfirmDialogProvider';
-import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { useState } from "react";
+import { CreditCard, MonitorPlay, Pause, Play, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useConfirmDialog } from "@/components/ConfirmDialogProvider";
+import { useCurrencyPreferences } from "@/components/CurrencyPreferencesProvider";
+import {
+  useCreateSubscriptionMutation,
+  useDeleteSubscriptionMutation,
+  useSubscriptionsQuery,
+  useUpdateSubscriptionStatusMutation,
+} from "@/features/subscriptions/hooks";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   MetricCard,
   PageHeader,
@@ -14,85 +20,49 @@ import {
   PageShell,
   SectionHeading,
   SurfaceCard,
-} from '@/components/shared/PagePrimitives';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CurrencyInput } from '@/components/ui/currency-input';
+} from "@/components/shared/PagePrimitives";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { useLanguage } from '@/components/LanguageProvider';
-import { createClient } from '@/lib/supabase/client';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/components/LanguageProvider";
 
-interface Subscription {
-  id: string;
-  name: string;
-  amount: number;
-  billing_day: number;
-  is_active: boolean;
-}
-
-function getSubscriptionStateLabel(isActive: boolean, language: 'en' | 'id') {
+function getSubscriptionStateLabel(isActive: boolean, language: "en" | "id") {
   if (isActive) {
-    return language === 'id' ? 'Aktif' : 'Active';
+    return language === "id" ? "Aktif" : "Active";
   }
 
-  return language === 'id' ? 'Dijeda' : 'Paused';
+  return language === "id" ? "Dijeda" : "Paused";
 }
 
 export default function SubscriptionsPage() {
   const { t, language } = useLanguage();
   const { formatCurrency } = useCurrencyPreferences();
   const confirm = useConfirmDialog();
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
+  const subscriptionsQuery = useSubscriptionsQuery();
+  const createSubscriptionMutation = useCreateSubscriptionMutation();
+  const updateSubscriptionStatusMutation =
+    useUpdateSubscriptionStatusMutation();
+  const deleteSubscriptionMutation = useDeleteSubscriptionMutation();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
   const [billingDay, setBillingDay] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [supabase] = useState(() => createClient());
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadSubscriptions = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .order('is_active', { ascending: false })
-        .order('billing_day', { ascending: true });
-
-      if (!isActive) {
-        return;
-      }
-
-      if (error) {
-        console.error('Error fetching subscriptions:', error);
-      }
-
-      setSubscriptions((data ?? []) as Subscription[]);
-      setLoading(false);
-    };
-
-    void loadSubscriptions();
-
-    return () => {
-      isActive = false;
-    };
-  }, [refreshKey, supabase]);
+  const subscriptions = subscriptionsQuery.data ?? [];
+  const loading = subscriptionsQuery.isLoading;
+  const submitting = createSubscriptionMutation.isPending;
 
   const resetForm = () => {
     setIsFormOpen(false);
-    setName('');
-    setAmount('');
+    setName("");
+    setAmount("");
     setBillingDay(1);
   };
 
@@ -103,64 +73,68 @@ export default function SubscriptionsPage() {
       return;
     }
 
-    setSubmitting(true);
-
-    const { error } = await supabase.from('subscriptions').insert({
-      name: name.trim(),
-      amount: parseInt(amount, 10),
-      billing_day: billingDay,
-      is_active: true,
-    });
-
-    if (error) {
-      console.error(error);
-      toast.error(t('transactions.form.saveError'));
-    } else {
+    try {
+      await createSubscriptionMutation.mutateAsync({
+        name,
+        amount: parseInt(amount, 10),
+        billingDay,
+      });
       resetForm();
-      setRefreshKey((current) => current + 1);
-      toast.success(t('common.saved'));
+      toast.success(t("common.saved"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("transactions.form.saveError"));
     }
-
-    setSubmitting(false);
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ is_active: !currentStatus })
-      .eq('id', id);
-
-    if (!error) {
-      setRefreshKey((current) => current + 1);
-      toast.success(currentStatus ? t('subscriptions.pause') : t('subscriptions.resume'));
+    try {
+      await updateSubscriptionStatusMutation.mutateAsync({
+        id,
+        isActive: currentStatus,
+      });
+      toast.success(
+        currentStatus ? t("subscriptions.pause") : t("subscriptions.resume"),
+      );
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleDelete = async (id: string) => {
     const accepted = await confirm({
-      title: t('common.delete'),
-      description: t('subscriptions.confirmDelete'),
-      confirmLabel: t('common.delete'),
-      cancelLabel: t('common.cancel'),
-      tone: 'danger',
+      title: t("common.delete"),
+      description: t("subscriptions.confirmDelete"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      tone: "danger",
     });
 
     if (!accepted) {
       return;
     }
 
-    const { error } = await supabase.from('subscriptions').delete().eq('id', id);
-
-    if (!error) {
-      setRefreshKey((current) => current + 1);
-      toast.success(t('common.deleted'));
+    try {
+      await deleteSubscriptionMutation.mutateAsync(id);
+      toast.success(t("common.deleted"));
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const activeSubscriptions = subscriptions.filter((subscription) => subscription.is_active);
-  const monthlyTotal = activeSubscriptions.reduce((sum, subscription) => sum + subscription.amount, 0);
+  const activeSubscriptions = subscriptions.filter(
+    (subscription) => subscription.is_active,
+  );
+  const monthlyTotal = activeSubscriptions.reduce(
+    (sum, subscription) => sum + subscription.amount,
+    0,
+  );
   const today = new Date().getDate();
-  const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0,
+  ).getDate();
 
   const isUpcoming = (billDay: number) => {
     let diff = billDay - today;
@@ -173,48 +147,63 @@ export default function SubscriptionsPage() {
   };
 
   const upcomingCount = subscriptions.filter(
-    (subscription) => subscription.is_active && isUpcoming(subscription.billing_day)
+    (subscription) =>
+      subscription.is_active && isUpcoming(subscription.billing_day),
   ).length;
 
   return (
     <PageShell className="animate-fade-in">
-        <PageHeader>
-          <PageHeading title={t('subscriptions.title')} />
-          <PageHeaderActions>
-          <Button type="button" variant="primary" size="sm" className="max-sm:min-w-max" onClick={() => setIsFormOpen(true)}>
+      <PageHeader>
+        <PageHeading title={t("subscriptions.title")} />
+        <PageHeaderActions>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="max-sm:min-w-max"
+            onClick={() => setIsFormOpen(true)}
+          >
             <CreditCard size={16} />
-            {t('subscriptions.addSubscription')}
+            {t("subscriptions.addSubscription")}
           </Button>
         </PageHeaderActions>
       </PageHeader>
 
       <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label={t('subscriptions.totalMonthly')}
-          value={loading ? '...' : formatCurrency(monthlyTotal)}
+          label={t("subscriptions.totalMonthly")}
+          value={loading ? "..." : formatCurrency(monthlyTotal)}
           tone="accent"
         />
         <MetricCard
-          label={t('subscriptions.activeServices')}
-          value={loading ? '...' : activeSubscriptions.length}
+          label={t("subscriptions.activeServices")}
+          value={loading ? "..." : activeSubscriptions.length}
           tone="success"
         />
         <MetricCard
-          label={t('subscriptions.upcoming')}
-          value={loading ? '...' : upcomingCount}
-          tone={upcomingCount > 0 ? 'warning' : 'default'}
+          label={t("subscriptions.upcoming")}
+          value={loading ? "..." : upcomingCount}
+          tone={upcomingCount > 0 ? "warning" : "default"}
         />
-        <MetricCard label={t('subscriptions.title')} value={loading ? '...' : subscriptions.length} />
+        <MetricCard
+          label={t("subscriptions.title")}
+          value={loading ? "..." : subscriptions.length}
+        />
       </section>
 
       <SurfaceCard>
         <div className="grid gap-3">
-          <SectionHeading title={language === 'id' ? 'Daftar langganan' : 'Subscription list'} />
+          <SectionHeading
+            title={language === "id" ? "Daftar langganan" : "Subscription list"}
+          />
 
           {loading ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={`subscription-skeleton-${index}`} className="grid gap-4 p-4 shadow-none">
+                <Card
+                  key={`subscription-skeleton-${index}`}
+                  className="grid gap-4 p-4 shadow-none"
+                >
                   <div className="skeleton skeleton-line skeleton-line--sm" />
                   <div className="skeleton skeleton-line skeleton-line--lg" />
                   <div className="skeleton skeleton-line skeleton-line--md" />
@@ -223,19 +212,25 @@ export default function SubscriptionsPage() {
             </div>
           ) : subscriptions.length === 0 ? (
             <EmptyState
-              title={t('subscriptions.noSubscriptions')}
+              title={t("subscriptions.noSubscriptions")}
               icon={<MonitorPlay size={20} />}
               action={
-                <Button type="button" variant="primary" onClick={() => setIsFormOpen(true)}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => setIsFormOpen(true)}
+                >
                   <CreditCard size={16} />
-                  {t('subscriptions.addSubscription')}
+                  {t("subscriptions.addSubscription")}
                 </Button>
               }
             />
           ) : (
             <div className="grid gap-3 xl:grid-cols-2">
               {subscriptions.map((subscription) => {
-                const upcoming = subscription.is_active && isUpcoming(subscription.billing_day);
+                const upcoming =
+                  subscription.is_active &&
+                  isUpcoming(subscription.billing_day);
 
                 return (
                   <article
@@ -248,11 +243,11 @@ export default function SubscriptionsPage() {
                           className="grid h-10 w-10 place-items-center rounded-2xl"
                           style={{
                             backgroundColor: subscription.is_active
-                              ? 'var(--accent-soft)'
-                              : 'var(--surface-1)',
+                              ? "var(--accent-soft)"
+                              : "var(--surface-1)",
                             color: subscription.is_active
-                              ? 'var(--accent-strong)'
-                              : 'var(--text-3)',
+                              ? "var(--accent-strong)"
+                              : "var(--text-3)",
                           }}
                         >
                           {subscription.is_active ? (
@@ -264,16 +259,28 @@ export default function SubscriptionsPage() {
 
                         <div className="grid gap-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant={subscription.is_active ? 'accent' : 'default'}>
-                              {getSubscriptionStateLabel(subscription.is_active, language)}
+                            <Badge
+                              variant={
+                                subscription.is_active ? "accent" : "default"
+                              }
+                            >
+                              {getSubscriptionStateLabel(
+                                subscription.is_active,
+                                language,
+                              )}
                             </Badge>
-                            {upcoming ? <Badge variant="warning">{t('subscriptions.upcoming')}</Badge> : null}
+                            {upcoming ? (
+                              <Badge variant="warning">
+                                {t("subscriptions.upcoming")}
+                              </Badge>
+                            ) : null}
                           </div>
                           <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
                             {subscription.name}
                           </strong>
                           <span className="text-sm text-text-3">
-                            {t('subscriptions.billingOn')} {subscription.billing_day}
+                            {t("subscriptions.billingOn")}{" "}
+                            {subscription.billing_day}
                           </span>
                         </div>
                       </div>
@@ -281,19 +288,26 @@ export default function SubscriptionsPage() {
                       <div className="flex flex-wrap gap-2 lg:justify-end">
                         <Button
                           type="button"
-                          variant={subscription.is_active ? 'secondary' : 'primary'}
+                          variant={
+                            subscription.is_active ? "secondary" : "primary"
+                          }
                           size="sm"
-                          onClick={() => toggleStatus(subscription.id, subscription.is_active)}
+                          onClick={() =>
+                            toggleStatus(
+                              subscription.id,
+                              subscription.is_active,
+                            )
+                          }
                         >
                           {subscription.is_active ? (
                             <>
                               <Pause size={14} />
-                              {t('subscriptions.pause')}
+                              {t("subscriptions.pause")}
                             </>
                           ) : (
                             <>
                               <Play size={14} />
-                              {t('subscriptions.resume')}
+                              {t("subscriptions.resume")}
                             </>
                           )}
                         </Button>
@@ -313,7 +327,8 @@ export default function SubscriptionsPage() {
 
                     <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-text-3">
                       <span>
-                        {t('subscriptions.form.billingDay')} {subscription.billing_day}
+                        {t("subscriptions.form.billingDay")}{" "}
+                        {subscription.billing_day}
                       </span>
                       <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
                         {formatCurrency(subscription.amount)}
@@ -327,10 +342,13 @@ export default function SubscriptionsPage() {
         </div>
       </SurfaceCard>
 
-      <Dialog open={isFormOpen} onOpenChange={(open) => (open ? setIsFormOpen(true) : resetForm())}>
+      <Dialog
+        open={isFormOpen}
+        onOpenChange={(open) => (open ? setIsFormOpen(true) : resetForm())}
+      >
         <DialogContent className="max-w-[30rem]">
           <DialogHeader>
-            <DialogTitle>{t('subscriptions.form.new')}</DialogTitle>
+            <DialogTitle>{t("subscriptions.form.new")}</DialogTitle>
           </DialogHeader>
 
           <form className="grid gap-4 pt-2" onSubmit={handleSubmit}>
@@ -339,7 +357,7 @@ export default function SubscriptionsPage() {
                 className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
                 htmlFor="subscription-name"
               >
-                {t('subscriptions.form.name')}
+                {t("subscriptions.form.name")}
               </label>
               <Input
                 id="subscription-name"
@@ -357,7 +375,7 @@ export default function SubscriptionsPage() {
                   className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
                   htmlFor="subscription-price"
                 >
-                  {t('subscriptions.form.price')}
+                  {t("subscriptions.form.price")}
                 </label>
                 <CurrencyInput
                   id="subscription-price"
@@ -374,7 +392,7 @@ export default function SubscriptionsPage() {
                   className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
                   htmlFor="subscription-billing-day"
                 >
-                  {t('subscriptions.form.billingDay')}
+                  {t("subscriptions.form.billingDay")}
                 </label>
                 <Input
                   id="subscription-billing-day"
@@ -383,7 +401,9 @@ export default function SubscriptionsPage() {
                   min="1"
                   max="31"
                   value={billingDay}
-                  onChange={(event) => setBillingDay(parseInt(event.target.value || '1', 10))}
+                  onChange={(event) =>
+                    setBillingDay(parseInt(event.target.value || "1", 10))
+                  }
                   required
                 />
               </div>
@@ -391,10 +411,12 @@ export default function SubscriptionsPage() {
 
             <div className="grid gap-2.5 pt-1 sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={resetForm}>
-                {t('subscriptions.form.cancel')}
+                {t("subscriptions.form.cancel")}
               </Button>
               <Button type="submit" variant="primary" disabled={submitting}>
-                {submitting ? t('subscriptions.form.saving') : t('subscriptions.form.add')}
+                {submitting
+                  ? t("subscriptions.form.saving")
+                  : t("subscriptions.form.add")}
               </Button>
             </div>
           </form>

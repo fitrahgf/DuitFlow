@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   title: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
@@ -21,8 +21,8 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'grid justify-items-center gap-3 text-center text-text-2',
-        compact ? 'px-2 py-4' : 'px-4 py-10',
+        'grid justify-items-center gap-2 text-center text-text-2',
+        compact ? 'px-2 py-3' : 'min-h-[var(--empty-state-height)] px-3.5 py-4',
         className
       )}
     >
@@ -30,15 +30,15 @@ export function EmptyState({
         <div
           className={cn(
             'grid place-items-center rounded-[calc(var(--radius-control)+0.15rem)] bg-surface-2 text-text-3',
-            compact ? 'h-11 w-11' : 'h-14 w-14'
+            compact ? 'h-8 w-8' : 'h-10 w-10'
           )}
         >
           {icon}
         </div>
       ) : null}
-      <div className="grid max-w-[24rem] gap-1">
-        <p className="m-0 text-sm font-semibold tracking-[-0.02em] text-text-1">{title}</p>
-        {description ? <p className="m-0 text-[0.94rem] leading-6 text-text-3">{description}</p> : null}
+      <div className="grid max-w-[18rem] gap-0.5">
+        <p className="m-0 text-[0.92rem] font-semibold tracking-[-0.02em] text-text-1">{title}</p>
+        {description ? <p className="m-0 text-[0.8rem] leading-5 text-text-3">{description}</p> : null}
       </div>
       {action}
     </div>

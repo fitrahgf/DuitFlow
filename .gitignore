@@ -58,3 +58,4 @@ Thumbs.db
 .vscode/
 eslint-output*.txt
 qa-server.log
+*.tsbuildinfo

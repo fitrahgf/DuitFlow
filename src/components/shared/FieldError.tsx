@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface FieldErrorProps {
   message?: string;
@@ -10,5 +10,9 @@ export function FieldError({ message, className }: FieldErrorProps) {
     return null;
   }
 
-  return <p className={cn('field-error', className)}>{message}</p>;
+  return (
+    <p className={cn("m-0 text-sm font-medium text-danger", className)}>
+      {message}
+    </p>
+  );
 }

@@ -1,18 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import AuthShell from '@/components/AuthShell';
-import { FieldError } from '@/components/shared/FieldError';
-import { useLanguage } from '@/components/LanguageProvider';
-import { createClient } from '@/lib/supabase/client';
-import { getErrorMessage } from '@/lib/errors';
+import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import AuthShell from "@/components/AuthShell";
+import { FormField, FormLabel } from "@/components/forms/FormPrimitives";
+import { FieldError } from "@/components/shared/FieldError";
+import { useLanguage } from "@/components/LanguageProvider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/errors";
 import {
   forgotPasswordSchema,
   type ForgotPasswordValues,
-} from '@/lib/validators/auth';
+} from "@/lib/validators/auth";
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
@@ -23,7 +26,7 @@ export default function ForgotPasswordPage() {
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
@@ -34,38 +37,40 @@ export default function ForgotPasswordPage() {
     });
 
     if (error) {
-      toast.error(getErrorMessage(error, t('auth.forgot.error')));
+      toast.error(getErrorMessage(error, t("auth.forgot.error")));
       return;
     }
 
-    toast.success(t('auth.forgot.success'));
+    toast.success(t("auth.forgot.success"));
   };
 
   return (
     <AuthShell
-      eyebrow={t('auth.forgot.eyebrow')}
-      title={t('auth.forgot.title')}
-      footer={<Link href="/login">{t('auth.forgot.backToLogin')}</Link>}
+      eyebrow={t("auth.forgot.eyebrow")}
+      title={t("auth.forgot.title")}
+      footer={<Link href="/login">{t("auth.forgot.backToLogin")}</Link>}
     >
       <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="input-group">
-          <label htmlFor="email" className="input-label">
-            {t('auth.fields.email')}
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="email">{t("auth.fields.email")}</FormLabel>
+          <Input
             id="email"
             type="email"
-            className="input"
             placeholder="you@example.com"
-            {...register('email')}
+            {...register("email")}
             required
           />
           <FieldError message={errors.email?.message} />
-        </div>
+        </FormField>
 
-        <button type="submit" className="btn btn-primary btn-full" disabled={isSubmitting}>
-          {isSubmitting ? '...' : t('auth.forgot.submit')}
-        </button>
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "..." : t("auth.forgot.submit")}
+        </Button>
       </form>
     </AuthShell>
   );
