@@ -21,7 +21,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTheme, type Theme } from '@/components/ThemeProvider';
+import type { Theme } from '@/components/ThemeProvider';
 import { useLanguage } from '@/components/LanguageProvider';
 import { cn } from '@/lib/utils';
 import {
@@ -54,8 +54,7 @@ type ExtendedSettingsTab = SettingsTab | 'integrations';
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
-  const { t, language, setLanguage } = useLanguage();
-  const { theme, setTheme } = useTheme();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<ExtendedSettingsTab>('profile');
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.me,
@@ -178,14 +177,6 @@ export default function SettingsPage() {
           },
         };
       });
-
-      if (theme !== values.theme_preference) {
-        setTheme(values.theme_preference);
-      }
-
-      if (language !== values.preferred_language) {
-        setLanguage(values.preferred_language);
-      }
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.me });
       toast.success(t('settings.saveSuccess'));

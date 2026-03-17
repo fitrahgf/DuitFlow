@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
@@ -161,12 +161,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useLanguage();
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const [supabase] = useState(() => createClient());
   const [user, setUser] = useState<User | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [desktopMoreExpanded, setDesktopMoreExpanded] = useState(false);
   const [quickTransactionOpen, setQuickTransactionOpen] = useState(false);
+  const lastAppliedLanguageRef = useRef<string | null>(null);
+  const lastAppliedThemeRef = useRef<string | null>(null);
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.me,
     queryFn: fetchCurrentProfile,
@@ -255,19 +257,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   useEffect(() => {
-    const profile = profileQuery.data?.profile;
-    if (!profile) {
+    const nextLanguage = profileQuery.data?.profile.preferred_language;
+
+    if (!nextLanguage || lastAppliedLanguageRef.current === nextLanguage) {
       return;
     }
 
-    if (profile.preferred_language && profile.preferred_language !== language) {
-      setLanguage(profile.preferred_language);
+    lastAppliedLanguageRef.current = nextLanguage;
+    setLanguage(nextLanguage);
+  }, [profileQuery.data?.profile.preferred_language, setLanguage]);
+
+  useEffect(() => {
+    const nextTheme = profileQuery.data?.profile.theme_preference;
+
+    if (!nextTheme || lastAppliedThemeRef.current === nextTheme) {
+      return;
     }
 
-    if (profile.theme_preference && profile.theme_preference !== theme) {
-      setTheme(profile.theme_preference);
-    }
-  }, [language, profileQuery.data?.profile, setLanguage, setTheme, theme]);
+    lastAppliedThemeRef.current = nextTheme;
+    setTheme(nextTheme);
+  }, [profileQuery.data?.profile.theme_preference, setTheme]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
