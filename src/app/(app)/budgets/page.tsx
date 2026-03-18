@@ -122,7 +122,7 @@ function BudgetInlineEmpty({
   onAction?: () => void;
 }) {
   return (
-    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] bg-surface-2/45 px-3 py-3">
+    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/70 bg-surface-2/45 px-3 py-3">
       <div className="flex items-start gap-3">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)+0.02rem)] bg-surface-1 text-text-3">
           <Target size={17} />
@@ -228,7 +228,7 @@ export default function BudgetsPage() {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: queryKeys.categories.list("expense"),
+    queryKey: queryKeys.categories.options("expense"),
     queryFn: () => fetchCategories("expense"),
   });
 
@@ -509,9 +509,9 @@ export default function BudgetsPage() {
     );
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t("budgets.title")} subtitle={t("budgets.subtitle")} />
-        <PageHeaderActions>
+      <PageHeader variant="compact">
+        <PageHeading title={t("budgets.title")} compact />
+        <PageHeaderActions mobileLayout="grid">
           <Button
             type="button"
             variant="secondary"
@@ -534,16 +534,17 @@ export default function BudgetsPage() {
       </PageHeader>
 
       <SurfaceCard
+        role="featured"
         padding="compact"
         className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
       >
         <div className="grid gap-2.5">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+          <div className="grid gap-2 border-b border-border-subtle/75 pb-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] sm:items-center sm:gap-0 sm:divide-x sm:divide-border-subtle/75">
             <Button
               type="button"
               variant="secondary"
               size="icon"
-              className="h-8 w-8 min-w-[2rem] rounded-full"
+              className="h-8 w-8 min-w-[2rem] rounded-full sm:justify-self-start"
               onClick={() =>
                 setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), -1)))
               }
@@ -554,7 +555,7 @@ export default function BudgetsPage() {
             </Button>
 
             <div className="grid min-w-0 gap-0.5 text-center">
-              <span className="text-[0.72rem] font-medium tracking-[0.01em] text-text-2">
+              <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
                 {t("budgets.currentMonth")}
               </span>
               <strong className="truncate text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[0.98rem]">
@@ -562,22 +563,6 @@ export default function BudgetsPage() {
               </strong>
             </div>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              className="h-8 w-8 min-w-[2rem] rounded-full"
-              onClick={() =>
-                setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))
-              }
-              aria-label={t("budgets.nextMonth")}
-              title={t("budgets.nextMonth")}
-            >
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-
-          <div className="grid gap-0 border-t border-border-subtle/75 pt-2 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/75 xl:pt-2.5">
             <BudgetUtilityStat
               label={t("budgets.summary.spent")}
               value={formatCurrency(totalSpent)}
@@ -597,6 +582,39 @@ export default function BudgetsPage() {
               label={t("budgets.summary.tracked")}
               value={categoryBudgets.length}
             />
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-8 w-8 min-w-[2rem] rounded-full sm:justify-self-end"
+              onClick={() =>
+                setMonthKey(getMonthKey(addMonths(monthKeyToDate(monthKey), 1)))
+              }
+              aria-label={t("budgets.nextMonth")}
+              title={t("budgets.nextMonth")}
+            >
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-[var(--font-size-meta)] text-text-2">
+            <span>
+              {overallLimit > 0
+                ? overallTone === "danger"
+                  ? t("budgets.status.exceeded")
+                  : overallTone === "warning"
+                    ? t("budgets.status.warning")
+                    : t("budgets.status.ok")
+                : t("budgets.noOverall")}
+            </span>
+            {categoryRows[0] ? (
+              <>
+                <span className="text-text-3">-</span>
+                <span>
+                  {language === "id" ? "Risiko tertinggi" : "Top risk"}: {categoryRows[0].budget.categories?.name || t("common.uncategorized")} · {Math.round(categoryRows[0].ratio * 100)}%
+                </span>
+              </>
+            ) : null}
           </div>
         </div>
       </SurfaceCard>
@@ -743,18 +761,18 @@ export default function BudgetsPage() {
       </Dialog>
 
       {budgetQuery.isLoading ? (
-        <SurfaceCard padding="compact">
+        <SurfaceCard role="embedded" padding="compact">
           <EmptyState title={t("common.loading")} compact />
         </SurfaceCard>
       ) : budgetQuery.isError ? (
-        <SurfaceCard padding="compact">
+        <SurfaceCard role="embedded" padding="compact">
           <EmptyState title={t("budgets.loadError")} compact />
         </SurfaceCard>
       ) : (
         <>
           <section className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
             <div className="grid gap-3 xl:sticky xl:top-[var(--shell-sticky-offset)]">
-              <SurfaceCard padding="compact">
+              <SurfaceCard role="embedded" padding="compact">
                 <div className="grid gap-2">
                   <SectionHeading
                     title={t("budgets.overallTitle")}
@@ -839,20 +857,22 @@ export default function BudgetsPage() {
                     />
                   )}
 
-                  {hasCategoryBudgets ? (
-                    <div className="grid gap-2 border-t border-border-subtle/75 pt-2.5">
-                      <SectionHeading
-                        title={t("budgets.untrackedTitle")}
-                        hideDescriptionOnMobile
-                      />
+                  {untrackedSpending.length > 0 ? (
+                    <details className="group grid gap-2 border-t border-border-subtle/75 pt-2.5">
+                      <summary className="flex list-none items-center justify-between gap-3">
+                        <span className="text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1">
+                          {t("budgets.untrackedTitle")}
+                        </span>
+                        <span className="text-[var(--font-size-meta)] text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+                      </summary>
                       {renderUntrackedList(true)}
-                    </div>
+                    </details>
                   ) : null}
                 </div>
               </SurfaceCard>
             </div>
 
-            <SurfaceCard padding="compact" className={cn(hasCategoryBudgets && "xl:min-h-full")}>
+            <SurfaceCard role="embedded" padding="compact" className={cn(hasCategoryBudgets && "xl:min-h-full")}>
               <div className="grid gap-2">
                 <SectionHeading
                   title={t("budgets.categoryTitle")}
@@ -872,12 +892,12 @@ export default function BudgetsPage() {
                 />
 
                 {hasCategoryBudgets ? (
-                  <div className="grid gap-0 divide-y divide-border-subtle/80">
+                  <div className="grid gap-1.5">
                     {categoryRows.map(
                       ({ budget, spent, limit, ratio, tone }) => (
                         <div
                           key={budget.id}
-                          className="grid gap-2 py-2.5 first:pt-0 last:pb-0"
+                          className="grid gap-2 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle/70 bg-surface-2/38 px-3 py-2.5"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="grid gap-1">
@@ -885,7 +905,7 @@ export default function BudgetsPage() {
                                 {budget.categories?.name ||
                                   t("common.uncategorized")}
                               </strong>
-                              <span className="text-[0.76rem] leading-4 text-text-2">
+                              <span className="text-[var(--font-size-meta)] leading-4 text-text-2">
                                 {formatCurrency(spent)} /{" "}
                                 {formatCurrency(limit)}
                               </span>
@@ -925,17 +945,14 @@ export default function BudgetsPage() {
                               }
                             />
                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                              <Badge
-                                variant={toneToBadgeVariant[tone]}
-                                className="min-h-0 px-2 py-0 text-[0.64rem] font-medium"
-                              >
+                              <span className="text-[var(--font-size-meta)] text-text-2">
                                 {ratio >= 1
                                   ? t("budgets.status.exceeded")
                                   : ratio >= 0.8
                                     ? t("budgets.status.warning")
                                     : t("budgets.status.ok")}
-                              </Badge>
-                              <span className="text-xs text-text-3">
+                              </span>
+                              <span className="text-[var(--font-size-meta)] text-text-3">
                                 {Math.round(ratio * 100)}%
                               </span>
                             </div>
@@ -945,16 +962,16 @@ export default function BudgetsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid gap-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.14rem)] bg-surface-2/4૫ px-3 py-3">
-                      <div className="grid gap-0.5">
-                        <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                          {t("budgets.noCategories")}
-                        </strong>
-                        <span className="text-[0.8rem] text-text-2">
-                          {language === "id"
-                            ? "Mulai dari kategori yang paling sering dipakai."
-                            : "Start with the categories you use most."}
+                    <div className="grid gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle/70 bg-surface-2/45 px-3 py-3">
+                        <div className="grid gap-0.5">
+                          <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                            {t("budgets.noCategories")}
+                          </strong>
+                          <span className="text-[var(--font-size-meta)] text-text-2">
+                            {language === "id"
+                              ? "Mulai dari kategori yang paling sering dipakai."
+                              : "Start with the categories you use most."}
                         </span>
                       </div>
                       <Button
@@ -967,16 +984,18 @@ export default function BudgetsPage() {
                       </Button>
                     </div>
 
-                    <div className="grid gap-1.5 border-t border-border-subtle/75 pt-2.5">
-                      <SectionHeading
-                        title={t("budgets.untrackedTitle")}
-                        hideDescriptionOnMobile
-                      />
-                      {renderUntrackedList()}
+                      <details className="group grid gap-1.5 border-t border-border-subtle/75 pt-2.5">
+                        <summary className="flex list-none items-center justify-between gap-3">
+                          <span className="text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1">
+                            {t("budgets.untrackedTitle")}
+                          </span>
+                          <span className="text-[var(--font-size-meta)] text-text-3 transition-transform duration-300 group-open:rotate-180">v</span>
+                        </summary>
+                        {renderUntrackedList()}
+                      </details>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
             </SurfaceCard>
           </section>
         </>
@@ -984,3 +1003,7 @@ export default function BudgetsPage() {
     </PageShell>
   );
 }
+
+
+
+

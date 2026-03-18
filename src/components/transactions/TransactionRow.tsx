@@ -3,20 +3,8 @@ import { getCategoryIcon } from '@/lib/icons';
 import type { TransactionDisplayItem } from '@/lib/transactionFeed';
 import type { TransactionListItem } from '@/lib/queries/transactions';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-const sourceBadgeVariant: Record<
-  'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion',
-  'default' | 'accent' | 'warning'
-> = {
-  manual: 'default',
-  quick_add: 'accent',
-  telegram_bot: 'accent',
-  system_transfer: 'accent',
-  wishlist_conversion: 'warning',
-};
 
 function getSourceLabel(
   source: 'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion',
@@ -35,28 +23,6 @@ function getDisplayTitle(transaction: TransactionDisplayItem, t: (path: string) 
 
 function MetaDot() {
   return <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />;
-}
-
-function SourceBadge({
-  source,
-  t,
-  className,
-}: {
-  source: 'manual' | 'quick_add' | 'telegram_bot' | 'system_transfer' | 'wishlist_conversion';
-  t: (path: string) => string;
-  className?: string;
-}) {
-  return (
-    <Badge
-      variant={sourceBadgeVariant[source]}
-      className={cn(
-        "min-h-0 px-2 py-0 text-[0.62rem] font-medium tracking-[-0.01em]",
-        className,
-      )}
-    >
-      {getSourceLabel(source, t)}
-    </Badge>
-  );
 }
 
 export function TransactionRow({
@@ -87,7 +53,7 @@ export function TransactionRow({
     const hasTransferFee = transaction.feeAmount > 0;
 
     return (
-      <article className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2.25 py-1.75 transition-colors duration-200 hover:bg-surface-2/45 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+      <article className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-l border-transparent px-2.25 py-2 transition-colors duration-200 hover:border-accent/28 hover:bg-surface-2/42 sm:gap-2.5 sm:px-3.5 sm:py-2.75">
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] bg-accent-soft text-accent-strong sm:h-8 sm:w-8">
           <ArrowLeftRight size={16} />
         </span>
@@ -96,8 +62,10 @@ export function TransactionRow({
           <strong className="truncate text-[0.86rem] font-semibold tracking-[-0.025em] text-text-1 sm:text-[0.9rem]">
             {transferTitle}
           </strong>
-          <div className="flex min-w-0 flex-nowrap items-center gap-x-1.25 overflow-hidden text-[0.72rem] leading-4 text-text-2 sm:flex-wrap sm:gap-x-1.5 sm:overflow-visible">
-            <span className="shrink-0 whitespace-nowrap">{formatDate(transaction.transactionDateValue)}</span>
+          <div className="flex min-w-0 flex-nowrap items-center gap-x-1.25 overflow-hidden text-[var(--font-size-meta)] leading-4 text-text-2 sm:flex-wrap sm:gap-x-1.5 sm:overflow-visible">
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-surface-2/78 px-2 py-0.5 text-[var(--font-size-meta)] font-medium text-text-2">
+              {formatDate(transaction.transactionDateValue)}
+            </span>
             {hasTransferFee ? (
               <>
                 <MetaDot />
@@ -155,7 +123,7 @@ export function TransactionRow({
   const showSourceBadge = transaction.source === 'wishlist_conversion';
 
   return (
-    <article className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2.25 py-1.75 transition-colors duration-200 hover:bg-surface-2/45 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+      <article className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-l border-transparent px-2.25 py-2 transition-colors duration-200 hover:border-accent/28 hover:bg-surface-2/42 sm:gap-2.5 sm:px-3.5 sm:py-2.75">
       <span
         className={cn(
           'grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] sm:h-8 sm:w-8',
@@ -175,14 +143,19 @@ export function TransactionRow({
           {getDisplayTitle(transaction, t)}
         </strong>
 
-        <div className="flex min-w-0 flex-nowrap items-center gap-x-1.25 overflow-hidden text-[0.72rem] leading-4 text-text-2 sm:flex-wrap sm:overflow-visible">
+        <div className="flex min-w-0 flex-nowrap items-center gap-x-1.25 overflow-hidden text-[var(--font-size-meta)] leading-4 text-text-2 sm:flex-wrap sm:overflow-visible">
           <span className="truncate">{categoryLabel}</span>
           <MetaDot />
           <span className="truncate">{walletLabel}</span>
           <MetaDot />
-          <span className="shrink-0 whitespace-nowrap">{formatDate(transaction.transactionDateValue)}</span>
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-surface-2/78 px-2 py-0.5 text-[var(--font-size-meta)] font-medium text-text-2">
+            {formatDate(transaction.transactionDateValue)}
+          </span>
           {showSourceBadge ? (
-            <SourceBadge source={transaction.source} t={t} className="h-5 px-1.5 text-[0.6rem]" />
+            <>
+              <MetaDot />
+              <span className="truncate">{getSourceLabel(transaction.source, t)}</span>
+            </>
           ) : null}
         </div>
       </div>

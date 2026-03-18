@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 type ModalShellSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 type ModalShellPadding = 'default' | 'flush';
+type ModalShellDensity = 'default' | 'compact';
 
 const modalShellSizeClassName: Record<ModalShellSize, string> = {
   sm: 'max-w-[30rem]',
@@ -31,6 +32,7 @@ interface ModalShellProps {
   padding?: ModalShellPadding;
   hideClose?: boolean;
   headerHidden?: boolean;
+  density?: ModalShellDensity;
   contentClassName?: string;
   headerClassName?: string;
   bodyClassName?: string;
@@ -46,6 +48,7 @@ export function ModalShell({
   padding = 'default',
   hideClose = false,
   headerHidden = false,
+  density = 'default',
   contentClassName,
   headerClassName,
   bodyClassName,
@@ -56,13 +59,23 @@ export function ModalShell({
         {...(!description ? { 'aria-describedby': undefined } : {})}
         className={cn(
           modalShellSizeClassName[size],
-          padding === 'flush' && 'overflow-hidden p-0',
+          padding === 'flush'
+            ? 'overflow-hidden p-0'
+            : density === 'compact'
+              ? 'gap-3 rounded-[calc(var(--radius-sheet)-0.08rem)] px-4 py-3 sm:px-4.5 sm:py-4'
+              : 'rounded-[var(--radius-sheet)] px-5 py-4 sm:px-6 sm:py-5',
           contentClassName
         )}
         hideClose={hideClose}
       >
         {title ? (
-          <DialogHeader className={cn(headerHidden && 'sr-only', headerClassName)}>
+          <DialogHeader
+            className={cn(
+              headerHidden && 'sr-only',
+              density === 'compact' && 'gap-1 pb-0',
+              headerClassName
+            )}
+          >
             <DialogTitle>{title}</DialogTitle>
             {description ? <DialogDescription>{description}</DialogDescription> : null}
           </DialogHeader>

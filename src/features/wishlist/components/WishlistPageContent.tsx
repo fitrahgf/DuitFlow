@@ -22,6 +22,7 @@ import {
   WishlistConvertDialog,
   WishlistDueBanner,
   WishlistFormDialog,
+  WishlistHistorySection,
   WishlistReviewDialog,
   WishlistSummarySection,
 } from "@/features/wishlist/components/WishlistSections";
@@ -429,7 +430,17 @@ export function WishlistPageContent() {
         getProgressTone={getWishlistProgressTone}
         isReviewDue={isWishlistReviewDue}
         getCoolingProgress={getWishlistCoolingProgress}
+        historySectionTitle={t("wishlist.sections.history")}
       />
+
+      {activeTab === "all" && (purchasedItems.length > 0 || cancelledItems.length > 0) ? (
+        <WishlistHistorySection
+          items={[...purchasedItems, ...cancelledItems]}
+          language={language}
+          t={t}
+          formatDate={formatWishlistDate}
+        />
+      ) : null}
 
       <WishlistFormDialog
         open={isFormOpen}

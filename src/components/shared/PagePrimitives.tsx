@@ -8,11 +8,13 @@ type PageContainerPadding = 'none' | 'header' | 'page';
 type PageContainerAlign = 'center' | 'left' | 'responsive';
 type SurfaceTone = 'default' | 'accent' | 'success' | 'warning' | 'danger';
 type SurfacePadding = 'default' | 'compact' | 'none';
+type SurfaceRole = 'default' | 'featured' | 'embedded' | 'ghost';
+type PageHeaderVariant = 'default' | 'compact' | 'plain';
 
 const pageContainerSizeClassName: Record<PageContainerSize, string> = {
   default: 'max-w-shell',
   narrow: 'max-w-5xl',
-  wide: 'max-w-[79rem]',
+  wide: 'max-w-[82rem]',
 };
 
 const pageContainerAlignClassName: Record<PageContainerAlign, string> = {
@@ -92,12 +94,21 @@ export function PageShell({
 
 export function PageHeader({
   className,
+  variant = 'default',
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & { variant?: PageHeaderVariant }) {
+  const variantClassName =
+    variant === 'compact'
+      ? 'gap-2.5 border-b border-border-subtle/70 pb-3 xl:items-center'
+      : variant === 'plain'
+        ? 'gap-2 border-b-0 pb-0 xl:items-center'
+        : 'gap-[var(--page-header-gap)] border-b border-border-subtle/80 pb-[var(--page-header-padding-bottom)] xl:items-end';
+
   return (
     <div
       className={cn(
-        'grid gap-[var(--page-header-gap)] border-b border-border-subtle/80 pb-[var(--page-header-padding-bottom)] xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end',
+        'grid xl:grid-cols-[minmax(0,1fr)_auto]',
+        variantClassName,
         className
       )}
       {...props}
@@ -113,6 +124,7 @@ export function PageHeading({
   titleClassName,
   subtitleClassName,
   hideSubtitleOnMobile = true,
+  compact = false,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -121,9 +133,10 @@ export function PageHeading({
   titleClassName?: string;
   subtitleClassName?: string;
   hideSubtitleOnMobile?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className={cn('grid max-w-[36rem] gap-1.5', className)}>
+    <div className={cn('grid max-w-[36rem]', compact ? 'gap-1' : 'gap-1.5', className)}>
       {eyebrow ? (
         <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
           {eyebrow}
@@ -131,7 +144,9 @@ export function PageHeading({
       ) : null}
       <h1
         className={cn(
-          'm-0 text-[clamp(1.32rem,1.12rem+0.88vw,1.96rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-text-1',
+          compact
+            ? 'm-0 text-[clamp(1.24rem,1.02rem+0.8vw,1.76rem)] font-semibold leading-[1.05] tracking-[-0.045em] text-text-1'
+            : 'm-0 text-[clamp(1.36rem,1.12rem+0.92vw,2.06rem)] font-semibold leading-[1.04] tracking-[-0.052em] text-text-1',
           titleClassName
         )}
       >
@@ -140,7 +155,9 @@ export function PageHeading({
       {subtitle ? (
         <p
           className={cn(
-            'm-0 max-w-[42rem] text-[0.86rem] leading-[1.55] text-text-2',
+            compact
+              ? 'm-0 max-w-[38rem] text-[0.82rem] leading-[1.55] text-text-2'
+              : 'm-0 max-w-[42rem] text-[0.88rem] leading-[1.58] text-text-2',
             hideSubtitleOnMobile && 'hidden sm:block',
             subtitleClassName
           )}
@@ -174,21 +191,33 @@ export function SurfaceCard({
   tone = 'default',
   padding = 'default',
   interactive = false,
+  role = 'default',
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof Card> & {
   tone?: SurfaceTone;
   padding?: SurfacePadding;
   interactive?: boolean;
+  role?: SurfaceRole;
 }) {
+  const roleClassName =
+    role === 'featured'
+      ? 'surface-featured border-border-strong/28 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_94%,transparent),color-mix(in_srgb,var(--surface-accent)_68%,transparent))] backdrop-blur-[14px]'
+      : role === 'embedded'
+        ? 'border-border-subtle/72 bg-surface-2/68 shadow-none backdrop-blur-[10px]'
+        : role === 'ghost'
+          ? 'border-transparent bg-transparent shadow-none'
+          : 'bg-surface-1/88 shadow-xs backdrop-blur-[10px]';
+
   return (
     <Card
       className={cn(
         surfaceToneClassName[tone],
         surfacePaddingClassName[padding],
-        'rounded-[var(--radius-card)] shadow-xs',
+        'rounded-[var(--radius-card)]',
+        roleClassName,
         interactive &&
-          'transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-surface-2/60 hover:shadow-sm',
+          'transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-[1px] hover:border-border-strong hover:bg-surface-2/74 hover:shadow-sm',
         className
       )}
       {...props}
@@ -204,6 +233,7 @@ export function Toolbar({
     <div
       className={cn(
         'flex flex-col gap-2 rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 p-[var(--space-panel)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between',
+        'backdrop-blur-[10px]',
         className
       )}
       {...props}
@@ -320,6 +350,7 @@ export function StatCard({
     <Card
       className={cn(
         'grid min-h-[5.2rem] gap-1.5 rounded-[calc(var(--radius-card)-0.08rem)] p-[var(--space-panel)] shadow-none lg:p-[var(--space-panel-lg)]',
+        'backdrop-blur-[8px]',
         metricToneClassName[tone],
         className
       )}
@@ -346,6 +377,8 @@ export interface EmptyStateCardProps
   emptyStateClassName?: string;
   tone?: SurfaceTone;
   padding?: SurfacePadding;
+  role?: SurfaceRole;
+  variant?: 'inline' | 'section' | 'featured';
 }
 
 export function EmptyStateCard({
@@ -353,15 +386,18 @@ export function EmptyStateCard({
   emptyStateClassName,
   tone = 'default',
   padding = 'default',
+  role = 'default',
+  variant = 'section',
   ...props
 }: EmptyStateCardProps) {
   return (
     <SurfaceCard
       tone={tone}
       padding={padding}
+      role={role}
       className={cardClassName}
     >
-      <EmptyState {...props} className={emptyStateClassName} />
+      <EmptyState {...props} variant={variant} className={emptyStateClassName} />
     </SurfaceCard>
   );
 }

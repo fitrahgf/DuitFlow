@@ -28,7 +28,7 @@ function NavLinkItem({ href, label, icon, active }: MobileBottomNavItem) {
     <Link
       href={href}
       className={cn(
-        'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.55rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
+        'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.72rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
         active && 'text-text-1'
       )}
       aria-current={active ? 'page' : undefined}
@@ -71,7 +71,7 @@ export default function MobileBottomNav({
 
         <button
           type="button"
-          className="grid min-h-[3.15rem] -translate-y-1 justify-items-center gap-0.5 text-center text-[0.53rem] font-semibold tracking-[-0.01em] text-text-1"
+          className="grid min-h-[3.15rem] -translate-y-1 justify-items-center gap-0.5 text-center text-[0.7rem] font-semibold tracking-[-0.01em] text-text-1"
           onClick={onAction}
           aria-label={actionLabel}
         >
@@ -88,7 +88,7 @@ export default function MobileBottomNav({
         <button
           type="button"
           className={cn(
-            'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.55rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
+            'grid min-h-[3rem] justify-items-center gap-0.5 px-1 pt-0.5 text-center text-[0.72rem] font-semibold tracking-[-0.01em] text-text-3 transition-all duration-300',
             moreActive && 'text-text-1'
           )}
           onClick={onMore}

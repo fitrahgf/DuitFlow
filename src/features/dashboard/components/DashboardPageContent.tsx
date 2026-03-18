@@ -4,7 +4,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Wallet } from 'lucide-react';
+import { ReceiptText, Wallet } from 'lucide-react';
 import type { TransactionFormPrefill } from '@/components/TransactionForm';
 import { useCurrencyPreferences } from '@/components/CurrencyPreferencesProvider';
 import { useLanguage } from '@/components/LanguageProvider';
@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  DashboardDesktopInsightsSection,
   DashboardMobilePanelsSection,
   DashboardOnboardingSection,
   DashboardQuickTransactionDialog,
@@ -204,18 +205,17 @@ export function DashboardPageContent() {
 
   return (
     <PageShell className="animate-fade-in gap-3 xl:gap-3.5">
-      <PageHeader className="gap-2.5">
+      <PageHeader variant="compact" className="gap-2">
         <PageHeading
           eyebrow="Workspace"
           title={t('dashboard.title')}
-          subtitle={
-            language === 'id'
-              ? 'Saldo, aktivitas, dan fokus bulan ini dalam satu ringkasan singkat.'
-              : 'Balance, activity, and monthly focus in one compact overview.'
-          }
+          compact
         />
         <PageHeaderActions className="max-sm:hidden">
-          <Badge variant="accent" className="hidden lg:inline-flex">
+          <Badge
+            variant="accent"
+            className="hidden min-h-[1.8rem] border-accent/20 bg-accent-soft/90 px-2.5 lg:inline-flex"
+          >
             {data?.monthKey ?? '---- --'}
           </Badge>
           <Button asChild variant="secondary" className="hidden sm:inline-flex">
@@ -226,6 +226,27 @@ export function DashboardPageContent() {
           </Button>
         </PageHeaderActions>
       </PageHeader>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Button asChild variant="primary" size="sm" className="min-w-max">
+          <Link href="/transactions">
+            <ReceiptText size={16} />
+            {t('transactions.addTransaction')}
+          </Link>
+        </Button>
+        <Button asChild variant="secondary" size="sm" className="min-w-max">
+          <Link href="/wallets">
+            <Wallet size={16} />
+            {t('nav.wallets')}
+          </Link>
+        </Button>
+        <Badge
+          variant="accent"
+          className="min-h-[1.8rem] border-accent/20 bg-accent-soft/90 px-2.5"
+        >
+          {data?.monthKey ?? '---- --'}
+        </Badge>
+      </div>
 
       <DashboardTopSection
         loading={loading}
@@ -247,11 +268,6 @@ export function DashboardPageContent() {
         language={language}
         t={t}
         formatCurrency={formatCurrency}
-        insightView={insightView}
-        onInsightViewChange={setInsightView}
-        barData={barData}
-        categoryData={categoryData}
-        hasCategoryBreakdown={hasCategoryBreakdown}
         onReviewQuickAdd={(draft) => {
           setQuickFormPrefill(draft);
           setQuickFormOpen(true);
@@ -264,6 +280,16 @@ export function DashboardPageContent() {
         setupSteps={setupSteps}
         nextSetupStep={nextSetupStep}
         t={t}
+      />
+
+      <DashboardDesktopInsightsSection
+        insightView={insightView}
+        onInsightViewChange={setInsightView}
+        language={language}
+        t={t}
+        barData={barData}
+        categoryData={categoryData}
+        hasCategoryBreakdown={hasCategoryBreakdown}
       />
 
       <DashboardQuickTransactionDialog

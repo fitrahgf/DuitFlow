@@ -204,11 +204,8 @@ export default function SubscriptionsPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading
-          title={t("subscriptions.title")}
-          subtitle={t("subscriptions.subtitle")}
-        />
+      <PageHeader variant="compact">
+        <PageHeading title={t("subscriptions.title")} compact />
         <PageHeaderActions>
           <Button
             type="button"
@@ -224,10 +221,10 @@ export default function SubscriptionsPage() {
       </PageHeader>
 
       {showOverviewRail ? (
-        <section className="grid gap-3 xl:grid-cols-[minmax(16rem,0.76fr)_minmax(0,1.24fr)] xl:items-start">
-          <SurfaceCard padding="compact" className="xl:sticky xl:top-[var(--shell-sticky-offset)]">
+        <section className="grid gap-3">
+          <SurfaceCard role="featured" padding="compact">
             <div className="grid gap-3">
-              <div className="grid gap-0 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="grid gap-0 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 sm:grid-cols-[minmax(0,1.15fr)_repeat(3,minmax(0,0.85fr))] sm:divide-x sm:divide-border-subtle/75">
                 <SubscriptionOverviewStat
                   label={t("subscriptions.totalMonthly")}
                   value={loading ? "..." : formatCurrency(monthlyTotal)}
@@ -237,26 +234,21 @@ export default function SubscriptionsPage() {
                   label={t("subscriptions.activeServices")}
                   value={loading ? "..." : activeSubscriptions.length}
                   tone="success"
-                  className="border-t border-border-subtle/75 sm:border-l sm:border-t-0 xl:border-l-0 xl:border-t"
-                />
-                <SubscriptionOverviewStat
-                  label={language === "id" ? "Dijeda" : "Paused"}
-                  value={loading ? "..." : pausedCount}
-                  className="border-t border-border-subtle/75 xl:border-t"
                 />
                 <SubscriptionOverviewStat
                   label={t("subscriptions.upcoming")}
                   value={loading ? "..." : upcomingCount}
                   tone={upcomingCount > 0 ? "warning" : "default"}
-                  className="border-t border-border-subtle/75 sm:border-l sm:border-t xl:border-l-0"
+                />
+                <SubscriptionOverviewStat
+                  label={language === "id" ? "Dijeda" : "Paused"}
+                  value={loading ? "..." : pausedCount}
                 />
               </div>
 
-              <div className="grid gap-1 border-t border-border-subtle/75 pt-2.5">
-                <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-                  {language === "id" ? "Tagihan terdekat" : "Next billing"}
-                </span>
-                <strong className="text-[0.96rem] font-semibold tracking-[-0.03em] text-text-1">
+              <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle/75 pt-2.5 text-[var(--font-size-meta)] text-text-2">
+                <span>{language === "id" ? "Tagihan terdekat" : "Next billing"}:</span>
+                <strong className="font-semibold text-text-1">
                   {loading
                     ? "..."
                     : nextBillingSubscription?.name ??
@@ -264,20 +256,16 @@ export default function SubscriptionsPage() {
                         ? "Belum ada layanan aktif."
                         : "No active service yet.")}
                 </strong>
-                <span className="text-[0.78rem] leading-5 text-text-2">
-                  {loading
-                    ? "..."
-                    : nextBillingSubscription
-                      ? `${t("subscriptions.billingOn")} ${nextBillingSubscription.billing_day} · ${getDaysUntilBilling(nextBillingSubscription.billing_day)} ${language === "id" ? "hari lagi" : "days left"}`
-                      : language === "id"
-                        ? "Tambahkan layanan pertama untuk mulai memantau tagihan rutin."
-                        : "Add your first service to start tracking recurring bills."}
-                </span>
+                {nextBillingSubscription ? (
+                  <span>
+                    {t("subscriptions.billingOn")} {nextBillingSubscription.billing_day} · {getDaysUntilBilling(nextBillingSubscription.billing_day)} {language === "id" ? "hari lagi" : "days left"}
+                  </span>
+                ) : null}
               </div>
             </div>
           </SurfaceCard>
 
-          <SurfaceCard padding="compact">
+          <SurfaceCard role="embedded" padding="compact">
             <div className="grid gap-3">
               <SectionHeading
                 title={language === "id" ? "Daftar langganan" : "Subscription list"}
@@ -305,6 +293,7 @@ export default function SubscriptionsPage() {
                 <EmptyState
                   title={t("subscriptions.noSubscriptions")}
                   icon={<MonitorPlay size={20} />}
+                  variant="featured"
                   action={
                     <Button
                       type="button"
@@ -317,126 +306,48 @@ export default function SubscriptionsPage() {
                   }
                 />
               ) : (
-                <div className="grid gap-0 divide-y divide-border-subtle/80">
-                  {subscriptions.map((subscription) => {
-                    const upcoming =
-                      subscription.is_active &&
-                      isUpcoming(subscription.billing_day);
+                <div className="grid gap-3">
+                  {activeSubscriptions.length > 0 ? (
+                    <section className="grid gap-2">
+                      <SectionHeading title={language === "id" ? "Aktif" : "Active"} />
+                      <div className="grid gap-0 divide-y divide-border-subtle/80">
+                        {activeSubscriptions.map((subscription) => (
+                          <SubscriptionRow
+                            key={subscription.id}
+                            subscription={subscription}
+                            upcoming={isUpcoming(subscription.billing_day)}
+                            language={language}
+                            t={t}
+                            formatCurrency={formatCurrency}
+                            getDaysUntilBilling={getDaysUntilBilling}
+                            onToggleStatus={toggleStatus}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
 
-                    return (
-                      <article
-                        key={subscription.id}
-                        className="grid gap-2.5 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
-                      >
-                        <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-3">
-                          <div
-                            className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.1rem)]"
-                            style={{
-                              backgroundColor: subscription.is_active
-                                ? "var(--accent-soft)"
-                                : "var(--surface-1)",
-                              color: subscription.is_active
-                                ? "var(--accent-strong)"
-                                : "var(--text-3)",
-                            }}
-                          >
-                            {subscription.is_active ? (
-                              <Play size={18} fill="currentColor" />
-                            ) : (
-                              <Pause size={18} />
-                            )}
-                          </div>
-
-                          <div className="grid min-w-0 gap-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <strong className="truncate text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
-                                {subscription.name}
-                              </strong>
-                              <Badge
-                                variant={
-                                  subscription.is_active ? "accent" : "default"
-                                }
-                              >
-                                {getSubscriptionStateLabel(
-                                  subscription.is_active,
-                                  language,
-                                )}
-                              </Badge>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[0.77rem] text-text-2">
-                              <span>
-                                {t("subscriptions.billingOn")}{" "}
-                                {subscription.billing_day}
-                              </span>
-                              <span aria-hidden="true">/</span>
-                              <span className={cn(upcoming && "text-warning")}>
-                                {getDaysUntilBilling(subscription.billing_day)}{" "}
-                                {language === "id" ? "hari lagi" : "days left"}
-                              </span>
-                              {upcoming ? (
-                                <>
-                                  <span aria-hidden="true">/</span>
-                                  <span>{t("subscriptions.upcoming")}</span>
-                                </>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="grid justify-items-start gap-0.5 sm:justify-items-end">
-                            <span className="text-[0.7rem] font-medium tracking-[0.01em] text-text-2">
-                              {language === "id" ? "Bulanan" : "Monthly"}
-                            </span>
-                            <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
-                              {formatCurrency(subscription.amount)}
-                            </strong>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 lg:justify-end">
-                          <Button
-                            type="button"
-                            variant={
-                              subscription.is_active ? "secondary" : "primary"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              toggleStatus(
-                                subscription.id,
-                                subscription.is_active,
-                              )
-                            }
-                          >
-                            {subscription.is_active ? (
-                              <>
-                                <Pause size={14} />
-                                <span className="max-sm:hidden">
-                                  {t("subscriptions.pause")}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Play size={14} />
-                                <span className="max-sm:hidden">
-                                  {t("subscriptions.resume")}
-                                </span>
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 rounded-2xl text-danger"
-                            onClick={() => {
-                              void handleDelete(subscription.id);
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </div>
-                      </article>
-                    );
-                  })}
+                  {pausedCount > 0 ? (
+                    <section className="grid gap-2 border-t border-border-subtle/75 pt-2.5">
+                      <SectionHeading title={language === "id" ? "Paused" : "Paused"} />
+                      <div className="grid gap-0 divide-y divide-border-subtle/80">
+                        {subscriptions.filter((subscription) => !subscription.is_active).map((subscription) => (
+                          <SubscriptionRow
+                            key={subscription.id}
+                            subscription={subscription}
+                            upcoming={false}
+                            language={language}
+                            t={t}
+                            formatCurrency={formatCurrency}
+                            getDaysUntilBilling={getDaysUntilBilling}
+                            onToggleStatus={toggleStatus}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -547,5 +458,116 @@ export default function SubscriptionsPage() {
         </DialogContent>
       </Dialog>
     </PageShell>
+  );
+}
+
+function SubscriptionRow({
+  subscription,
+  upcoming,
+  language,
+  t,
+  formatCurrency,
+  getDaysUntilBilling,
+  onToggleStatus,
+  onDelete,
+}: {
+  subscription: {
+    id: string;
+    name: string;
+    amount: number;
+    billing_day: number;
+    is_active: boolean;
+  };
+  upcoming: boolean;
+  language: "en" | "id";
+  t: (key: string) => string;
+  formatCurrency: (amount: number) => string;
+  getDaysUntilBilling: (billDay: number) => number;
+  onToggleStatus: (id: string, currentStatus: boolean) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  return (
+    <article className="grid gap-2.5 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-3">
+        <div
+          className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.1rem)]"
+          style={{
+            backgroundColor: subscription.is_active ? "var(--accent-soft)" : "var(--surface-1)",
+            color: subscription.is_active ? "var(--accent-strong)" : "var(--text-3)",
+          }}
+        >
+          {subscription.is_active ? <Play size={18} fill="currentColor" /> : <Pause size={18} />}
+        </div>
+
+        <div className="grid min-w-0 gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <strong className="truncate text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+              {subscription.name}
+            </strong>
+            <Badge variant={subscription.is_active ? "accent" : "default"}>
+              {getSubscriptionStateLabel(subscription.is_active, language)}
+            </Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-[var(--font-size-meta)] text-text-2">
+            <span>
+              {t("subscriptions.billingOn")} {subscription.billing_day}
+            </span>
+            <span aria-hidden="true">/</span>
+            <span className={cn(upcoming && "text-warning")}>
+              {getDaysUntilBilling(subscription.billing_day)} {language === "id" ? "hari lagi" : "days left"}
+            </span>
+            {upcoming ? (
+              <>
+                <span aria-hidden="true">/</span>
+                <span>{t("subscriptions.upcoming")}</span>
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid justify-items-start gap-0.5 sm:justify-items-end">
+          <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
+            {language === "id" ? "Bulanan" : "Monthly"}
+          </span>
+          <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+            {formatCurrency(subscription.amount)}
+          </strong>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 lg:justify-end">
+        <Button
+          type="button"
+          variant={subscription.is_active ? "secondary" : "primary"}
+          size="sm"
+          onClick={() => {
+            void onToggleStatus(subscription.id, subscription.is_active);
+          }}
+        >
+          {subscription.is_active ? (
+            <>
+              <Pause size={14} />
+              <span className="max-sm:hidden">{t("subscriptions.pause")}</span>
+            </>
+          ) : (
+            <>
+              <Play size={14} />
+              <span className="max-sm:hidden">{t("subscriptions.resume")}</span>
+            </>
+          )}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-2xl text-danger"
+          onClick={() => {
+            void onDelete(subscription.id);
+          }}
+        >
+          <Trash2 size={16} />
+        </Button>
+      </div>
+    </article>
   );
 }

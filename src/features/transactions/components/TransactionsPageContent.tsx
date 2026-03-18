@@ -93,7 +93,7 @@ export function TransactionsPageContent() {
     queryFn: fetchActiveWallets,
   });
   const categoriesQuery = useQuery({
-    queryKey: queryKeys.categories.list("all"),
+    queryKey: queryKeys.categories.options("all"),
     queryFn: () => fetchCategories(),
   });
 
@@ -304,8 +304,11 @@ export function TransactionsPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t("transactions.title")} />
+      <PageHeader variant="compact">
+        <PageHeading
+          title={t("transactions.title")}
+          compact
+        />
         <PageHeaderActions>
           <Button
             type="button"
@@ -445,7 +448,7 @@ export function TransactionsPageFallback() {
       <PageHeader>
         <PageHeading title="Transactions" />
       </PageHeader>
-      <EmptyStateCard title="Loading..." compact />
+      <EmptyStateCard title="Loading..." compact variant="inline" role="embedded" />
     </PageShell>
   );
 }

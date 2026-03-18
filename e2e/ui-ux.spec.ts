@@ -52,7 +52,10 @@ const publicRoutes: PublicRouteAudit[] = [
 const appRoutes: AppRouteAudit[] = [
   {
     path: '/dashboard',
-    keyLocator: (page) => page.getByPlaceholder(/coffee 25k cash|kopi 25rb cash/i),
+    keyLocator: (page) =>
+      page
+        .getByRole('link', { name: /tambah transaksi|add transaction/i })
+        .or(page.getByPlaceholder(/coffee 25k cash|kopi 25rb cash/i)),
   },
   {
     path: '/transactions',

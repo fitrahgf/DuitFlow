@@ -21,18 +21,18 @@ export default function ShellHeader({
   unreadBadgeLabel,
 }: ShellHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border-subtle/80 bg-canvas/96 backdrop-blur-md lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-border-subtle/75 bg-[var(--gradient-header)] backdrop-blur-xl lg:hidden">
       <PageContainer
         align="center"
         padding="header"
         className="flex min-h-[var(--mobile-header-height)] items-center justify-between gap-2 py-1"
       >
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="grid h-7 w-7 place-items-center rounded-[0.76rem] border border-border-subtle bg-surface-1 text-[0.58rem] font-extrabold tracking-[-0.04em] text-text-1">
+          <span className="grid h-8 w-8 place-items-center rounded-[0.9rem] border border-border-subtle/80 bg-surface-1/94 text-[0.6rem] font-extrabold tracking-[-0.06em] text-text-1 shadow-xs">
             DF
           </span>
           <div className="min-w-0" title={currentPage}>
-            <span className="block truncate text-[0.78rem] font-semibold tracking-[-0.035em] text-text-1">
+            <span className="block truncate text-[0.8rem] font-semibold tracking-[-0.04em] text-text-1">
               DuitFlow
             </span>
           </div>
@@ -42,8 +42,8 @@ export default function ShellHeader({
           <Link
             href="/notifications"
             className={cn(
-              "relative inline-flex h-8 w-8 items-center justify-center rounded-[calc(var(--radius-control)-0.06rem)] border border-border-subtle bg-surface-1 text-text-3 transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-border-strong hover:bg-surface-2 hover:text-text-1",
-              notificationsActive && "bg-surface-2 text-text-1 shadow-xs",
+              "relative inline-flex h-9 w-9 items-center justify-center rounded-[calc(var(--radius-control)-0.02rem)] border border-border-subtle/80 bg-surface-1/94 text-text-3 transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-border-strong hover:bg-surface-2/94 hover:text-text-1 hover:shadow-xs",
+              notificationsActive && "bg-surface-2/94 text-text-1 shadow-xs",
             )}
             aria-label={notificationsLabel}
             title={notificationsLabel}

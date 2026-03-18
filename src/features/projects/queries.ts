@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { projectFormSchema, type ProjectFormValues } from "@/lib/validators/project";
 
 export interface ProjectCategoryRecord {
   id: string;
@@ -29,7 +30,9 @@ export async function fetchProjects() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("projects")
-    .select("*, project_categories(*)")
+    .select(
+      "id, name, budget_target, status, project_categories(id, name, budget_allocated)"
+    )
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -41,32 +44,15 @@ export async function fetchProjects() {
 
 export async function createProject(input: CreateProjectInput) {
   const supabase = createClient();
-  const { data: createdProject, error: projectError } = await supabase
-    .from("projects")
-    .insert({
-      name: input.name.trim(),
-      budget_target: input.budgetTarget,
-      status: "active",
-    })
-    .select()
-    .single();
+  const parsed = projectFormSchema.parse(input) as ProjectFormValues;
+  const { error } = await supabase.rpc("create_project_with_categories", {
+    p_name: parsed.name,
+    p_budget_target: parsed.budgetTarget,
+    p_category_names: parsed.categoryNames,
+  });
 
-  if (projectError) {
-    throw projectError;
-  }
-
-  const { error: categoryError } = await supabase
-    .from("project_categories")
-    .insert(
-      input.categoryNames.map((name) => ({
-        project_id: createdProject.id,
-        name,
-        budget_allocated: 0,
-      })),
-    );
-
-  if (categoryError) {
-    throw categoryError;
+  if (error) {
+    throw error;
   }
 }
 

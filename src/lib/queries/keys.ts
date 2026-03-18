@@ -27,8 +27,10 @@ export const queryKeys = {
   },
   categories: {
     all: ["categories"] as const,
-    list: (type: "all" | "income" | "expense" = "all") =>
-      ["categories", "list", type] as const,
+    options: (type: "all" | "income" | "expense" = "all") =>
+      ["categories", "options", type] as const,
+    pageList: (scope: "all" = "all") =>
+      ["categories", "page", "list", scope] as const,
   },
   projects: {
     all: ["projects"] as const,

@@ -14,7 +14,7 @@ export function AppToaster() {
       theme={resolvedTheme}
       toastOptions={{
         className:
-          'rounded-[1.35rem] border border-border-subtle bg-surface-1 text-text-1 shadow-sm',
+          'rounded-[1.35rem] border border-border-subtle/85 bg-surface-1/94 text-text-1 shadow-sm backdrop-blur-xl',
       }}
     />
   );

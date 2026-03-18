@@ -54,7 +54,7 @@ export function FilterGroup({
     >
       <span
         className={cn(
-          "text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3 md:text-[0.72rem] md:tracking-[0.14em]",
+          "text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2",
           labelClassName,
         )}
       >
@@ -90,7 +90,7 @@ export function FilterField({
     <div className={cn("grid gap-2", className)} {...props}>
       <label
         className={cn(
-          "text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3",
+          "text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2",
           labelClassName,
         )}
         htmlFor={htmlFor}

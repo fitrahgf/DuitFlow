@@ -149,7 +149,7 @@ export default function TransactionForm({
   const optionalTitle = language === "id" ? "Opsional" : "Optional";
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: queryKeys.categories.list(transactionType),
+    queryKey: queryKeys.categories.options(transactionType),
     queryFn: () => fetchCategories(transactionType),
   });
 
@@ -241,7 +241,7 @@ export default function TransactionForm({
           ? "gap-2.5 p-0"
           : minimalPresentation
             ? "gap-3 px-3 pb-3 pt-2.5 md:px-4 md:pb-4 md:pt-3"
-            : "gap-3 p-3 md:p-4",
+            : "gap-3 px-3 pb-3 pt-2.5 md:px-4 md:pb-4 md:pt-3.5",
       )}
       onSubmit={handleSubmit((values) => transactionMutation.mutate(values))}
     >
@@ -276,7 +276,7 @@ export default function TransactionForm({
               "grid grid-cols-2 gap-1 rounded-[var(--radius-control)] p-1",
               minimalPresentation
                 ? "bg-surface-2/55"
-                : "border border-border-subtle bg-surface-1/88",
+                : "border border-border-subtle/75 bg-surface-1/88",
             )}
           >
             <button

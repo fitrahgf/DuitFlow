@@ -71,7 +71,9 @@ function buildWalletSummary<
       id: wallet.id,
       name: wallet.name,
       type: wallet.type,
-      balance: Number.isFinite(wallet.balance) ? wallet.balance : computedBalance,
+      // Prefer the ledger-derived balance so client reads stay correct even if the
+      // stored balance column drifts before DB integrity guards run.
+      balance: computedBalance,
       initial_balance: wallet.initial_balance ?? 0,
       color: wallet.color ?? null,
       icon: wallet.icon ?? null,

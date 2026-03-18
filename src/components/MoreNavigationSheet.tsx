@@ -52,7 +52,7 @@ export default function MoreNavigationSheet({
 
         <div className="mb-2 flex items-start justify-between gap-3 border-b border-border-subtle/75 pb-2">
           <div className="grid gap-0.5">
-            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-text-3">{title}</span>
+            <span className="text-[var(--font-size-chip)] font-medium tracking-[0.01em] text-text-2">{title}</span>
             <SheetTitle className="text-[0.92rem] tracking-[-0.04em]">DuitFlow</SheetTitle>
           </div>
 
@@ -90,7 +90,7 @@ export default function MoreNavigationSheet({
                 key={section.key}
                 className="grid gap-1 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/90 p-1.5"
               >
-                <span className="px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.18em] text-text-3">
+                <span className="px-1.5 py-0.5 text-[var(--font-size-chip)] font-medium tracking-[0.01em] text-text-2">
                   {section.label}
                 </span>
                 {sectionItems.map((item) => (

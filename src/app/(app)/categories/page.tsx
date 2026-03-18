@@ -139,8 +139,8 @@ export default function CategoriesPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t("categories.title")} />
+      <PageHeader variant="compact">
+        <PageHeading title={t("categories.title")} compact />
         <PageHeaderActions>
           <Button
             type="button"
@@ -155,31 +155,27 @@ export default function CategoriesPage() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard padding="compact">
+      <SurfaceCard role="embedded" padding="compact">
         <div className="grid gap-2">
-          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border-subtle/80 pb-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle/80 pb-2.5">
             <div className="grid gap-0.5">
               <h2 className="m-0 text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
                 {language === "id" ? "Daftar kategori" : "Category list"}
               </h2>
-              <span className="text-[0.8rem] text-text-2">
+              <span className="text-[var(--font-size-meta)] text-text-2">
                 {language === "id"
-                  ? "Kelola kategori sistem dan kategori buatan Anda."
-                  : "Manage system and custom categories."}
+                  ? `${defaultCategories.length} sistem, ${customCategories} custom`
+                  : `${defaultCategories.length} system, ${customCategories} custom`}
               </span>
             </div>
-            <div className="grid gap-0 divide-y divide-border-subtle/70 text-right sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="grid gap-0 divide-y divide-border-subtle/70 text-right sm:grid-cols-2 sm:divide-x sm:divide-y-0">
               <CategoryStatItem
                 label={language === "id" ? "Total" : "Total"}
                 value={loading ? "..." : String(categories.length)}
               />
               <CategoryStatItem
-                label={language === "id" ? "Sistem" : "System"}
-                value={loading ? "..." : String(defaultCategories.length)}
-              />
-              <CategoryStatItem
                 label={language === "id" ? "Custom" : "Custom"}
-                value={loading ? "..." : String(customCategories)}
+                value={loading ? "..." : `${customCategories}/${categories.length}`}
               />
             </div>
           </div>
@@ -205,6 +201,7 @@ export default function CategoriesPage() {
             <EmptyState
               title={t("categories.title")}
               icon={<Tags size={20} />}
+              variant="featured"
               action={
                 <Button
                   type="button"
@@ -217,74 +214,31 @@ export default function CategoriesPage() {
               }
             />
           ) : (
-            <div className="grid gap-0 divide-y divide-border-subtle/80">
-              {categories.map((category) => (
-                <article
-                  key={category.id}
-                  className="grid gap-2.5 py-2.5 first:pt-0 last:pb-0 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center"
-                >
-                  <div
-                    className="grid h-9 w-9 place-items-center rounded-[1rem] border md:self-start"
-                    style={{
-                      backgroundColor: `${category.color}18`,
-                      color: category.color,
-                      borderColor: `${category.color}35`,
-                    }}
-                  >
-                    {getCategoryIcon(
-                      category.name,
-                      "expense",
-                      20,
-                      category.icon,
-                    )}
-                  </div>
-
-                  <div className="grid gap-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <strong className="truncate text-[0.94rem] font-semibold tracking-[-0.03em] text-text-1">
-                        {category.name}
-                      </strong>
-                      <Badge
-                        variant={category.is_default ? "accent" : "default"}
-                        className="h-6 rounded-full px-2.5 text-[0.7rem]"
-                      >
-                        {category.is_default
-                          ? t("categories.systemDefault")
-                          : t("categories.customCategory")}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="inline-flex items-center gap-0.5 rounded-full border border-border-subtle/75 bg-surface-2/45 p-0.5 md:justify-self-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full"
-                      onClick={() => handleOpenForm(category)}
-                      aria-label={t("categories.form.edit")}
-                      title={t("categories.form.edit")}
-                    >
-                      <Pencil size={16} />
-                    </Button>
-                    {!category.is_default ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-danger"
-                        onClick={() => {
-                          void handleDelete(category.id);
-                        }}
-                        aria-label={t("common.delete")}
-                        title={t("common.delete")}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    ) : null}
-                  </div>
-                </article>
-              ))}
+            <div className="grid gap-3">
+              <CategoryGroupSection
+                title={language === "id" ? "Default" : "Default"}
+                description={
+                  language === "id"
+                    ? "Kategori bawaan sistem."
+                    : "Built-in system categories."
+                }
+                categories={defaultCategories}
+                t={t}
+                onEdit={handleOpenForm}
+                onDelete={handleDelete}
+              />
+              <CategoryGroupSection
+                title={language === "id" ? "Custom" : "Custom"}
+                description={
+                  language === "id"
+                    ? "Kategori yang Anda buat sendiri."
+                    : "Categories you created."
+                }
+                categories={categories.filter((category) => !category.is_default)}
+                t={t}
+                onEdit={handleOpenForm}
+                onDelete={handleDelete}
+              />
             </div>
           )}
         </div>
@@ -306,10 +260,10 @@ export default function CategoriesPage() {
           </DialogHeader>
 
           <form className="grid gap-4 pt-2" onSubmit={handleSubmit}>
-            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_7.5rem]">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_9rem]">
               <div className="grid gap-2">
                 <label
-                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
+                  className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="category-name"
                 >
                   {t("categories.form.name")}
@@ -326,43 +280,37 @@ export default function CategoriesPage() {
 
               <div className="grid gap-2">
                 <label
-                  className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2"
+                  className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="category-color"
                 >
                   {t("categories.form.color")}
                 </label>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2 rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle bg-surface-2/55 p-1.5">
                   <input
                     id="category-color"
                     type="color"
                     value={color}
                     onChange={(event) => setColor(event.target.value)}
-                    className="h-[2.85rem] w-full rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle bg-surface-1 p-1.5"
+                    className="h-10 w-12 shrink-0 rounded-[calc(var(--radius-card)-0.24rem)] border border-border-subtle bg-surface-1 p-1"
                   />
+                  <span className="text-[var(--font-size-meta)] font-medium text-text-2">
+                    {color}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex min-h-[2.85rem] items-center gap-3 rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle bg-surface-2/70 px-3.5">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: color }}
-                aria-hidden="true"
-              />
-              <span className="text-sm text-text-2">{color}</span>
-            </div>
-
             <div className="grid gap-2">
-              <span className="text-[0.78rem] font-medium tracking-[0.01em] text-text-2">
+              <span className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2">
                 {t("categories.form.selectIcon")}
               </span>
-              <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+              <div className="grid grid-cols-5 gap-1.25 sm:grid-cols-7">
                 {iconOptions.map((option) => (
                   <Button
                     key={option}
                     type="button"
                     variant={icon === option ? "primary" : "secondary"}
-                    className="min-h-[2.75rem] rounded-[calc(var(--radius-card)-0.18rem)] px-0"
+                    className="min-h-[2.45rem] rounded-[calc(var(--radius-card)-0.18rem)] px-0"
                     onClick={() => setIcon(option)}
                     title={option}
                   >
@@ -402,10 +350,108 @@ function CategoryStatItem({
 }) {
   return (
     <div className="grid gap-0.5 px-0 py-1.5 first:pt-0 last:pb-0 sm:px-3 sm:py-0 sm:first:pl-0 sm:last:pr-0">
-      <span className="text-[0.72rem] font-medium text-text-2">{label}</span>
+      <span className="text-[var(--font-size-meta)] font-medium text-text-2">{label}</span>
       <strong className="text-[0.96rem] font-semibold tracking-[-0.04em] text-text-1">
         {value}
       </strong>
     </div>
+  );
+}
+
+function CategoryGroupSection({
+  title,
+  description,
+  categories,
+  t,
+  onEdit,
+  onDelete,
+}: {
+  title: string;
+  description: string;
+  categories: CategoryRecord[];
+  t: (key: string) => string;
+  onEdit: (category: CategoryRecord) => void;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  return (
+    <section className="grid gap-2">
+      <div className="grid gap-0.5">
+        <h3 className="m-0 text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+          {title}
+        </h3>
+        <span className="text-[var(--font-size-meta)] text-text-2">{description}</span>
+      </div>
+
+      {categories.length === 0 ? (
+        <div className="rounded-[calc(var(--radius-card)-0.16rem)] border border-dashed border-border-subtle/80 px-3 py-2.5 text-[var(--font-size-meta)] text-text-2">
+          {t("common.noData")}
+        </div>
+      ) : (
+        <div className="grid gap-0 divide-y divide-border-subtle/80 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle/70 bg-surface-1/72 px-3">
+          {categories.map((category) => (
+            <article
+              key={category.id}
+              className="grid gap-2.5 py-2.5 first:pt-3 last:pb-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center"
+            >
+              <div
+                className="grid h-9 w-9 place-items-center rounded-[1rem] border md:self-start"
+                style={{
+                  backgroundColor: `${category.color}18`,
+                  color: category.color,
+                  borderColor: `${category.color}35`,
+                }}
+              >
+                {getCategoryIcon(category.name, "expense", 20, category.icon)}
+              </div>
+
+              <div className="grid gap-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="truncate text-[0.94rem] font-semibold tracking-[-0.03em] text-text-1">
+                    {category.name}
+                  </strong>
+                  <Badge
+                    variant={category.is_default ? "accent" : "default"}
+                    className="h-6 rounded-full px-2.5"
+                  >
+                    {category.is_default
+                      ? t("categories.systemDefault")
+                      : t("categories.customCategory")}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-0.5 rounded-full border border-border-subtle/75 bg-surface-2/45 p-0.5 md:justify-self-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() => onEdit(category)}
+                  aria-label={t("categories.form.edit")}
+                  title={t("categories.form.edit")}
+                >
+                  <Pencil size={16} />
+                </Button>
+                {!category.is_default ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-danger"
+                    onClick={() => {
+                      void onDelete(category.id);
+                    }}
+                    aria-label={t("common.delete")}
+                    title={t("common.delete")}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

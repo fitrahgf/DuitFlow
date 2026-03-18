@@ -21,7 +21,6 @@ import {
   SectionHeading,
   SurfaceCard,
 } from '@/components/shared/PagePrimitives';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -126,19 +125,6 @@ interface DashboardTopSectionProps {
   language: 'en' | 'id';
   t: (path: string) => string;
   formatCurrency: (amount: number) => string;
-  insightView: DashboardInsightView;
-  onInsightViewChange: (view: DashboardInsightView) => void;
-  barData: {
-    labels: string[];
-    income: number[];
-    expense: number[];
-  };
-  categoryData: {
-    labels: string[];
-    values: number[];
-    colors: string[];
-  };
-  hasCategoryBreakdown: boolean;
   onReviewQuickAdd: (draft: TransactionFormPrefill) => void;
 }
 
@@ -162,11 +148,6 @@ export function DashboardTopSection({
   language,
   t,
   formatCurrency,
-  insightView,
-  onInsightViewChange,
-  barData,
-  categoryData,
-  hasCategoryBreakdown,
   onReviewQuickAdd,
 }: DashboardTopSectionProps) {
   const monthlyNet = totalIncome - totalExpense;
@@ -180,61 +161,55 @@ export function DashboardTopSection({
 
   return (
     <>
-      <section className="hidden gap-2.5 sm:grid">
-        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.62fr)_minmax(19rem,0.68fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.66fr)_minmax(19.75rem,0.64fr)]">
-          <SurfaceCard
-            padding="compact"
-            className="border-border-strong/30 bg-surface-1/98 shadow-[0_14px_34px_-30px_rgba(15,23,42,0.18)]"
-          >
-            <div className="grid gap-2.5">
-              <div className="grid gap-1.5">
-                <h2 className="m-0 text-[0.82rem] font-medium tracking-[0.01em] text-text-2">
-                  {t('dashboard.totalBalance')}
-                </h2>
-                <strong className="text-[clamp(2.34rem,2.08rem+1.18vw,3.3rem)] font-semibold leading-none tracking-[-0.084em] text-text-1">
-                  {loading ? '...' : formatCurrency(totalBalance)}
+      <section className="hidden gap-3 sm:grid">
+        <SurfaceCard
+          role="featured"
+          padding="compact"
+          className="border-border-strong/24 bg-surface-1/98"
+        >
+          <div className="grid gap-2">
+            <div className="grid gap-1">
+              <h2 className="m-0 text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
+                {t('dashboard.totalBalance')}
+              </h2>
+              <strong className="text-[var(--number-hero-size)] font-semibold leading-none tracking-[-0.09em] text-text-1">
+                {loading ? '...' : formatCurrency(totalBalance)}
+              </strong>
+              <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--font-size-meta)] text-text-2">
+                <span>{netFlowLabel}</span>
+                <strong
+                  className={cn(
+                    'text-[0.86rem] font-semibold tracking-[-0.03em]',
+                    monthlyNet >= 0 ? 'text-success' : 'text-danger',
+                  )}
+                >
+                  {monthlyNet >= 0 ? '+' : '-'}
+                  {formatCurrency(Math.abs(monthlyNet))}
                 </strong>
-                <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] text-text-2">
-                  <span>{netFlowLabel}</span>
-                  <strong
-                    className={cn(
-                      'text-[0.86rem] font-semibold tracking-[-0.03em]',
-                      monthlyNet >= 0 ? 'text-success' : 'text-danger',
-                    )}
-                  >
-                    {monthlyNet >= 0 ? '+' : '-'}
-                    {formatCurrency(Math.abs(monthlyNet))}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="grid gap-3 border-t border-border-subtle/35 pt-1.5 sm:grid-cols-3">
-                <DashboardHeroMetric
-                  label={t('dashboard.monthlyIncome')}
-                  value={loading ? '...' : formatCurrency(totalIncome)}
-                  tone="success"
-                />
-                <DashboardHeroMetric
-                  label={t('dashboard.monthlyExpense')}
-                  value={loading ? '...' : formatCurrency(totalExpense)}
-                  tone="danger"
-                />
-                <DashboardHeroMetric
-                  label={t('dashboard.monthlyTransfers')}
-                  value={loading ? '...' : formatCurrency(totalTransfers)}
-                  tone="accent"
-                />
               </div>
             </div>
-          </SurfaceCard>
 
-          <DashboardDesktopQuickInputSection
-            quickInputLabel={quickInputLabel}
-            onReviewQuickAdd={onReviewQuickAdd}
-          />
-        </div>
+            <div className="grid gap-2 border-t border-border-subtle/35 pt-2 sm:grid-cols-3">
+              <DashboardHeroMetric
+                label={t('dashboard.monthlyIncome')}
+                value={loading ? '...' : formatCurrency(totalIncome)}
+                tone="success"
+              />
+              <DashboardHeroMetric
+                label={t('dashboard.monthlyExpense')}
+                value={loading ? '...' : formatCurrency(totalExpense)}
+                tone="danger"
+              />
+              <DashboardHeroMetric
+                label={t('dashboard.monthlyTransfers')}
+                value={loading ? '...' : formatCurrency(totalTransfers)}
+                tone="accent"
+              />
+            </div>
+          </div>
+        </SurfaceCard>
 
-        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.2fr)_minmax(18.5rem,0.8fr)]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(18.5rem,0.66fr)_minmax(0,1.34fr)] xl:items-start 2xl:grid-cols-[minmax(19rem,0.64fr)_minmax(0,1.36fr)]">
           <DashboardDesktopWalletSummarySection
             wallets={wallets}
             topWallets={topWallets}
@@ -245,6 +220,13 @@ export function DashboardTopSection({
             formatCurrency={formatCurrency}
           />
 
+          <DashboardDesktopQuickInputSection
+            quickInputLabel={quickInputLabel}
+            onReviewQuickAdd={onReviewQuickAdd}
+          />
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-[minmax(17rem,0.7fr)_minmax(0,1.3fr)] xl:items-start 2xl:grid-cols-[minmax(17.5rem,0.68fr)_minmax(0,1.32fr)]">
           <DashboardDesktopFocusSection
             overallBudgetLimit={overallBudgetLimit}
             overallBudgetSpent={overallBudgetSpent}
@@ -257,25 +239,13 @@ export function DashboardTopSection({
             t={t}
             formatCurrency={formatCurrency}
           />
-        </div>
 
-        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.05fr)_minmax(21rem,0.95fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)]">
           <DashboardRecentTransactionsSection
             loading={loading}
             recentTransactions={recentTransactions}
             language={language}
             t={t}
             formatCurrency={formatCurrency}
-          />
-
-          <DashboardDesktopInsightsSection
-            insightView={insightView}
-            onInsightViewChange={onInsightViewChange}
-            language={language}
-            t={t}
-            barData={barData}
-            categoryData={categoryData}
-            hasCategoryBreakdown={hasCategoryBreakdown}
           />
         </div>
       </section>
@@ -312,6 +282,17 @@ export function DashboardTopSection({
           </div>
         </SurfaceCard>
 
+        {loading || recentTransactions.length > 0 ? (
+          <DashboardRecentTransactionsSection
+            loading={loading}
+            recentTransactions={recentTransactions}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+            className="sm:hidden"
+          />
+        ) : null}
+
         <DashboardMobileFocusSection
           overallBudgetLimit={overallBudgetLimit}
           overallBudgetSpent={overallBudgetSpent}
@@ -332,17 +313,6 @@ export function DashboardTopSection({
           t={t}
           formatCurrency={formatCurrency}
         />
-
-        {loading || recentTransactions.length > 0 ? (
-          <DashboardRecentTransactionsSection
-            loading={loading}
-            recentTransactions={recentTransactions}
-            language={language}
-            t={t}
-            formatCurrency={formatCurrency}
-            className="sm:hidden"
-          />
-        ) : null}
       </section>
     </>
   );
@@ -359,14 +329,13 @@ function DashboardDesktopQuickInputSection({
 }: DashboardDesktopSupportSectionProps) {
   return (
     <SurfaceCard
+      role="embedded"
       padding="compact"
-      className="grid h-full content-start gap-1.5 border-border-strong/24 bg-surface-2/10"
+      className="grid h-full content-start gap-2.5 border-border-subtle/65 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_90%,transparent),color-mix(in_srgb,var(--surface-accent)_36%,transparent))]"
     >
-      <div className="grid gap-0.5">
-        <h2 className="m-0 text-[0.9rem] font-semibold tracking-[-0.04em] text-text-1">
-          {quickInputLabel}
-        </h2>
-      </div>
+      <h2 className="m-0 text-[0.92rem] font-semibold tracking-[-0.04em] text-text-1">
+        {quickInputLabel}
+      </h2>
       <QuickAddComposer variant="dashboard" onReview={onReviewQuickAdd} />
     </SurfaceCard>
   );
@@ -391,29 +360,54 @@ function DashboardDesktopWalletSummarySection({
   t,
   formatCurrency,
 }: DashboardDesktopWalletSummarySectionProps) {
+  const featuredWallet = topWallets[0] ?? null;
+  const secondaryWallets = topWallets.slice(1, 3);
+
   return (
-    <div className="grid gap-2 self-start">
+    <SurfaceCard
+      role="featured"
+      padding="compact"
+      className="grid gap-2.5 self-start border-border-strong/24"
+    >
       <div className="flex items-center justify-between gap-3">
-        <div className="grid gap-0.5">
-          <h2 className="m-0 text-[0.92rem] font-semibold tracking-[-0.04em] text-text-1">
-            {walletSummaryTitle}
-          </h2>
-        </div>
+        <h2 className="m-0 text-[0.92rem] font-semibold tracking-[-0.04em] text-text-1">
+          {walletSummaryTitle}
+        </h2>
         <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[0.74rem]">
           <Link href="/wallets">{t('dashboard.viewAll')}</Link>
         </Button>
       </div>
 
       {wallets.length > 0 ? (
-        <div className="grid gap-2 sm:grid-cols-3">
-          {topWallets.slice(0, 3).map((wallet) => (
-            <DashboardWalletMiniCard
-              key={wallet.id}
-              wallet={wallet}
+        <div className="grid gap-2.5">
+          {featuredWallet ? (
+            <DashboardWalletFeaturedCard
+              wallet={featuredWallet}
               totalBalance={totalWalletBalance}
               formatCurrency={formatCurrency}
+              language={language}
             />
-          ))}
+          ) : null}
+
+          {secondaryWallets.length > 0 ? (
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
+              {secondaryWallets.map((wallet) => (
+                <DashboardWalletCompactRow
+                  key={wallet.id}
+                  wallet={wallet}
+                  formatCurrency={formatCurrency}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {wallets.length > topWallets.length ? (
+            <span className="text-[var(--font-size-meta)] text-text-2">
+              {language === 'id'
+                ? `+${wallets.length - topWallets.length} dompet lainnya`
+                : `+${wallets.length - topWallets.length} more wallets`}
+            </span>
+          ) : null}
         </div>
       ) : (
         <CompactEmptyLine
@@ -423,15 +417,7 @@ function DashboardDesktopWalletSummarySection({
           }
         />
       )}
-
-      {wallets.length > topWallets.length ? (
-        <span className="text-[0.74rem] text-text-2">
-          {language === 'id'
-            ? `+${wallets.length - topWallets.length} dompet lainnya`
-            : `+${wallets.length - topWallets.length} more wallets`}
-        </span>
-      ) : null}
-    </div>
+    </SurfaceCard>
   );
 }
 
@@ -469,14 +455,16 @@ function DashboardDesktopFocusSection({
     language === 'id' ? 'Belum ada prioritas' : 'No priority yet';
 
   return (
-    <div className="grid gap-1.5 self-start">
-      <div className="grid gap-0.5">
-        <h2 className="m-0 text-[0.88rem] font-semibold tracking-[-0.04em] text-text-1">
-          {plannerLabel}
-        </h2>
-      </div>
+    <SurfaceCard
+      role="embedded"
+      padding="compact"
+      className="grid gap-2.5 self-start border-border-subtle/65"
+    >
+      <h2 className="m-0 text-[0.88rem] font-semibold tracking-[-0.04em] text-text-1">
+        {plannerLabel}
+      </h2>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-1">
         <DashboardFocusMiniBlock
           href="/budgets"
           label={t('dashboard.budgetTitle')}
@@ -515,7 +503,7 @@ function DashboardDesktopFocusSection({
           muted={!hasWishlist && !showCombinedEmpty}
         />
       </div>
-    </div>
+    </SurfaceCard>
   );
 }
 
@@ -556,7 +544,7 @@ function DashboardMobileFocusSection({
         : 'text-text-1';
 
   return (
-    <SurfaceCard padding="compact" className="grid gap-1.5 sm:hidden">
+      <SurfaceCard role="featured" padding="compact" className="grid gap-1.5 sm:hidden">
       <div className="flex items-center justify-between gap-2">
         <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
           {language === 'id' ? 'Fokus bulan ini' : 'Monthly focus'}
@@ -630,7 +618,7 @@ function DashboardMobileWalletSummarySection({
   }
 
   return (
-    <SurfaceCard padding="compact" className="grid gap-1.5 sm:hidden">
+    <SurfaceCard role="embedded" padding="compact" className="grid gap-2 sm:hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="grid gap-0.5">
           <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
@@ -647,8 +635,25 @@ function DashboardMobileWalletSummarySection({
         </Button>
       </div>
 
+      {topWallets[0] ? (
+        <Link
+          href="/wallets"
+          className="grid gap-1.5 rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/70 bg-surface-1/78 px-3 py-3"
+        >
+          <span className="text-[0.7rem] font-medium tracking-[0.01em] text-text-2">
+            {language === 'id' ? 'Dompet utama' : 'Primary wallet'}
+          </span>
+          <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+            {topWallets[0].name}
+          </strong>
+          <strong className="text-[1.14rem] font-semibold tracking-[-0.05em] text-text-1">
+            {formatCurrency(topWallets[0].balance)}
+          </strong>
+        </Link>
+      ) : null}
+
       <div className="grid gap-0 divide-y divide-border-subtle/80">
-        {topWallets.slice(0, 3).map((wallet) => (
+        {topWallets.slice(1, 3).map((wallet) => (
           <MobileWalletListRow
             key={wallet.id}
             wallet={wallet}
@@ -740,10 +745,11 @@ export function DashboardRecentTransactionsSection({
 }: DashboardRecentTransactionsSectionProps) {
   return (
     <SurfaceCard
+      role="embedded"
       padding="compact"
-      className={cn('h-full border-border-strong/26 bg-surface-1/96', className)}
+      className={cn('h-full border-border-subtle/65', className)}
     >
-      <div className="grid h-full gap-0.75">
+      <div className="grid h-full gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
             {t('dashboard.recentTransactions')}
@@ -814,14 +820,22 @@ export function DashboardDesktopInsightsSection({
 }: DashboardDesktopInsightsSectionProps) {
   return (
     <SurfaceCard
+      role="embedded"
       padding="compact"
-      className="hidden h-full border-border-strong/24 bg-surface-2/10 sm:grid"
+      className="hidden h-full border-border-subtle/65 sm:grid"
     >
-      <div className="grid h-full gap-1.5">
+      <div className="grid h-full gap-2">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="m-0 text-[0.9rem] font-semibold tracking-[-0.04em] text-text-1">
-            {language === 'id' ? 'Insights' : 'Insights'}
-          </h2>
+          <div className="grid gap-0.5">
+            <h2 className="m-0 text-[0.9rem] font-semibold tracking-[-0.04em] text-text-1">
+              {language === 'id' ? 'Insights' : 'Insights'}
+            </h2>
+            <span className="text-[0.76rem] leading-5 text-text-2">
+              {insightView === 'activity'
+                ? t('dashboard.weeklyActivity')
+                : t('dashboard.expenseBreakdown')}
+            </span>
+          </div>
           <div className="inline-flex rounded-full border border-border-subtle/55 bg-surface-1/72 p-0.5">
             <InsightToggleButton
               active={insightView === 'activity'}
@@ -852,7 +866,7 @@ export function DashboardDesktopInsightsSection({
             </div>
             <ChartSurface className="h-full">
               <div className="h-[9.4rem] xl:h-[9.8rem] 2xl:h-[10.1rem]">
-                <TransactionBarChart data={barData} />
+                <TransactionBarChart data={barData} minHeight={150} />
               </div>
             </ChartSurface>
           </div>
@@ -861,7 +875,7 @@ export function DashboardDesktopInsightsSection({
             <ChartSurface className="h-full">
               <div className="h-[9.4rem] xl:h-[9.8rem] 2xl:h-[10.1rem]">
                 {hasCategoryBreakdown ? (
-                  <CategoryDoughnutChart data={categoryData} />
+                  <CategoryDoughnutChart data={categoryData} minHeight={150} />
                 ) : (
                   <div className="grid h-full place-items-center">
                     <EmptyState
@@ -957,7 +971,7 @@ export function DashboardMobilePanelsSection({
               </div>
               <ChartSurface>
                 <div className="h-[12.5rem]">
-                  <TransactionBarChart data={barData} />
+                  <TransactionBarChart data={barData} minHeight={200} />
                 </div>
               </ChartSurface>
             </div>
@@ -965,7 +979,7 @@ export function DashboardMobilePanelsSection({
             <ChartSurface>
               <div className="h-[12.5rem]">
                 {hasCategoryBreakdown ? (
-                  <CategoryDoughnutChart data={categoryData} />
+                  <CategoryDoughnutChart data={categoryData} minHeight={200} />
                 ) : (
                   <div className="grid h-full place-items-center">
                     <EmptyState
@@ -1004,12 +1018,14 @@ export function DashboardQuickTransactionDialog({
       title={t('transactions.form.new')}
       size="lg"
       padding="flush"
+      density="compact"
       hideClose
       headerHidden
     >
       <TransactionForm
         initialValues={prefill}
         createSource="quick_add"
+        presentation="minimal"
         onSuccess={onSuccess}
         onCancel={() => onOpenChange(false)}
       />
@@ -1101,9 +1117,9 @@ function SetupStepRow({
         {title}
       </strong>
       {done ? (
-        <Badge variant="success">{doneLabel}</Badge>
+        <span className="text-[var(--font-size-chip)] font-medium text-success">{doneLabel}</span>
       ) : active ? (
-        <Badge variant="accent">{activeLabel}</Badge>
+        <span className="text-[var(--font-size-chip)] font-medium text-accent-strong">{activeLabel}</span>
       ) : null}
     </div>
   );
@@ -1199,31 +1215,33 @@ function CompactEmptyLine({
   );
 }
 
-function DashboardWalletMiniCard({
+function DashboardWalletFeaturedCard({
   wallet,
   totalBalance,
   formatCurrency,
+  language,
 }: {
   wallet: DashboardWalletSummary;
   totalBalance: number;
   formatCurrency: (amount: number) => string;
+  language: 'en' | 'id';
 }) {
   const share = getWalletShare(wallet, totalBalance);
   const accentColor = normalizeHexColor(wallet.color) ?? 'var(--accent)';
   const accentBorderColor = withHexAlpha(wallet.color, '2c');
   const accentBackgroundColor = withHexAlpha(wallet.color, '12');
-  const accentChipColor = withHexAlpha(wallet.color, '18');
+  const accentChipColor = withHexAlpha(wallet.color, '16');
 
   return (
     <Link
       href="/wallets"
-      className="grid gap-2 rounded-[calc(var(--radius-control)+0.08rem)] border border-border-subtle/60 bg-surface-1/90 px-3.5 py-3 shadow-[0_10px_24px_-24px_rgba(15,23,42,0.24)] transition-[border-color,background-color,transform] duration-200 hover:-translate-y-[1px] hover:bg-surface-1"
+      className="grid gap-2.5 rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/60 bg-surface-1/90 px-3.5 py-3.5 transition-[border-color,background-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:bg-surface-1 hover:shadow-sm"
       style={{
         borderColor: accentBorderColor,
         backgroundColor: accentBackgroundColor,
       }}
     >
-      <div className="flex min-w-0 items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center justify-between gap-2">
         <span
           className="grid h-8 w-8 shrink-0 place-items-center rounded-[0.9rem] border border-white/65 bg-surface-1/82"
           style={{
@@ -1233,18 +1251,49 @@ function DashboardWalletMiniCard({
         >
           <Wallet size={15} />
         </span>
-        <span className="inline-flex min-h-[1.35rem] items-center rounded-full bg-surface-1/78 px-2 py-0.5 text-[0.66rem] font-medium text-text-2">
-          {share}%
+        <span className="inline-flex min-h-[1.35rem] items-center rounded-full bg-surface-1/78 px-2 py-0.5 text-[var(--font-size-chip)] font-medium text-text-2">
+          {language === 'id' ? 'Utama' : 'Primary'}
         </span>
       </div>
-      <div className="grid gap-0.75">
+      <div className="grid gap-1">
         <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
             {wallet.name}
         </strong>
-        <strong className="whitespace-nowrap text-[1.02rem] font-semibold tracking-[-0.045em] text-text-1">
+        <strong className="whitespace-nowrap text-[var(--number-section-size)] font-semibold tracking-[-0.05em] text-text-1">
           {formatCurrency(wallet.balance)}
         </strong>
+        <span className="text-[var(--font-size-meta)] font-medium text-text-2">
+          {language === 'id' ? `${share}% dari total` : `${share}% of total`}
+        </span>
       </div>
+    </Link>
+  );
+}
+
+function DashboardWalletCompactRow({
+  wallet,
+  formatCurrency,
+}: {
+  wallet: DashboardWalletSummary;
+  formatCurrency: (amount: number) => string;
+}) {
+  return (
+    <Link
+      href="/wallets"
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: wallet.color || 'var(--accent)' }}
+        />
+        <strong className="truncate text-[0.86rem] font-semibold tracking-[-0.02em] text-text-1">
+          {wallet.name}
+        </strong>
+      </div>
+      <strong className="whitespace-nowrap text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1">
+        {formatCurrency(wallet.balance)}
+      </strong>
     </Link>
   );
 }
@@ -1278,17 +1327,17 @@ function DashboardFocusMiniBlock({
     <Link
       href={href}
       className={cn(
-        'grid gap-1 rounded-[calc(var(--radius-control)+0.02rem)] border border-border-subtle/55 px-3 py-2 transition-[border-color,background-color] duration-200 hover:border-border-strong/45',
-        muted ? 'bg-surface-1/46' : 'bg-surface-1/78',
+        'grid gap-1.5 rounded-[calc(var(--radius-control)+0.02rem)] border border-border-subtle/55 px-3 py-2.5 transition-[border-color,background-color,transform] duration-200 hover:-translate-y-[1px] hover:border-border-strong/45',
+        muted ? 'bg-surface-1/46' : 'bg-surface-1/88',
       )}
     >
-      <span className="text-[0.68rem] font-medium tracking-[0.01em] text-text-2">
+      <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
         {label}
       </span>
       <strong className="truncate text-[0.82rem] font-semibold tracking-[-0.03em] text-text-1">
         {status}
       </strong>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-text-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[var(--font-size-meta)] text-text-2">
         {meta ? <span className="truncate">{meta}</span> : <span className="sr-only">-</span>}
         {value ? (
           <strong
@@ -1351,7 +1400,7 @@ function MobileFocusRow({
       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
     >
       <div className="grid min-w-0 gap-0.5">
-        <span className="text-[0.74rem] font-medium tracking-[-0.01em] text-text-2">
+        <span className="text-[var(--font-size-meta)] font-medium tracking-[-0.01em] text-text-2">
           {label}
         </span>
         <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1">
@@ -1369,7 +1418,7 @@ function MobileFocusRow({
             {value}
           </strong>
         ) : null}
-        {meta ? <span className="text-[0.74rem] text-text-2">{meta}</span> : null}
+        {meta ? <span className="text-[var(--font-size-meta)] text-text-2">{meta}</span> : null}
       </div>
     </Link>
   );
@@ -1436,14 +1485,14 @@ function RecentActivityRow({
             <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
               {transaction.title}
             </strong>
-            <span className="truncate text-[0.7rem] text-text-2">{supportingMeta}</span>
+            <span className="truncate text-[var(--font-size-meta)] text-text-2">{supportingMeta}</span>
           </div>
         </div>
         <div className="grid gap-0.5 text-right">
           <strong className="text-[0.88rem] font-semibold tracking-[-0.03em] text-accent-strong">
             {formatCurrency(transaction.amount)}
           </strong>
-          <span className="text-[0.7rem] text-text-2">
+          <span className="text-[var(--font-size-meta)] text-text-2">
             {formatShortDate(getTransactionDisplayDate(transaction), language)}
           </span>
         </div>
@@ -1485,7 +1534,7 @@ function RecentActivityRow({
           <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
             {transaction.title || transaction.note || t('common.noNote')}
           </strong>
-          <span className="truncate text-[0.7rem] text-text-2">{supportingMeta}</span>
+          <span className="truncate text-[var(--font-size-meta)] text-text-2">{supportingMeta}</span>
         </div>
       </div>
       <div className="grid gap-0.5 text-right">
@@ -1498,7 +1547,7 @@ function RecentActivityRow({
           {transaction.type === 'income' ? '+' : '-'}
           {formatCurrency(transaction.amount)}
         </strong>
-        <span className="text-[0.7rem] text-text-2">
+        <span className="text-[var(--font-size-meta)] text-text-2">
           {formatShortDate(getTransactionDisplayDate(transaction), language)}
         </span>
       </div>

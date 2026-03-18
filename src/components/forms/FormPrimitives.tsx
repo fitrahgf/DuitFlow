@@ -18,10 +18,10 @@ export function FormLabel({
 }: ComponentPropsWithoutRef<"label">) {
   return (
     <label
-        className={cn(
-          "inline-flex items-center gap-1 text-[0.67rem] font-semibold uppercase tracking-[0.16em] text-text-3",
-          className,
-        )}
+      className={cn(
+        "inline-flex items-center gap-1 text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2",
+        className,
+      )}
       {...props}
     />
   );
@@ -33,10 +33,10 @@ export function FormLegend({
 }: ComponentPropsWithoutRef<"legend">) {
   return (
     <legend
-        className={cn(
-          "inline-flex items-center gap-1 text-[0.67rem] font-semibold uppercase tracking-[0.16em] text-text-3",
-          className,
-        )}
+      className={cn(
+        "inline-flex items-center gap-1 text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2",
+        className,
+      )}
       {...props}
     />
   );
@@ -87,8 +87,8 @@ export function FormSectionHeader({
       <span
         className={cn(
           stepVariant === "inline"
-            ? "pt-0.5 text-[0.68rem] font-medium tracking-[0.02em] text-text-3"
-            : "inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full border border-border-subtle bg-surface-2/75 px-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-text-3",
+            ? "pt-0.5 text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2"
+            : "inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full border border-border-subtle bg-surface-2/75 px-1.5 text-[var(--font-size-chip)] font-semibold tracking-[0.01em] text-text-2",
         )}
       >
         {step}

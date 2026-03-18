@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useLanguage } from "@/components/LanguageProvider";
+import { getErrorMessage } from "@/lib/errors";
 import { projectTemplates } from "@/lib/projectTemplates";
 
 function ProjectSummaryStat({
@@ -108,7 +109,7 @@ export default function ProjectsPage() {
       toast.success(t("common.saved"));
     } catch (error) {
       console.error("Error creating project:", error);
-      toast.error(t("transactions.form.saveError"));
+      toast.error(getErrorMessage(error, t("transactions.form.saveError")));
     }
   };
 
@@ -121,6 +122,7 @@ export default function ProjectsPage() {
       toast.success(t(`projects.status.${status}`));
     } catch (error) {
       console.error("Error updating project status:", error);
+      toast.error(getErrorMessage(error, t("common.save")));
     }
   };
 
@@ -142,6 +144,7 @@ export default function ProjectsPage() {
       toast.success(t("common.deleted"));
     } catch (error) {
       console.error("Error deleting project:", error);
+      toast.error(getErrorMessage(error, t("common.delete")));
     }
   };
 
@@ -167,8 +170,8 @@ export default function ProjectsPage() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t("projects.title")} subtitle={t("projects.subtitle")} />
+      <PageHeader variant="compact">
+        <PageHeading title={t("projects.title")} compact />
         <PageHeaderActions>
           <Button
             type="button"
@@ -184,7 +187,7 @@ export default function ProjectsPage() {
       </PageHeader>
 
       {showSummaryStrip ? (
-        <SurfaceCard padding="compact">
+        <SurfaceCard role="featured" padding="compact">
           <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/80">
             <ProjectSummaryStat
               label={t("projects.title")}
@@ -216,14 +219,14 @@ export default function ProjectsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard padding="compact">
+      <SurfaceCard role="embedded" padding="compact">
         <div className="grid gap-2.5">
           <SectionHeading
             title={language === "id" ? "Daftar proyek" : "Project list"}
           />
 
           {loading ? (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-3">
               {Array.from({ length: 3 }).map((_, index) => (
                 <Card
                   key={`project-skeleton-${index}`}
@@ -266,20 +269,16 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <ProjectTemplatesAside
-                language={language}
-                templates={emptyStateTemplates}
-              />
+              <ProjectTemplatesAside language={language} templates={emptyStateTemplates} />
             </div>
           ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {projects.map((project) => (
                 <article
                   key={project.id}
-                  className="grid gap-3 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle bg-surface-2/55 p-3.5"
+                  className="grid gap-2.5 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                 >
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="grid gap-1.5">
+                  <div className="grid gap-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge
                           variant={
@@ -288,13 +287,25 @@ export default function ProjectsPage() {
                         >
                           {t(`projects.status.${project.status}`)}
                         </Badge>
-                        <Badge>{project.project_categories?.length ?? 0}</Badge>
                       </div>
-                      <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+                      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
                         {project.name}
                       </strong>
-                    </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[var(--font-size-meta)] text-text-2">
+                        <span>
+                          {t("projects.totalBudget")}: {formatCurrency(project.budget_target)}
+                        </span>
+                        <span className="text-text-3">-</span>
+                        <span>
+                          {t("projects.categoriesText")}: {project.project_categories?.length ?? 0}
+                        </span>
+                      </div>
+                  </div>
 
+                  <div className="grid justify-items-start gap-2 lg:justify-items-end">
+                    <strong className="text-[0.98rem] font-semibold tracking-[-0.03em] text-text-1">
+                       {formatCurrency(project.budget_target)}
+                    </strong>
                     <div className="flex flex-wrap gap-2 lg:justify-end">
                       {project.status === "active" ? (
                         <Button
@@ -334,24 +345,6 @@ export default function ProjectsPage() {
                       </Button>
                     </div>
                   </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-text-3">
-                    <span>{t("projects.totalBudget")}</span>
-                    <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
-                      {formatCurrency(project.budget_target)}
-                    </strong>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                      {t("projects.categoriesText")}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {project.project_categories?.map((category) => (
-                        <Badge key={category.id}>{category.name}</Badge>
-                      ))}
-                    </div>
-                  </div>
                 </article>
               ))}
             </div>
@@ -372,7 +365,7 @@ export default function ProjectsPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="project-name"
                 >
                   {t("projects.form.name")}
@@ -389,7 +382,7 @@ export default function ProjectsPage() {
 
               <div className="grid gap-2">
                 <label
-                  className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                  className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
                   htmlFor="project-budget"
                 >
                   {t("projects.form.budgetTarget")}
@@ -407,7 +400,7 @@ export default function ProjectsPage() {
 
             <div className="grid gap-2">
               <label
-                className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+                className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
                 htmlFor="project-template"
               >
                 {t("projects.form.template")}
@@ -430,12 +423,17 @@ export default function ProjectsPage() {
             </div>
 
             <div className="grid gap-2 border-t border-border-subtle/80 pt-3">
-              <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+              <span className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2">
                 {t("projects.form.templateHint")}
               </span>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {templatePreview.map((label) => (
-                  <Badge key={label}>{label}</Badge>
+                  <span
+                    key={label}
+                    className="rounded-full bg-surface-2/72 px-2.5 py-1 text-[var(--font-size-chip)] font-medium text-text-2"
+                  >
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
@@ -470,7 +468,7 @@ function ProjectTemplatesAside({
 }) {
   return (
     <div className="grid gap-2.5 border-t border-border-subtle/70 pt-2.5 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+      <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
         {language === "id" ? "Template cepat" : "Quick templates"}
       </span>
       <div className="grid gap-0 divide-y divide-border-subtle/75">
@@ -482,7 +480,7 @@ function ProjectTemplatesAside({
             <strong className="text-[0.88rem] font-semibold tracking-[-0.03em] text-text-1">
               {template.title}
             </strong>
-            <span className="text-[0.76rem] leading-5 text-text-2">
+            <span className="text-[var(--font-size-meta)] leading-5 text-text-2">
               {template.categories.slice(0, 2).join(" / ")}
             </span>
           </div>

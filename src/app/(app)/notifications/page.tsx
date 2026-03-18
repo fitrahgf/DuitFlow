@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useSyncExternalStore } from 'react';
+import { Suspense, useSyncExternalStore } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCheck, CircleAlert, Clock3, Inbox, Sparkles, Target } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,14 +20,12 @@ import {
 } from '@/components/shared/PagePrimitives';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/events';
 import { getErrorMessage } from '@/lib/errors';
 import {
   fetchNotifications,
   fetchUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-  syncSystemNotifications,
   type NotificationPriority,
   type NotificationType,
 } from '@/lib/queries/notifications';
@@ -60,42 +58,6 @@ function getPriorityBadgeVariant(priority: NotificationPriority) {
   return 'default';
 }
 
-function NotificationOverviewStat({
-  label,
-  value,
-  meta,
-  tone = 'default',
-  className,
-}: {
-  label: string;
-  value: React.ReactNode;
-  meta?: React.ReactNode;
-  tone?: 'default' | 'accent' | 'warning';
-  className?: string;
-}) {
-  const dotClassName =
-    tone === 'accent'
-      ? 'bg-accent'
-      : tone === 'warning'
-        ? 'bg-warning'
-        : 'bg-text-3/35';
-
-  return (
-    <div className={cn("grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0", className)}>
-      <div className="inline-flex items-center gap-2">
-        <span className={cn('h-1.5 w-1.5 rounded-full', dotClassName)} aria-hidden="true" />
-        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-          {label}
-        </span>
-      </div>
-      <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
-        {value}
-      </strong>
-      {meta ? <span className="text-[0.78rem] text-text-2">{meta}</span> : null}
-    </div>
-  );
-}
-
 function NotificationsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -120,40 +82,6 @@ function NotificationsPageContent() {
     queryKey: queryKeys.notifications.unreadCount,
     queryFn: fetchUnreadNotificationCount,
   });
-
-  useEffect(() => {
-    let active = true;
-
-    const syncAndRefresh = async (showError = false) => {
-      try {
-        await syncSystemNotifications();
-        if (!active) {
-          return;
-        }
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
-          queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.overview }),
-        ]);
-      } catch (error) {
-        if (showError && active) {
-          toast.error(getErrorMessage(error, t('notifications.syncError')));
-        }
-      }
-    };
-
-    void syncAndRefresh(false);
-
-    const handleRefresh = () => {
-      void syncAndRefresh(false);
-    };
-
-    window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, handleRefresh);
-
-    return () => {
-      active = false;
-      window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, handleRefresh);
-    };
-  }, [queryClient, t]);
 
   const markReadMutation = useMutation({
     mutationFn: markNotificationAsRead,
@@ -217,8 +145,8 @@ function NotificationsPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('notifications.title')} subtitle={t('notifications.subtitle')} />
+      <PageHeader variant="compact">
+        <PageHeading title={t('notifications.title')} compact />
         <PageHeaderActions>
           <Button
             type="button"
@@ -232,86 +160,73 @@ function NotificationsPageContent() {
         </PageHeaderActions>
       </PageHeader>
 
-      <SurfaceCard padding="compact">
-        <div className="grid gap-0 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 sm:grid-cols-3">
-          <NotificationOverviewStat
-            label={t('notifications.summary.total')}
-            value={notificationsQuery.isLoading ? '...' : notifications.length}
-          />
-          <NotificationOverviewStat
-            label={t('notifications.summary.unread')}
-            value={unreadCountQuery.isLoading ? '...' : unreadCount}
-            tone={unreadCount > 0 ? 'warning' : 'default'}
-            className="border-t border-border-subtle/75 sm:border-l sm:border-t-0"
-          />
-          <NotificationOverviewStat
-            label={t('notifications.summary.scope')}
-            value={activeScopeLabel}
-            meta={typeFilter !== 'all' ? activeTypeLabel : undefined}
-            tone="accent"
-            className="border-t border-border-subtle/75 sm:border-l sm:border-t-0"
-          />
-        </div>
-      </SurfaceCard>
-
-      <SurfaceCard padding="compact">
+      <SurfaceCard role="featured" padding="compact">
         <div className="grid gap-2.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {tabsReady ? (
-              tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color]',
-                    scope === tab.key
-                      ? 'bg-surface-2 text-text-1'
-                      : 'hover:bg-surface-2/75 hover:text-text-1'
-                  )}
-                  onClick={() => replaceNotificationsState(tab.key, typeFilter)}
-                >
-                  <span>{tab.label}</span>
-                  {tab.key === 'unread' ? (
-                    <span className="inline-flex h-[1.05rem] min-w-[1.2rem] items-center justify-center rounded-full bg-surface-1/90 px-1.5 text-[0.64rem] font-semibold text-text-3">
-                      {unreadCount}
-                    </span>
-                  ) : null}
-                </button>
-              ))
-            ) : (
-              tabs.map((tab) => (
-                <div
-                  key={tab.key}
-                  className="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2"
-                >
-                  {tab.label}
-                </div>
-              ))
-            )}
+          <div className="flex flex-wrap items-center gap-2 text-[var(--font-size-meta)] text-text-2">
+            <strong className="text-text-1">{notificationsQuery.isLoading ? '...' : notifications.length}</strong>
+            <span>{t('notifications.summary.total')}</span>
+            <span className="text-text-3">/</span>
+            <strong className="text-text-1">{unreadCountQuery.isLoading ? '...' : unreadCount}</strong>
+            <span>{t('notifications.summary.unread')}</span>
+            <span className="text-text-3">/</span>
+            <span>{activeScopeLabel}</span>
+            {typeFilter !== 'all' ? (
+              <>
+                <span className="text-text-3">/</span>
+                <span>{activeTypeLabel}</span>
+              </>
+            ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 border-t border-border-subtle/75 pt-2.5">
-            {typeFilters.map((filter) => (
-              <Button
-                key={filter.key}
-                type="button"
-                size="sm"
-                variant={typeFilter === filter.key ? 'secondary' : 'ghost'}
-                className={cn(
-                  'h-8 justify-center px-2.5 text-[0.76rem] font-medium sm:justify-start',
-                  typeFilter !== filter.key &&
-                    'border-transparent text-text-2 hover:bg-surface-2/88 hover:text-text-1'
-                )}
-                onClick={() => replaceNotificationsState(scope, filter.key)}
-              >
-                {filter.label}
-              </Button>
-            ))}
+          <div className="grid gap-2 border-t border-border-subtle/70 pt-2.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {tabsReady ? (
+                tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color]',
+                      scope === tab.key
+                        ? 'bg-surface-1 text-text-1 shadow-sm'
+                        : 'hover:bg-surface-1/70 hover:text-text-1'
+                    )}
+                    onClick={() => replaceNotificationsState(tab.key, typeFilter)}
+                  >
+                    <span>{tab.label}</span>
+                    {tab.key === 'unread' ? (
+                      <span className="inline-flex h-[1.05rem] min-w-[1.2rem] items-center justify-center rounded-full bg-surface-2/90 px-1.5 text-[0.64rem] font-semibold text-text-3">
+                        {unreadCount}
+                      </span>
+                    ) : null}
+                  </button>
+                ))
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {typeFilters.map((filter) => (
+                <Button
+                  key={filter.key}
+                  type="button"
+                  size="sm"
+                  variant={typeFilter === filter.key ? 'secondary' : 'ghost'}
+                  className={cn(
+                    'h-8 justify-center px-2.5 text-[0.76rem] font-medium sm:justify-start',
+                    typeFilter !== filter.key &&
+                      'border-transparent text-text-2 hover:bg-surface-1/72 hover:text-text-1'
+                  )}
+                  onClick={() => replaceNotificationsState(scope, filter.key)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="compact">
+      <SurfaceCard role="embedded" padding="compact">
         <div className="grid gap-3">
           <SectionHeading title={t('notifications.feedTitle')} />
 
@@ -326,13 +241,11 @@ function NotificationsPageContent() {
                   title={t('notifications.empty')}
                   icon={<Inbox size={18} />}
                   compact
+                  variant="featured"
                   className="gap-1.5 px-0 py-0"
                 />
               </div>
-              <NotificationSignalsAside
-                language={language}
-                signals={typeFilters.slice(1).map((filter) => filter.label)}
-              />
+              <NotificationSignalsAside language={language} signals={typeFilters.slice(1).map((filter) => filter.label)} />
             </div>
           ) : (
             <div className="grid gap-0 divide-y divide-border-subtle/80">
@@ -359,11 +272,11 @@ export default function NotificationsPage() {
     <Suspense
       fallback={
         <PageShell className="animate-fade-in">
-          <PageHeader>
-            <PageHeading title="Notifications" />
+          <PageHeader variant="compact">
+            <PageHeading title="Notifications" compact />
           </PageHeader>
-          <SurfaceCard>
-            <EmptyState title="Loading..." compact />
+          <SurfaceCard role="embedded">
+            <EmptyState title="Loading..." compact variant="inline" />
           </SurfaceCard>
         </PageShell>
       }
@@ -426,7 +339,7 @@ function NotificationRow({
   return (
     <article
       className={cn(
-        'relative grid gap-3 px-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
+        'relative grid gap-3 border-l border-transparent px-3 py-3 hover:border-accent/30 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start',
         surfaceClassName
       )}
     >
@@ -526,3 +439,4 @@ function NotificationSignalsAside({
     </div>
   );
 }
+

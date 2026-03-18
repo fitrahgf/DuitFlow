@@ -13,12 +13,10 @@ import TransactionForm from "@/components/TransactionForm";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
-  MetricCard,
   SectionHeading,
   SurfaceCard,
 } from "@/components/shared/PagePrimitives";
 import { TransactionRow } from "@/components/transactions/TransactionRow";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -92,10 +90,11 @@ export function TransactionsFiltersSection({
 
   return (
     <SurfaceCard
+      role="featured"
       padding="none"
-      className="sticky top-[var(--shell-sticky-offset)] z-20 border-transparent bg-transparent shadow-none sm:static sm:border-border-subtle sm:bg-surface-1 sm:shadow-xs"
+      className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
     >
-      <FilterToolbar className="gap-2 px-0 py-0 sm:px-[var(--space-panel-tight)] sm:py-[var(--space-panel-tight)] lg:px-[var(--space-panel)] lg:py-[var(--space-panel)]">
+      <FilterToolbar className="gap-2 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-strong/20 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_94%,transparent),color-mix(in_srgb,var(--surface-accent)_36%,transparent))] px-[var(--space-panel-tight)] py-[var(--space-panel-tight)] shadow-none backdrop-blur-sm lg:px-[var(--space-panel)]">
         <div className="grid gap-1.5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <FilterSearchField
             id="transaction-search"
@@ -118,7 +117,7 @@ export function TransactionsFiltersSection({
             inputClassName="text-[0.82rem]"
           />
 
-          <ToolbarActions className="hidden sm:justify-end">
+          <ToolbarActions className="hidden sm:flex sm:justify-end lg:hidden">
             <Button
               type="button"
               variant="secondary"
@@ -144,103 +143,45 @@ export function TransactionsFiltersSection({
           </ToolbarActions>
         </div>
 
-        <details className="group rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle/75 bg-surface-1 sm:hidden">
-          <summary className="flex list-none items-center justify-between gap-3 px-2.75 py-2">
+        <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle/75 bg-surface-1 px-2.75 py-2 sm:hidden">
+          <div className="flex items-center justify-between gap-3">
             <div className="grid gap-0.5">
               <strong className="text-[0.76rem] font-semibold tracking-[-0.03em] text-text-1">
-                {language === "id" ? "Filter cepat" : "Quick filters"}
+                {language === "id" ? "Filter" : "Filters"}
               </strong>
-              <span className="text-[0.72rem] text-text-3">{mobileFilterSummary}</span>
+              <span className="text-[var(--font-size-meta)] text-text-3">{mobileFilterSummary}</span>
             </div>
-            <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">
-              v
-            </span>
-          </summary>
-
-          <div className="grid gap-2 border-t border-border-subtle px-2.75 py-2">
-            <div className="flex flex-wrap gap-1.25">
-              {(["all", "expense", "income", "transfer"] as const).map((type) => (
-                <Button
-                  key={type}
-                  type="button"
-                  size="sm"
-                  variant={filters.type === type ? "primary" : "ghost"}
-                  className={cn(
-                    "px-2.25",
-                    filters.type !== type &&
-                      "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
-                  )}
-                  onClick={() =>
-                    onReplaceFilters({
-                      ...filters,
-                      type,
-                    })
-                  }
-                >
-                  {t(`transactions.${type}`)}
-                </Button>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-1.25">
-              {(["all", "30d", "7d", "month"] as const).map((period) => (
-                <Button
-                  key={period}
-                  type="button"
-                  size="sm"
-                  variant={filters.period === period ? "primary" : "ghost"}
-                  className={cn(
-                    "px-2.25",
-                    filters.period !== period &&
-                      "border-transparent text-text-2 hover:bg-surface-2/90 hover:text-text-1",
-                  )}
-                  onClick={() =>
-                    onReplaceFilters({
-                      ...filters,
-                      period,
-                      customFrom: "",
-                      customTo: "",
-                    })
-                  }
-                >
-                  {getPeriodLabel(period, t)}
-                </Button>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-border-subtle/80 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="px-2.25"
+              onClick={onOpenAdvancedFilters}
+            >
+              <Filter size={15} />
+              {t("transactions.advancedFilters")}
+            </Button>
+          </div>
+          {hasActiveFilters ? (
+            <div className="flex items-center justify-between gap-2 border-t border-border-subtle/80 pt-2">
+              <span className="min-w-0 text-[var(--font-size-meta)] text-text-3">
+                {compactFilterSummary}
+              </span>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="px-2.25 text-[0.72rem]"
-                onClick={onOpenAdvancedFilters}
+                className="px-2.25 text-[var(--font-size-meta)]"
+                onClick={onResetAll}
               >
-                <Filter size={15} />
-                {t("transactions.advancedFilters")}
+                <RotateCcw size={15} />
+                {t("transactions.resetAll")}
               </Button>
-              {hasActiveFilters ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="px-2.25 text-[0.72rem]"
-                  onClick={onResetAll}
-                >
-                  <RotateCcw size={15} />
-                  {t("transactions.resetAll")}
-                </Button>
-              ) : null}
-              {hasActiveFilters ? (
-                <span className="min-w-0 text-[0.72rem] text-text-3">
-                  {compactFilterSummary}
-                </span>
-              ) : null}
             </div>
-          </div>
-        </details>
+          ) : null}
+        </div>
 
-        <div className="hidden gap-2.5 lg:grid-cols-2 lg:gap-3 sm:grid">
+        <div className="hidden gap-2.5 border-t border-border-subtle/70 pt-2 sm:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end lg:gap-3">
           <FilterGroup label={t("transactions.quickType")}>
             {(["all", "expense", "income", "transfer"] as const).map((type) => (
               <Button
@@ -290,32 +231,45 @@ export function TransactionsFiltersSection({
               </Button>
             ))}
           </FilterGroup>
+
+          <div className="hidden items-center justify-end gap-2 lg:flex">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="max-sm:min-w-max"
+              onClick={onOpenAdvancedFilters}
+            >
+              <Filter size={16} />
+              {t("transactions.advancedFilters")}
+            </Button>
+            {hasActiveFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="max-sm:min-w-max"
+                onClick={onResetAll}
+              >
+                <RotateCcw size={16} />
+                {t("transactions.resetAll")}
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {activeFilterChips.length > 0 ? (
-          <div className="hidden flex-wrap items-center gap-1.5 border-t border-border-subtle/80 pt-2 sm:flex">
-            {visibleFilterChips.map((chip) => (
-              <Badge
-                key={chip}
-                className="min-h-0 whitespace-nowrap border-border-subtle/80 bg-surface-2/80 px-2 py-0 text-[0.64rem] font-medium text-text-2"
-              >
-                {chip}
-              </Badge>
-            ))}
-            {hiddenChipCount > 0 ? (
-              <span className="whitespace-nowrap text-[0.72rem] text-text-3">
-                +{hiddenChipCount} {language === "id" ? "filter lain" : "more"}
-              </span>
-            ) : null}
-            {hasActiveFilters ? (
-              <button
-                type="button"
-                className="whitespace-nowrap text-[0.72rem] font-medium text-text-3 transition hover:text-text-1"
-                onClick={onResetAll}
-              >
-                {t("transactions.resetAll")}
-              </button>
-            ) : null}
+          <div className="hidden items-center justify-between gap-2 border-t border-border-subtle/80 pt-2 sm:flex">
+            <span className="truncate text-[var(--font-size-meta)] text-text-2">
+              {compactFilterSummary}
+            </span>
+            <button
+              type="button"
+              className="whitespace-nowrap text-[var(--font-size-meta)] font-medium text-text-3 transition hover:text-text-1"
+              onClick={onResetAll}
+            >
+              {t("transactions.resetAll")}
+            </button>
           </div>
         ) : null}
       </FilterToolbar>
@@ -348,6 +302,25 @@ export function TransactionsInsightsSection({
     return null;
   }
 
+  const summaryRows = [
+    {
+      label: t("transactions.summary.currentWindow"),
+      value: formatCurrency(searchSummary.currentTotal),
+    },
+    {
+      label: t("transactions.summary.last30Days"),
+      value: formatCurrency(searchSummary.last30DaysTotal),
+    },
+    {
+      label: t("transactions.summary.average"),
+      value: formatCurrency(searchSummary.averageAmount),
+    },
+    {
+      label: t("transactions.summary.count"),
+      value: String(searchSummary.count),
+    },
+  ];
+
   return (
     <>
       <details className="group rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1 sm:hidden">
@@ -365,29 +338,20 @@ export function TransactionsInsightsSection({
           </span>
         </summary>
         <div className="border-t border-border-subtle px-2.75 py-2">
-          <div className="grid gap-2">
-            <div className="grid grid-cols-2 gap-2.5">
-              <MetricCard
-                label={t("transactions.summary.currentWindow")}
-                value={formatCurrency(searchSummary.currentTotal)}
-                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-              />
-              <MetricCard
-                label={t("transactions.summary.last30Days")}
-                value={formatCurrency(searchSummary.last30DaysTotal)}
-                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-              />
-              <MetricCard
-                label={t("transactions.summary.average")}
-                value={formatCurrency(searchSummary.averageAmount)}
-                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-              />
-              <MetricCard
-                label={t("transactions.summary.count")}
-                value={searchSummary.count}
-                className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-              />
-            </div>
+          <div className="grid gap-2.5">
+            <dl className="grid gap-1.5">
+              {summaryRows.map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between gap-3 rounded-[calc(var(--radius-control)+0.12rem)] border border-border-subtle/65 bg-surface-2/58 px-2.5 py-2"
+                >
+                  <dt className="text-[var(--font-size-meta)] text-text-2">{row.label}</dt>
+                  <dd className="text-[0.88rem] font-semibold tracking-[-0.03em] text-text-1">
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
 
             <div className="grid gap-1.5">
               <span className="text-sm text-text-3">
@@ -406,47 +370,33 @@ export function TransactionsInsightsSection({
       </details>
 
       <SurfaceCard
+        role="featured"
         padding="compact"
-        className="hidden sm:block xl:sticky xl:top-[var(--page-top-space)]"
+        className="hidden border-border-strong/18 sm:block xl:sticky xl:top-[var(--page-top-space)]"
       >
         <div className="grid gap-2.5">
-          <SectionHeading title={t("transactions.insightTitle")} />
+          <SectionHeading
+            title={t("transactions.insightTitle")}
+            description={
+              t("transactions.summary.latest") +
+              ": " +
+              getDisplayLatestLabel(searchSummary.latestTransaction, formatDate, t)
+            }
+          />
 
-          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-2">
-            <MetricCard
-              label={t("transactions.summary.currentWindow")}
-              value={formatCurrency(searchSummary.currentTotal)}
-              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-            />
-            <MetricCard
-              label={t("transactions.summary.last30Days")}
-              value={formatCurrency(searchSummary.last30DaysTotal)}
-              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-            />
-            <MetricCard
-              label={t("transactions.summary.average")}
-              value={formatCurrency(searchSummary.averageAmount)}
-              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-            />
-            <MetricCard
-              label={t("transactions.summary.count")}
-              value={searchSummary.count}
-              className="min-h-[4.25rem] p-[var(--space-panel-tight)]"
-            />
-          </div>
-
-          <div className="grid gap-1.5">
-            <span className="text-sm text-text-3">
-              {t("transactions.summary.latest")}
-            </span>
-            <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
-              {getDisplayLatestLabel(
-                searchSummary.latestTransaction,
-                formatDate,
-                t,
-              )}
-            </strong>
-          </div>
+          <dl className="grid gap-1.5">
+            {summaryRows.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between gap-3 rounded-[calc(var(--radius-control)+0.12rem)] border border-border-subtle/65 bg-surface-2/58 px-3 py-2"
+              >
+                <dt className="text-[var(--font-size-meta)] text-text-2">{row.label}</dt>
+                <dd className="text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </SurfaceCard>
     </>
@@ -481,11 +431,13 @@ export function TransactionEditorDialog({
       }
       size="lg"
       padding="flush"
+      density="compact"
       hideClose
       headerHidden
     >
       <TransactionForm
         transaction={editingTransaction}
+        presentation="minimal"
         onSuccess={onSuccess}
         onCancel={onCancel}
       />
@@ -769,22 +721,24 @@ export function TransactionsResultsSection({
 }: TransactionsResultsSectionProps) {
   return (
     <SurfaceCard
+      role="embedded"
       padding="none"
-      className="overflow-hidden rounded-none border-transparent bg-transparent shadow-none sm:rounded-[var(--radius-card)] sm:border-border-subtle sm:bg-surface-1 sm:shadow-xs"
+      className="overflow-hidden rounded-none border-transparent bg-transparent shadow-none sm:rounded-[var(--radius-card)]"
     >
       {isLoading ? (
         <div className="p-[var(--space-panel-tight)] lg:p-[var(--space-panel)]">
-          <EmptyState title={t("common.loading")} compact />
+          <EmptyState title={t("common.loading")} compact variant="inline" />
         </div>
       ) : isError ? (
         <div className="p-[var(--space-panel-tight)] lg:p-[var(--space-panel)]">
-          <EmptyState title={t("transactions.loadError")} compact />
+          <EmptyState title={t("transactions.loadError")} compact variant="inline" />
         </div>
       ) : displayTransactions.length === 0 ? (
         <div className="p-[var(--space-panel-tight)] lg:p-[var(--space-panel)]">
           <EmptyState
             title={t("transactions.emptyTitle")}
             icon={<ReceiptText size={20} />}
+            variant="featured"
           />
         </div>
       ) : filteredTransactions.length === 0 ? (
@@ -792,10 +746,11 @@ export function TransactionsResultsSection({
           <EmptyState
             title={t("transactions.noResults")}
             icon={<Search size={20} />}
+            variant="inline"
           />
         </div>
       ) : (
-        <div className="divide-y divide-border-subtle/80">
+        <div className="divide-y divide-border-subtle/75">
           {filteredTransactions.map((transaction) => (
             <TransactionRow
               key={transaction.id}
@@ -831,7 +786,7 @@ export function TransactionsInsightsLayout({
       className={cn(
         "grid gap-3",
         hasActiveFilters &&
-          "xl:grid-cols-[minmax(0,1.5fr)_minmax(18.5rem,0.5fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.62fr)_minmax(20rem,0.46fr)]",
+          "xl:grid-cols-[minmax(0,1.64fr)_minmax(17.5rem,0.36fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.7fr)_minmax(18rem,0.3fr)]",
       )}
     >
       {children}

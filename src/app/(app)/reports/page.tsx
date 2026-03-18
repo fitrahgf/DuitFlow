@@ -13,7 +13,6 @@ import { Suspense, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
-  PieChart,
   RotateCcw,
   Search,
   TrendingUp,
@@ -176,7 +175,7 @@ function ReportsPageContent() {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: queryKeys.categories.list("all"),
+    queryKey: queryKeys.categories.options("all"),
     queryFn: () => fetchCategories(),
   });
 
@@ -405,8 +404,16 @@ function ReportsPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t("reports.title")} />
+      <PageHeader variant="compact">
+        <PageHeading
+          title={t("reports.title")}
+          compact
+          subtitle={
+            language === "id"
+              ? "Analitik disusun lebih ringkas agar insight utama langsung terbaca."
+              : "Analytics are arranged more tightly so the key insight reads first."
+          }
+        />
         <PageHeaderActions>
           <Button
             type="button"
@@ -431,11 +438,15 @@ function ReportsPageContent() {
       </PageHeader>
 
       <SurfaceCard
+        role="featured"
         padding="compact"
         className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
       >
         <FilterToolbar className="gap-2.5">
-          <FilterGroup label={t("reports.filters.period")}>
+          <FilterGroup
+            label={t("reports.filters.period")}
+            contentClassName="!grid !grid-cols-2 gap-1.5 overflow-visible pb-0 sm:!flex sm:gap-2 sm:overflow-x-auto sm:pb-1"
+          >
             {(["month", "30d", "7d", "all", "custom"] as const).map(
               (period) => (
                 <Button
@@ -444,7 +455,7 @@ function ReportsPageContent() {
                   size="sm"
                   variant={filters.period === period ? "primary" : "ghost"}
                   className={cn(
-                    "px-2.5",
+                    "min-w-0 w-full px-2.5 text-center",
                     filters.period !== period &&
                       "border-transparent text-text-2 hover:bg-surface-2/88 hover:text-text-1",
                   )}
@@ -560,13 +571,13 @@ function ReportsPageContent() {
         </SurfaceCard>
         ) : (
         <>
-          <SurfaceCard padding="compact" className="overflow-hidden">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.16fr)_repeat(3,minmax(0,0.84fr))] xl:gap-0">
-              <div className="grid gap-1 border-b border-border-subtle/75 pb-3 sm:col-span-2 xl:col-span-1 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-4 2xl:pr-5">
+          <SurfaceCard role="featured" padding="compact" className="overflow-hidden border-border-strong/24 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_94%,transparent),color-mix(in_srgb,var(--surface-accent)_44%,transparent))]">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.26fr)_repeat(3,minmax(0,0.78fr))] xl:gap-0">
+              <div className="grid gap-1 border-b border-border-subtle/55 pb-3 sm:col-span-2 xl:col-span-1 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-4 2xl:pr-5">
                 <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
                   {t("reports.summary.net")}
                 </span>
-                <strong className="text-[1.34rem] font-semibold tracking-[-0.055em] text-text-1 sm:text-[1.52rem]">
+                <strong className="text-[clamp(1.42rem,1.22rem+0.76vw,1.9rem)] font-semibold tracking-[-0.065em] text-text-1">
                   {formatCurrency(netFlow)}
                 </strong>
                 <span className="text-[0.76rem] leading-5 text-text-2">
@@ -589,9 +600,41 @@ function ReportsPageContent() {
                 className="border-t border-border-subtle/75 pt-3 sm:col-span-2 sm:pt-3 xl:col-span-1 xl:border-l xl:border-t-0 xl:px-4 xl:pt-0 2xl:px-5"
               />
             </div>
+            <div className="mt-3 grid gap-2 border-t border-border-subtle/55 pt-3 sm:grid-cols-2">
+              <div className="rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/70 bg-surface-1/78 px-3.5 py-3">
+                <span className="text-[0.72rem] font-medium tracking-[0.01em] text-text-2">
+                  {language === "id" ? "Insight utama" : "Primary read"}
+                </span>
+                <strong className="mt-1.5 block text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+                  {topCategory
+                    ? `${topCategory.name} - ${formatCurrency(topCategory.total)}`
+                    : t("reports.insights.noCategory")}
+                </strong>
+                <p className="mb-0 mt-1 text-[0.8rem] leading-5 text-text-2">
+                  {language === "id"
+                    ? "Kategori belanja terbesar langsung diletakkan di permukaan agar halaman ini tidak terasa seperti template chart."
+                    : "The top spending category is surfaced early so this page feels curated, not like a generic chart template."}
+                </p>
+              </div>
+              <div className="rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/70 bg-surface-1/78 px-3.5 py-3">
+                <span className="text-[0.72rem] font-medium tracking-[0.01em] text-text-2">
+                  {language === "id" ? "Dompet paling aktif" : "Most active wallet"}
+                </span>
+                <strong className="mt-1.5 block text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+                  {mostActiveWallet
+                    ? `${mostActiveWallet.name} - ${mostActiveWallet.count}`
+                    : t("reports.insights.noWallet")}
+                </strong>
+                <p className="mb-0 mt-1 text-[0.8rem] leading-5 text-text-2">
+                  {language === "id"
+                    ? "Aktivitas dompet utama membantu membaca ritme uang tanpa harus turun ke tabel transaksi."
+                    : "The most active wallet helps frame money movement before you dig into transaction evidence."}
+                </p>
+              </div>
+            </div>
           </SurfaceCard>
 
-          <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden">
+          <details className="group rounded-[var(--radius-card)] border border-border-subtle bg-surface-1 sm:hidden" open>
             <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
               <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
                 {language === "id" ? "Charts & insight" : "Charts & insights"}
@@ -674,14 +717,19 @@ function ReportsPageContent() {
             </div>
           </details>
 
-          <SurfaceCard padding="compact">
+          <SurfaceCard role="embedded" padding="compact">
             <div className="hidden gap-3 sm:grid">
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.26fr)_minmax(18.5rem,0.74fr)] xl:gap-0">
-                <div className="grid gap-2.5 xl:border-r xl:border-border-subtle/75 xl:pr-5">
+                <div className="grid gap-2.5 xl:border-r xl:border-border-subtle/65 xl:pr-5">
                   <div className="grid gap-0.5">
                     <h2 className="m-0 text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
                       {t("reports.charts.trend")}
                     </h2>
+                    <span className="text-[0.76rem] leading-5 text-text-2">
+                      {language === "id"
+                        ? "Tren pemasukan dan pengeluaran enam bulan terakhir."
+                        : "Income and expense trend across the last six months."}
+                    </span>
                   </div>
                   <div className="h-[15.2rem]">
                     <TransactionBarChart
@@ -699,6 +747,11 @@ function ReportsPageContent() {
                     <h2 className="m-0 text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
                       {t("reports.charts.category")}
                     </h2>
+                    <span className="text-[0.76rem] leading-5 text-text-2">
+                      {language === "id"
+                        ? "Kategori belanja utama pada jendela waktu aktif."
+                        : "Primary spending categories for the active time window."}
+                    </span>
                   </div>
                   <div className="h-[15.2rem]">
                     {categoryRows.length > 0 ? (
@@ -718,7 +771,7 @@ function ReportsPageContent() {
                 </div>
               </div>
 
-              <section className="grid gap-0 border-t border-border-subtle/75 pt-3 md:grid-cols-3">
+              <section className="grid gap-0 border-t border-border-subtle/65 pt-3 md:grid-cols-3">
                 <InsightCard
                   icon={<TrendingUp size={18} />}
                   label={t("reports.insights.topCategory")}
@@ -752,7 +805,7 @@ function ReportsPageContent() {
             </div>
           </SurfaceCard>
 
-          <SurfaceCard padding="compact">
+          <SurfaceCard role="embedded" padding="compact">
             <div className="grid gap-3">
               <SectionHeading title={t("reports.keyword.title")} />
 

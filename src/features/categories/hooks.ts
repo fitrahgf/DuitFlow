@@ -8,7 +8,7 @@ import {
 
 export function useCategoriesPageQuery() {
   return useQuery({
-    queryKey: queryKeys.categories.list("all"),
+    queryKey: queryKeys.categories.pageList("all"),
     queryFn: fetchCategoriesPageData,
   });
 }

@@ -17,12 +17,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
-  const update = (await request.json()) as TelegramUpdate;
+  let update: TelegramUpdate;
+
+  try {
+    update = (await request.json()) as TelegramUpdate;
+  } catch {
+    return NextResponse.json({ ok: false, error: 'invalid_payload' }, { status: 400 });
+  }
 
   try {
     await handleTelegramUpdate(update);
   } catch (error) {
     console.error('Telegram webhook error', error);
+    return NextResponse.json({ ok: false, error: 'processing_failed' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

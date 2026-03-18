@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -13,7 +13,6 @@ import {
   YAxis,
 } from 'recharts';
 import { useCurrencyPreferences } from './CurrencyPreferencesProvider';
-import { useTheme } from './ThemeProvider';
 
 interface TransactionChartProps {
   data: {
@@ -21,6 +20,7 @@ interface TransactionChartProps {
     income: number[];
     expense: number[];
   };
+  minHeight?: number;
 }
 
 interface CategoryChartProps {
@@ -29,6 +29,11 @@ interface CategoryChartProps {
     values: number[];
     colors: string[];
   };
+  minHeight?: number;
+}
+
+function hasAnyPositiveValue(values: number[]) {
+  return values.some((value) => Number.isFinite(value) && value > 0);
 }
 
 function useCompactCharts() {
@@ -46,22 +51,31 @@ function useCompactCharts() {
 }
 
 function useHasClientLayout() {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setMounted(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return mounted;
 }
 
 function useChartContainerReady<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element) {
       return;
     }
+
+    let raf = 0;
+    let timeoutId: number | null = null;
 
     const sync = () => {
       const rect = element.getBoundingClientRect();
@@ -72,11 +86,25 @@ function useChartContainerReady<T extends HTMLElement>() {
     };
 
     sync();
+    raf = window.requestAnimationFrame(sync);
+    timeoutId = window.setTimeout(sync, 80);
 
-    const observer = new ResizeObserver(() => sync());
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(sync);
+    });
     observer.observe(element);
 
-    return () => observer.disconnect();
+    window.addEventListener('load', sync);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('load', sync);
+      window.cancelAnimationFrame(raf);
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   return {
@@ -147,7 +175,10 @@ function DonutLegend({
   );
 }
 
-export function TransactionBarChart({ data }: TransactionChartProps) {
+export function TransactionBarChart({
+  data,
+  minHeight = 250,
+}: TransactionChartProps) {
   const mounted = useHasClientLayout();
   const { ref, ready, width, height } = useChartContainerReady<HTMLDivElement>();
 
@@ -160,14 +191,15 @@ export function TransactionBarChart({ data }: TransactionChartProps) {
       })),
     [data]
   );
+  const hasChartData = hasAnyPositiveValue(data.income) || hasAnyPositiveValue(data.expense);
 
   if (!mounted) {
-    return <div className="h-[250px] w-full rounded-2xl bg-surface-2" />;
+    return <div className="w-full rounded-2xl bg-surface-2" style={{ minHeight }} />;
   }
 
   return (
-    <div ref={ref} className="h-full min-h-[250px] w-full">
-      {ready ? (
+    <div ref={ref} className="h-full w-full" style={{ minHeight }}>
+      {ready && hasChartData ? (
         <BarChart width={width} height={height} data={chartData} barGap={8} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--border-subtle)" strokeDasharray="3 7" />
           <XAxis
@@ -187,15 +219,19 @@ export function TransactionBarChart({ data }: TransactionChartProps) {
           <Bar dataKey="Expense" fill="var(--danger)" radius={[10, 10, 8, 8]} maxBarSize={18} />
         </BarChart>
       ) : (
-        <div className="h-full w-full rounded-2xl bg-surface-2" />
+        <div className="grid h-full w-full place-items-center rounded-2xl bg-surface-2 px-3 text-center text-[var(--font-size-meta)] text-text-3">
+          {hasChartData ? 'Preparing chart...' : 'No chart data yet'}
+        </div>
       )}
     </div>
   );
 }
 
-export function CategoryDoughnutChart({ data }: CategoryChartProps) {
+export function CategoryDoughnutChart({
+  data,
+  minHeight = 250,
+}: CategoryChartProps) {
   const compact = useCompactCharts();
-  const { resolvedTheme } = useTheme();
   const mounted = useHasClientLayout();
   const { ref, ready, width, height } = useChartContainerReady<HTMLDivElement>();
 
@@ -208,17 +244,17 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
       })),
     [data]
   );
-
-  const ringStroke = resolvedTheme === 'dark' ? 'rgba(14, 20, 16, 0.85)' : 'rgba(255, 255, 255, 0.92)';
+  const hasChartData = hasAnyPositiveValue(data.values);
 
   if (!mounted) {
-    return <div className="h-[250px] w-full rounded-2xl bg-surface-2" />;
+    return <div className="w-full rounded-2xl bg-surface-2" style={{ minHeight }} />;
   }
 
   return (
     <div className={compact ? 'grid h-full gap-4' : 'grid h-full grid-cols-[minmax(0,1fr)_11rem] gap-4'}>
-      <div ref={ref} className="h-[250px] min-h-[15rem]">
+      <div ref={ref} className="h-full" style={{ minHeight }}>
         {ready ? (
+          hasChartData ? (
           <PieChart width={width} height={height}>
             <Tooltip content={<ChartTooltip />} />
             <Pie
@@ -230,7 +266,7 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
               innerRadius={compact ? 54 : 64}
               outerRadius={compact ? 82 : 92}
               paddingAngle={3}
-              stroke={ringStroke}
+              stroke="hsl(var(--chart-ring-channel) / 0.9)"
               strokeWidth={3}
             >
               {chartData.map((entry) => (
@@ -238,8 +274,15 @@ export function CategoryDoughnutChart({ data }: CategoryChartProps) {
               ))}
             </Pie>
           </PieChart>
+          ) : (
+            <div className="grid h-full place-items-center rounded-2xl bg-surface-2 px-3 text-center text-[var(--font-size-meta)] text-text-3">
+              No chart data yet
+            </div>
+          )
         ) : (
-          <div className="h-full w-full rounded-2xl bg-surface-2" />
+          <div className="grid h-full w-full place-items-center rounded-2xl bg-surface-2 px-3 text-center text-[var(--font-size-meta)] text-text-3">
+            Preparing chart...
+          </div>
         )}
       </div>
       <DonutLegend entries={chartData} compact={compact} />

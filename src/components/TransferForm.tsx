@@ -190,11 +190,11 @@ export default function TransferForm({
 
   return (
     <form
-      className="grid gap-3 rounded-[inherit] bg-surface-1 p-3 md:gap-4 md:p-5"
+      className="grid gap-3 rounded-[inherit] bg-surface-1 px-3 pb-3 pt-2.5 md:gap-3.5 md:px-4 md:pb-4 md:pt-3.5"
       onSubmit={handleSubmit((values) => transferMutation.mutate(values))}
     >
       <div className="grid gap-0.5">
-        <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+        <span className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2">
           {transfer ? t("transfers.form.edit") : t("transfers.form.new")}
         </span>
         <h3 className="text-[1.02rem] font-semibold tracking-[-0.03em] md:text-lg">

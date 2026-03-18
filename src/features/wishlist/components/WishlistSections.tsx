@@ -70,7 +70,7 @@ function FormField({
   return (
     <div className="grid gap-2">
       <label
-        className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3"
+        className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2"
         htmlFor={htmlFor}
       >
         {label}
@@ -94,7 +94,7 @@ function SegmentedChoices({
 }) {
   return (
     <div className="grid gap-2">
-      <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+      <span className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2">
         {label}
       </span>
       <div className="grid grid-cols-3 gap-2">
@@ -136,7 +136,7 @@ function ChoicePills({
 }) {
   return (
     <div className="grid gap-2">
-      <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+      <span className="text-[var(--font-size-helper)] font-medium tracking-[0.01em] text-text-2">
         {label}
       </span>
       <div className="grid gap-2 sm:grid-cols-3">
@@ -164,7 +164,7 @@ function ChoicePills({
 function MetaStat({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="grid gap-0.5 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-2/55 p-3">
-      <span className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+      <span className="text-[var(--font-size-meta)] font-medium text-text-2">
         {label}
       </span>
       <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
@@ -291,7 +291,9 @@ export function WishlistDueBanner({
             </strong>
           </div>
         </div>
-        <Badge variant="accent">{dueCount}</Badge>
+        <span className="text-[0.92rem] font-semibold tracking-[-0.03em] text-accent-strong">
+          {dueCount}
+        </span>
       </div>
     </SurfaceCard>
   );
@@ -327,6 +329,7 @@ interface WishlistBoardSectionProps {
   ) => "accent" | "success" | "warning" | "danger";
   isReviewDue: (item: WishlistItem) => boolean;
   getCoolingProgress: (item: WishlistItem) => number;
+  historySectionTitle?: string;
 }
 
 export function WishlistBoardSection({
@@ -353,6 +356,7 @@ export function WishlistBoardSection({
   getProgressTone,
   isReviewDue,
   getCoolingProgress,
+  historySectionTitle,
 }: WishlistBoardSectionProps) {
   const tabsLabel = language === "id" ? "Filter wishlist" : "Wishlist tabs";
 
@@ -363,7 +367,7 @@ export function WishlistBoardSection({
           <div
             role="tablist"
             aria-label={tabsLabel}
-            className="flex w-full items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="grid w-full grid-cols-2 gap-1 overflow-visible pb-0 sm:flex sm:items-center sm:gap-1 sm:overflow-x-auto sm:pb-1 sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden"
           >
             {tabs.map((tab) => (
               <button
@@ -375,7 +379,7 @@ export function WishlistBoardSection({
                 aria-controls={`wishlist-panel-${tab.key}`}
                 tabIndex={activeTab === tab.key ? 0 : -1}
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color,border-color] sm:min-w-[unset]",
+                  "inline-flex min-w-0 w-full items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color,border-color] sm:shrink-0 sm:min-w-[unset] sm:w-auto",
                   activeTab === tab.key
                     ? "bg-surface-2 text-text-1"
                     : "hover:bg-surface-2/75 hover:text-text-1",
@@ -383,7 +387,7 @@ export function WishlistBoardSection({
                 data-state={activeTab === tab.key ? "active" : "inactive"}
                 onClick={() => onTabChange(tab.key)}
               >
-                <span>{tab.label}</span>
+                <span className="min-w-0 truncate">{tab.label}</span>
                 <span className="inline-flex h-[1.05rem] min-w-[1.2rem] items-center justify-center rounded-full bg-surface-1/90 px-1.5 text-[0.64rem] font-semibold text-text-3">
                   {tab.count}
                 </span>
@@ -414,7 +418,9 @@ export function WishlistBoardSection({
             />
           ) : (
             <div className="grid gap-3">
-              {activeSections.map((section) =>
+              {activeSections
+                .filter((section) => section.title !== historySectionTitle)
+                .map((section) =>
                 section.items.length > 0 ? (
                   <section key={section.title} className="grid gap-2.5">
                     <details
@@ -454,10 +460,10 @@ export function WishlistBoardSection({
                         </div>
                       </div>
                     </details>
-                    <div className="hidden gap-3 sm:grid">
-                      <SectionHeading title={section.title} />
-                      <div className="grid gap-3 2xl:grid-cols-2">
-                        {section.items.map((item) => (
+                      <div className="hidden gap-3 sm:grid">
+                        <SectionHeading title={section.title} />
+                        <div className="grid gap-2.5">
+                          {section.items.map((item) => (
                           <WishlistItemCard
                             key={item.id}
                             item={item}
@@ -1027,6 +1033,55 @@ export function WishlistConvertDialog({
   );
 }
 
+export function WishlistHistorySection({
+  items,
+  language,
+  t,
+  formatDate,
+}: {
+  items: WishlistItem[];
+  language: "en" | "id";
+  t: (key: string) => string;
+  formatDate: (value: string, language: "en" | "id") => string;
+}) {
+  const { formatCurrency } = useCurrencyPreferences();
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <SurfaceCard padding="compact">
+      <div className="grid gap-2.5">
+        <SectionHeading title={t("wishlist.sections.history")} />
+        <div className="grid gap-0 divide-y divide-border-subtle/80">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="grid gap-1.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3"
+            >
+              <div className="grid gap-0.5">
+                <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
+                  {item.item_name}
+                </strong>
+                <span className="text-[var(--font-size-meta)] text-text-2">
+                  {formatDate(item.review_date, language)}
+                </span>
+              </div>
+              <span className="text-[var(--font-size-meta)] text-text-2">
+                {t(`wishlist.status.${item.status}`)}
+              </span>
+              <span className="text-right text-[0.86rem] font-semibold tracking-[-0.02em] text-text-1">
+                {item.target_price ? formatCurrency(item.target_price) : "-"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SurfaceCard>
+  );
+}
+
 function WishlistItemCard({
   item,
   language,
@@ -1103,13 +1158,13 @@ function WishlistItemCard({
   return (
     <Card
       className={cn(
-        "grid gap-3.5 p-3.5 md:p-5",
+        "grid gap-2.5 rounded-[calc(var(--radius-card)-0.08rem)] border-border-subtle/75 p-3.5 md:p-4",
         getCardTone(item),
         item.status === "purchased" && "opacity-90",
       )}
     >
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-        <div className="grid gap-2.5">
+      <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
+        <div className="grid gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={getStatusVariant(item.status)}>
               {t(`wishlist.status.${item.status}`)}
@@ -1119,22 +1174,45 @@ function WishlistItemCard({
                 {t(`wishlist.priority.${item.priority}`)}
               </Badge>
             ) : null}
-            {isDue ? (
-              <Badge variant="warning">{t("wishlist.actions.reviewNow")}</Badge>
-            ) : null}
           </div>
 
           <div className="grid gap-0.5">
-            <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+            <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
               {item.item_name}
             </strong>
-            <span className="text-sm text-text-3">
-              {item.target_price ? formatCurrency(item.target_price) : "-"}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 text-[var(--font-size-meta)] text-text-2">
+              <span>{item.target_price ? formatCurrency(item.target_price) : "-"}</span>
+              <span className="text-text-3">-</span>
+              <span>{statusSummary.label}</span>
+              {item.wallets?.name ? (
+                <>
+                  <span className="text-text-3">-</span>
+                  <span>{item.wallets.name}</span>
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 xl:justify-end">
+          {isDue ? (
+            <Button type="button" variant="secondary" size="sm" onClick={onReview}>
+              <Sparkles size={14} />
+              {t("wishlist.actions.reviewNow")}
+            </Button>
+          ) : null}
+          {item.status === "approved_to_buy" ? (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onConvert}
+              disabled={convertPending}
+            >
+              <ShoppingBasket size={14} />
+              {t("wishlist.actions.convert")}
+            </Button>
+          ) : null}
           {item.url ? (
             <Button asChild variant="ghost" size="sm">
               <a href={item.url} target="_blank" rel="noreferrer">
@@ -1157,12 +1235,10 @@ function WishlistItemCard({
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-            {t("wishlist.coolingLabel")}
-          </span>
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-text-2">
+      <div className="grid gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[var(--font-size-meta)] text-text-2">
+          <span>{t("wishlist.coolingLabel")}</span>
+          <span className="inline-flex items-center gap-2 font-medium text-text-2">
             {statusSummary.icon}
             <span>{statusSummary.label}</span>
           </span>
@@ -1175,27 +1251,36 @@ function WishlistItemCard({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        <MetaStat
-          label={t("wishlist.meta.reviewDate")}
-          value={formatDate(item.review_date, language)}
-        />
-        <MetaStat
-          label={t("wishlist.meta.coolingDays")}
-          value={`${item.cooling_days} ${t("wishlist.form.days").toLowerCase()}`}
-        />
-        <MetaStat
-          label={t("wishlist.meta.wallet")}
-          value={item.wallets?.name ?? t("wishlist.form.walletOptional")}
-        />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[var(--font-size-meta)] text-text-2">
+        <span>
+          {t("wishlist.meta.reviewDate")}: {formatDate(item.review_date, language)}
+        </span>
+        <span className="text-text-3">-</span>
+        <span>
+          {t("wishlist.meta.coolingDays")}: {item.cooling_days} {t("wishlist.form.days").toLowerCase()}
+        </span>
+        {item.priority !== "medium" ? (
+          <>
+            <span className="text-text-3">-</span>
+            <span>{t(`wishlist.priority.${item.priority}`)}</span>
+          </>
+        ) : null}
       </div>
 
       {item.reason || item.note ? (
-        <>
-          <div className="hidden gap-4 md:grid md:grid-cols-2">
+        <details className="group rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1/70">
+          <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
+            <span className="text-[var(--font-size-meta)] font-medium text-text-2">
+              {language === "id" ? "Notes" : "Notes"}
+            </span>
+            <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">
+              v
+            </span>
+          </summary>
+          <div className="grid gap-2 border-t border-border-subtle px-3 py-3">
             {item.reason ? (
               <div className="grid gap-1">
-                <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                <span className="text-[var(--font-size-meta)] font-medium text-text-2">
                   {t("wishlist.form.reason")}
                 </span>
                 <p className="m-0 text-sm leading-6 text-text-2">
@@ -1205,68 +1290,15 @@ function WishlistItemCard({
             ) : null}
             {item.note ? (
               <div className="grid gap-1">
-                <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
+                <span className="text-[var(--font-size-meta)] font-medium text-text-2">
                   {t("wishlist.form.note")}
                 </span>
                 <p className="m-0 text-sm leading-6 text-text-2">{item.note}</p>
               </div>
             ) : null}
           </div>
-          <details className="group rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1/70 md:hidden">
-            <summary className="flex list-none items-center justify-between gap-3 px-3 py-2.5">
-              <span className="text-sm font-medium text-text-2">
-                {language === "id" ? "Detail" : "Details"}
-              </span>
-              <span className="text-xs font-semibold text-text-3 transition-transform duration-300 group-open:rotate-180">
-                v
-              </span>
-            </summary>
-            <div className="grid gap-3 border-t border-border-subtle px-3 py-3">
-              {item.reason ? (
-                <div className="grid gap-1">
-                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                    {t("wishlist.form.reason")}
-                  </span>
-                  <p className="m-0 text-sm leading-5 text-text-2">
-                    {item.reason}
-                  </p>
-                </div>
-              ) : null}
-              {item.note ? (
-                <div className="grid gap-1">
-                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-text-3">
-                    {t("wishlist.form.note")}
-                  </span>
-                  <p className="m-0 text-sm leading-5 text-text-2">
-                    {item.note}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </details>
-        </>
+        </details>
       ) : null}
-
-      <div className="flex flex-wrap gap-2">
-        {isDue ? (
-          <Button type="button" variant="secondary" size="sm" onClick={onReview}>
-            <Sparkles size={14} />
-            {t("wishlist.actions.reviewNow")}
-          </Button>
-        ) : null}
-        {item.status === "approved_to_buy" ? (
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={onConvert}
-            disabled={convertPending}
-          >
-            <ShoppingBasket size={14} />
-            {t("wishlist.actions.convert")}
-          </Button>
-        ) : null}
-      </div>
     </Card>
   );
 }

@@ -7,6 +7,7 @@ export interface EmptyStateProps {
   icon?: ReactNode;
   action?: ReactNode;
   compact?: boolean;
+  variant?: 'inline' | 'section' | 'featured';
   className?: string;
 }
 
@@ -16,15 +17,35 @@ export function EmptyState({
   icon,
   action,
   compact = false,
+  variant = 'section',
   className,
 }: EmptyStateProps) {
+  const variantClassName =
+    variant === 'inline'
+      ? 'justify-items-start gap-1.5 text-left'
+      : variant === 'featured'
+        ? 'gap-3 text-left sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:justify-items-stretch'
+        : 'justify-items-center text-center';
+
+  const iconClassName =
+    variant === 'inline'
+      ? compact
+        ? 'h-7 w-7'
+        : 'h-8 w-8'
+      : compact
+        ? 'h-8 w-8'
+        : 'h-10 w-10';
+
   return (
     <div
       className={cn(
-        'grid justify-items-center gap-2 text-center text-text-2',
+        'grid text-text-2',
+        variantClassName,
         compact
           ? 'px-2 py-2.5'
-          : 'min-h-[5.25rem] px-2.5 py-3 sm:min-h-[var(--empty-state-height)] sm:px-3 sm:py-3.5',
+          : variant === 'inline'
+            ? 'px-2.5 py-2.5 sm:px-3 sm:py-3'
+            : 'min-h-[5.25rem] px-2.5 py-3 sm:min-h-[var(--empty-state-height)] sm:px-3 sm:py-3.5',
         className
       )}
     >
@@ -32,17 +53,21 @@ export function EmptyState({
         <div
           className={cn(
             'grid place-items-center rounded-[calc(var(--radius-control)+0.15rem)] bg-surface-2 text-text-3',
-            compact ? 'h-8 w-8' : 'h-9 w-9'
+            iconClassName
           )}
         >
           {icon}
         </div>
       ) : null}
-      <div className="grid max-w-[19rem] gap-0.5">
+      <div className={cn('grid gap-0.5', variant === 'inline' ? 'max-w-[26rem]' : 'max-w-[19rem]')}>
         <p className="m-0 text-[0.98rem] font-semibold tracking-[-0.035em] text-text-1">{title}</p>
-        {description ? <p className="m-0 text-[0.84rem] leading-[1.55] text-text-2">{description}</p> : null}
+        {description ? <p className="m-0 text-[var(--font-size-body)] leading-[1.55] text-text-2">{description}</p> : null}
       </div>
-      {action ? <div className="w-full pt-1 sm:w-auto">{action}</div> : null}
+      {action ? (
+        <div className={cn(variant === 'inline' ? 'pt-0.5' : 'w-full pt-1 sm:w-auto')}>
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }

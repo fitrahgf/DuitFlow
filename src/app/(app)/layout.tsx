@@ -109,6 +109,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             queryKey: queryKeys.notifications.all,
           }),
           queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.unreadCount,
+          }),
+          queryClient.invalidateQueries({
             queryKey: queryKeys.dashboard.overview,
           }),
         ]);

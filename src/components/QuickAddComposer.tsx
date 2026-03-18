@@ -101,7 +101,7 @@ export default function QuickAddComposer({
   });
 
   const categoriesQuery = useQuery({
-    queryKey: queryKeys.categories.list('all'),
+    queryKey: queryKeys.categories.options('all'),
     queryFn: () => fetchCategories(),
   });
 
@@ -392,7 +392,7 @@ export default function QuickAddComposer({
                     'font-semibold text-text-3',
                     isDashboard
                       ? 'text-[0.72rem] tracking-[-0.01em]'
-                      : 'text-[0.72rem] uppercase tracking-[0.16em]',
+                      : 'text-[var(--font-size-helper)] tracking-[0.01em] text-text-2',
                   )}
                 >
                   {t('dashboard.quickAdd.suggestedCategories')}
@@ -434,7 +434,7 @@ export default function QuickAddComposer({
                     'font-semibold text-text-3',
                     isDashboard
                       ? 'text-[0.72rem] tracking-[-0.01em]'
-                      : 'text-[0.72rem] uppercase tracking-[0.16em]',
+                      : 'text-[var(--font-size-helper)] tracking-[0.01em] text-text-2',
                   )}
                 >
                   {t('dashboard.quickAdd.suggestedWallets')}

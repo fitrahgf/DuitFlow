@@ -63,14 +63,14 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle/72 bg-canvas/92 px-2.5 py-2.5 backdrop-blur-md lg:flex dark:bg-canvas/94">
-        <div className="flex items-center gap-2.5 px-1.5 py-1.5">
-          <span className="grid h-8 w-8 place-items-center rounded-[0.88rem] bg-accent text-[0.64rem] font-extrabold tracking-[-0.04em] text-white shadow-xs">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border-subtle/65 bg-[var(--gradient-header-desktop)] px-2.5 py-2.5 backdrop-blur-xl lg:flex">
+        <div className="flex items-center gap-2.5 rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/70 bg-surface-1/72 px-2.5 py-2 shadow-xs backdrop-blur-sm">
+          <span className="grid h-8 w-8 place-items-center rounded-[0.94rem] bg-accent text-[0.64rem] font-extrabold tracking-[-0.05em] text-white shadow-xs">
             DF
           </span>
           <Link
             href="/dashboard"
-            className="min-w-0 flex-1 truncate text-[0.84rem] font-semibold tracking-[-0.04em] text-text-1"
+            className="min-w-0 flex-1 truncate text-[0.86rem] font-semibold tracking-[-0.045em] text-text-1"
           >
             DuitFlow
           </Link>
@@ -79,7 +79,10 @@ export default function Sidebar({
         <div className="mt-2 flex min-h-0 flex-1 flex-col">
           <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-0.5">
             {primarySections.map((section) => (
-              <div key={section.key} className="grid gap-0.75">
+              <div
+                key={section.key}
+                className="grid gap-0.75 rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/58 bg-surface-1/58 p-1.5 backdrop-blur-sm"
+              >
                 {section.key === "planning" ? (
                   <span className={sectionLabelClass}>{section.label}</span>
                 ) : null}
@@ -108,7 +111,7 @@ export default function Sidebar({
 
           <div className="mt-3 grid gap-2.5 border-t border-border-subtle/55 pt-3">
             {utilitySection ? (
-              <nav className="grid gap-0.75">
+              <nav className="grid gap-0.75 rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/58 bg-surface-1/58 p-1.5 backdrop-blur-sm">
                 {utilitySection.items.map((item) => (
                   <Link
                     key={item.href}
@@ -143,10 +146,10 @@ export default function Sidebar({
         </div>
       </aside>
 
-      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-2 border-r border-border-subtle/72 bg-canvas/92 px-2 py-2.5 backdrop-blur-md md:flex lg:hidden dark:bg-canvas/94">
+      <aside className="sticky top-0 hidden h-screen flex-col items-center gap-2 border-r border-border-subtle/65 bg-[var(--gradient-header-desktop)] px-2 py-2.5 backdrop-blur-xl md:flex lg:hidden">
         <Link
           href="/dashboard"
-          className="grid h-[2.35rem] w-[2.35rem] place-items-center rounded-[0.88rem] border border-border-subtle/80 bg-surface-1 text-[0.6rem] font-extrabold tracking-[-0.04em] shadow-xs"
+          className="grid h-[2.45rem] w-[2.45rem] place-items-center rounded-[0.92rem] border border-border-subtle/80 bg-surface-1/92 text-[0.6rem] font-extrabold tracking-[-0.05em] shadow-xs"
           aria-label="DuitFlow"
         >
           DF

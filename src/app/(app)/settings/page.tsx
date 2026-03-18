@@ -1,20 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { Bot, Link2, Moon, Palette, Save, Sun, Unlink } from "lucide-react";
+import { Link2, Moon, Palette, Save, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { FieldError } from "@/components/shared/FieldError";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
   PageHeader,
+  PageHeaderActions,
   PageHeading,
   PageShell,
   SurfaceCard,
 } from "@/components/shared/PagePrimitives";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -34,11 +35,6 @@ import {
   fetchCurrentProfile,
   type ProfileQueryResult,
 } from "@/lib/queries/profile";
-import {
-  createTelegramConnectLink,
-  disconnectTelegramConnection,
-  fetchTelegramConnection,
-} from "@/lib/queries/telegram";
 import { createClient } from "@/lib/supabase/client";
 import {
   profileSettingsSchema,
@@ -50,20 +46,14 @@ import type { Language } from "@/lib/i18n/dictionaries";
 const timezones = ["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura", "UTC"];
 
 type SettingsTab = "profile" | "regional" | "appearance" | "notifications";
-type ExtendedSettingsTab = SettingsTab | "integrations";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<ExtendedSettingsTab>("profile");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.me,
     queryFn: fetchCurrentProfile,
-    retry: false,
-  });
-  const telegramQuery = useQuery({
-    queryKey: queryKeys.telegram.connection,
-    queryFn: fetchTelegramConnection,
     retry: false,
   });
 
@@ -194,31 +184,6 @@ export default function SettingsPage() {
       toast.error(getErrorMessage(error, t("settings.saveError")));
     },
   });
-  const telegramConnectMutation = useMutation({
-    mutationFn: createTelegramConnectLink,
-    onSuccess: (result) => {
-      window.open(result.url, "_blank", "noopener,noreferrer");
-      toast.success(t("settings.telegram.connectStarted"));
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, t("settings.telegram.connectError")));
-    },
-  });
-  const telegramDisconnectMutation = useMutation({
-    mutationFn: async () =>
-      disconnectTelegramConnection(profileQuery.data?.profile.id ?? ""),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.telegram.connection,
-      });
-      toast.success(t("settings.telegram.disconnectSuccess"));
-    },
-    onError: (error) => {
-      toast.error(
-        getErrorMessage(error, t("settings.telegram.disconnectError")),
-      );
-    },
-  });
 
   const themeOptions: { value: Theme; label: string; icon: React.ReactNode }[] =
     [
@@ -245,7 +210,7 @@ export default function SettingsPage() {
   ];
 
   const tabs: {
-    value: ExtendedSettingsTab;
+    value: SettingsTab;
     label: string;
   }[] = [
     {
@@ -263,10 +228,6 @@ export default function SettingsPage() {
     {
       value: "notifications",
       label: t("settings.notifications.title"),
-    },
-    {
-      value: "integrations",
-      label: t("settings.telegram.title"),
     },
   ];
   const currencyOptions = supportedCurrencyCodes.map((currencyCode) => ({
@@ -329,25 +290,30 @@ export default function SettingsPage() {
 
   return (
     <PageShell className="mx-auto w-full max-w-[68rem] animate-fade-in">
-      <PageHeader>
-        <PageHeading
-          title={t("settings.title")}
-          subtitle={t("settings.subtitle")}
-        />
+      <PageHeader variant="compact">
+        <PageHeading title={t("settings.title")} compact />
+        <PageHeaderActions>
+          <Button asChild variant="secondary" size="sm" className="w-full sm:w-auto">
+            <Link href="/settings/integrations">
+              <Link2 size={16} />
+              {t("settings.telegram.title")}
+            </Link>
+          </Button>
+        </PageHeaderActions>
       </PageHeader>
 
       <form
         id="settings-form"
-        className="grid gap-3"
+        className="grid gap-2.5"
         onSubmit={handleSubmit(async (values) => {
           await profileMutation.mutateAsync(values);
         })}
         >
-        <SurfaceCard padding="compact" className="mx-auto w-full max-w-[66rem]">
+        <SurfaceCard role="embedded" padding="compact" className="mx-auto w-full max-w-[66rem]">
           <Tabs
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value as ExtendedSettingsTab)}
-            className="grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)] xl:gap-5"
+            onValueChange={(value) => setActiveTab(value as SettingsTab)}
+            className="grid gap-3 xl:grid-cols-[15rem_minmax(0,1fr)] xl:gap-4"
           >
             <div className="grid gap-3 border-b border-border-subtle/80 pb-3 xl:border-b-0 xl:border-r xl:border-border-subtle/80 xl:pb-0 xl:pr-4">
               <TabsList className="!flex !w-auto gap-1 rounded-[calc(var(--radius-control)+0.04rem)] border border-border-subtle/75 bg-surface-2/44 p-0.5 sm:!grid sm:!w-full sm:grid-cols-3 xl:!grid xl:!w-full xl:grid-cols-1 xl:gap-1 xl:!border-0 xl:!bg-transparent xl:!p-0">
@@ -372,9 +338,12 @@ export default function SettingsPage() {
                     {activeTabLabel}
                   </strong>
                 </div>
-                <Badge variant={isDirty ? "accent" : "default"}>
+                <span className={cn(
+                  "text-[var(--font-size-meta)] font-medium",
+                  isDirty ? "text-accent-strong" : "text-text-2",
+                )}>
                   {isDirty ? unsavedChangesLabel : savedStateLabel}
-                </Badge>
+                </span>
               </div>
 
           <TabsContent value="profile" className="mt-0">
@@ -527,7 +496,9 @@ export default function SettingsPage() {
                           {currencyPreview}
                         </strong>
                       </div>
-                      <Badge>{selectedCurrency ?? "IDR"}</Badge>
+                      <span className="rounded-full bg-surface-2/72 px-2.5 py-1 text-[var(--font-size-chip)] font-medium text-text-2">
+                        {selectedCurrency ?? "IDR"}
+                      </span>
                     </div>
                   </div>
                 </SettingsSectionCard>
@@ -694,109 +665,12 @@ export default function SettingsPage() {
             </SettingsTabPanel>
           </TabsContent>
 
-          <TabsContent value="integrations" className="mt-0">
-            <SettingsTabPanel className="xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.9fr)] xl:items-start">
-              <SettingsSectionCard title={t("settings.telegram.title")}>
-                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-2/65 text-text-1">
-                      <Bot size={18} />
-                    </span>
-                    <div className="grid gap-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
-                          @
-                          {telegramQuery.data?.botUsername ||
-                            process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
-                            "DuitFlowMoneyTrack_Bot"}
-                        </strong>
-                        <Badge
-                          variant={
-                            telegramQuery.data?.connected ? "accent" : "default"
-                          }
-                        >
-                          {telegramQuery.data?.connected
-                            ? t("settings.telegram.connected")
-                            : t("settings.telegram.disconnected")}
-                        </Badge>
-                      </div>
-                      {telegramQuery.data?.connected &&
-                      telegramQuery.data.username ? (
-                        <span className="text-[0.82rem] leading-5 text-text-2">
-                          @{telegramQuery.data.username}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      disabled={
-                        telegramConnectMutation.isPending ||
-                        !telegramQuery.data?.botUsername
-                      }
-                      onClick={() => telegramConnectMutation.mutate()}
-                    >
-                      <Link2 size={16} />
-                      {telegramQuery.data?.connected
-                        ? t("settings.telegram.reconnect")
-                        : t("settings.telegram.connect")}
-                    </Button>
-                    {telegramQuery.data?.connected ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={telegramDisconnectMutation.isPending}
-                        onClick={() => telegramDisconnectMutation.mutate()}
-                      >
-                        <Unlink size={16} />
-                        {t("settings.telegram.disconnect")}
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </SettingsSectionCard>
-              <SettingsContextPanel
-                title={language === "id" ? "Status" : "Status"}
-              >
-                <SettingsInfoRow
-                  label={language === "id" ? "Koneksi" : "Connection"}
-                  value={
-                    telegramQuery.data?.connected
-                      ? t("settings.telegram.connected")
-                      : t("settings.telegram.disconnected")
-                  }
-                />
-                <SettingsInfoRow
-                  label="Bot"
-                  value={
-                    telegramQuery.data?.botUsername
-                      ? `@${telegramQuery.data.botUsername}`
-                      : "@DuitFlowMoneyTrack_Bot"
-                  }
-                />
-                <SettingsInfoRow
-                  label={language === "id" ? "Akun tertaut" : "Linked account"}
-                  value={
-                    telegramQuery.data?.connected &&
-                    telegramQuery.data.username
-                      ? `@${telegramQuery.data.username}`
-                      : notSetLabel
-                  }
-                />
-              </SettingsContextPanel>
-            </SettingsTabPanel>
-          </TabsContent>
             </div>
           </Tabs>
         </SurfaceCard>
 
         <div className="sticky bottom-[calc(4.75rem+var(--safe-bottom))] z-10 mx-auto w-full max-w-[66rem] pt-1 md:bottom-0">
-          <div className="rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/80 bg-surface-1/92 px-3 py-2 shadow-xs">
+          <div className="rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/75 bg-surface-1/84 px-3 py-2 shadow-none">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <span
@@ -805,7 +679,7 @@ export default function SettingsPage() {
                     isDirty ? "bg-accent" : "bg-border-strong/60",
                   )}
                 />
-                <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
                   {isDirty ? unsavedChangesLabel : savedStateLabel}
                 </span>
               </div>
@@ -849,19 +723,19 @@ function SettingsField({
   return (
     <div
       className={cn(
-        "grid gap-1.5 border-b border-border-subtle/80 py-2.5 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] sm:items-start",
+        "grid gap-1.5 py-2 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] sm:items-start",
         className,
       )}
     >
       <div className="grid gap-0.5">
         <label
-          className="text-[0.8rem] font-medium tracking-[-0.01em] text-text-2"
+          className="text-[var(--font-size-helper)] font-medium tracking-[-0.01em] text-text-2"
           htmlFor={htmlFor}
         >
           {label}
         </label>
         {description ? (
-          <p className="m-0 text-[0.78rem] leading-[1.45] text-text-2">
+          <p className="m-0 text-[var(--font-size-meta)] leading-[1.45] text-text-2">
             {description}
           </p>
         ) : null}
@@ -886,13 +760,13 @@ function SettingsSectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("grid gap-2.5", className)}>
+    <div className={cn("grid gap-2", className)}>
       <div className="grid gap-0.5">
         <strong className="text-[0.95rem] font-semibold tracking-[-0.03em] text-text-1">
           {title}
         </strong>
         {description ? (
-          <p className="m-0 text-[0.8rem] leading-[1.5] text-text-2">
+          <p className="m-0 text-[var(--font-size-meta)] leading-[1.5] text-text-2">
             {description}
           </p>
         ) : null}
@@ -912,13 +786,13 @@ function SettingsContextPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2.5 rounded-[calc(var(--radius-card)-0.12rem)] bg-surface-2/32 p-3 sm:p-3.5">
+    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/70 bg-surface-2/26 p-2.5 sm:p-3">
       <div className="grid gap-0.5">
         <strong className="text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
           {title}
         </strong>
         {description ? (
-          <p className="m-0 text-[0.8rem] leading-[1.55] text-text-2">
+          <p className="m-0 text-[var(--font-size-meta)] leading-[1.55] text-text-2">
             {description}
           </p>
         ) : null}
@@ -939,7 +813,7 @@ function SettingsInfoRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
-      <span className="text-[0.76rem] font-medium tracking-[-0.01em] text-text-2">
+      <span className="text-[var(--font-size-meta)] font-medium tracking-[-0.01em] text-text-2">
         {label}
       </span>
       <span className="text-right text-sm font-semibold tracking-[-0.02em] text-text-1">
@@ -969,7 +843,7 @@ function ToggleField({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 border-b border-border-subtle/80 py-2.5 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+    <div className="grid gap-2 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="grid gap-0.5">
         <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
           {title}
@@ -984,3 +858,6 @@ function ToggleField({
     </div>
   );
 }
+
+
+

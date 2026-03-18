@@ -95,6 +95,7 @@ function TransferPageContent() {
     transfers.find((transfer) => transfer.id === activeEditId) ?? transferDetailQuery.data ?? null;
   const totalMoved = transfers.reduce((total, transfer) => total + transfer.amount, 0);
   const totalFees = transfers.reduce((total, transfer) => total + transfer.fee_amount, 0);
+  const averageTransfer = transfers.length > 0 ? totalMoved / transfers.length : 0;
 
   const closeForm = () => {
     setLocalFormOpen(false);
@@ -124,8 +125,8 @@ function TransferPageContent() {
 
   return (
     <PageShell className="animate-fade-in">
-      <PageHeader>
-        <PageHeading title={t('transfers.title')} />
+      <PageHeader variant="compact">
+        <PageHeading title={t('transfers.title')} compact />
         <PageHeaderActions>
           <Button
             type="button"
@@ -150,6 +151,7 @@ function TransferPageContent() {
         title={activeEditId ? t('transfers.form.edit') : t('transfers.form.new')}
         size="lg"
         padding="flush"
+        density="compact"
         hideClose
         headerHidden
       >
@@ -167,25 +169,36 @@ function TransferPageContent() {
           )}
       </ModalShell>
 
-      <SurfaceCard padding="compact">
-        <div className="grid gap-0 divide-y divide-border-subtle/80 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <TransferSummaryItem
-            label={t('transfers.summary.totalMoved')}
-            value={formatCurrency(totalMoved)}
-          />
-          <TransferSummaryItem
-            label={t('transfers.summary.totalFees')}
-            value={formatCurrency(totalFees)}
-            tone={totalFees > 0 ? 'warning' : 'default'}
-          />
-          <TransferSummaryItem
-            label={t('transfers.summary.count')}
-            value={String(transfers.length)}
-          />
+      <SurfaceCard role="featured" padding="compact">
+        <div className="grid gap-2.5">
+          <div className="grid gap-0.5">
+            <span className="text-[var(--font-size-meta)] font-medium tracking-[0.01em] text-text-2">
+              {language === 'id' ? 'Transfer overview' : 'Transfer overview'}
+            </span>
+            <strong className="text-[var(--number-section-size)] font-semibold tracking-[-0.05em] text-text-1">
+              {formatCurrency(totalMoved)}
+            </strong>
+          </div>
+
+          <div className="grid gap-0 divide-y divide-border-subtle/80 rounded-[calc(var(--radius-card)-0.16rem)] border border-border-subtle/70 bg-surface-1/78 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <TransferSummaryItem
+              label={t('transfers.summary.count')}
+              value={String(transfers.length)}
+            />
+            <TransferSummaryItem
+              label={t('transfers.summary.totalFees')}
+              value={formatCurrency(totalFees)}
+              tone={totalFees > 0 ? 'warning' : 'default'}
+            />
+            <TransferSummaryItem
+              label={language === 'id' ? 'Rata-rata transfer' : 'Average transfer'}
+              value={formatCurrency(averageTransfer)}
+            />
+          </div>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="compact">
+      <SurfaceCard role="embedded" padding="compact">
         <div className="grid gap-2">
           <div className="flex items-end justify-between gap-3">
             <div className="grid gap-0.5">
@@ -195,7 +208,7 @@ function TransferPageContent() {
               <span className="text-[0.8rem] text-text-2">
                 {language === 'id'
                   ? `${transfers.length} transfer terbaru`
-                  : `${transfers.length} recent transfers`}
+                  : `${transfers.length} recent money movements`}
               </span>
             </div>
           </div>
@@ -208,6 +221,7 @@ function TransferPageContent() {
             <EmptyState
               title={t('transfers.noTransfers')}
               icon={<ArrowLeftRight size={20} />}
+              variant="featured"
               action={
                 <Button
                   type="button"
@@ -277,34 +291,26 @@ function TransferRow({
         <div className="grid min-w-0 flex-1 gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[0.96rem]">
-              {transfer.from_wallet?.name || '-'} {'->'} {transfer.to_wallet?.name || '-'}
+              {transfer.from_wallet?.name || '-'} {'?'} {transfer.to_wallet?.name || '-'}
             </strong>
             {hasFee ? (
-              <span className="rounded-full bg-warning-soft/80 px-2 py-0.5 text-[0.68rem] font-medium text-warning-strong">
+              <span className="rounded-full bg-warning-soft/80 px-2 py-0.5 text-[var(--font-size-chip)] font-medium text-warning-strong">
                 {language === 'id' ? 'Ada potongan' : 'Fee'}
               </span>
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem] leading-5 text-text-2">
+          <div className="grid gap-1 rounded-[calc(var(--radius-control)-0.08rem)] border border-border-subtle/70 bg-surface-2/45 px-3 py-2 text-[var(--font-size-meta)] leading-5 text-text-2 sm:grid-cols-[auto_auto_1fr] sm:items-center sm:gap-2">
             <span className="whitespace-nowrap">{formatDate(transfer.transfer_date, language)}</span>
             {hasFee ? (
               <>
-                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
                 <span className="whitespace-nowrap">
-                  {t('transfers.list.fee')}: {formatCurrency(transfer.fee_amount)}
-                </span>
-                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
-                <span className="whitespace-nowrap">
-                  {t('transfers.list.totalDeducted')}: {formatCurrency(totalDeducted)}
+                  {t('transfers.list.fee')}: {formatCurrency(transfer.fee_amount)} · {t('transfers.list.totalDeducted')}: {formatCurrency(totalDeducted)}
                 </span>
               </>
             ) : null}
             {transfer.note ? (
-              <>
-                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
-                <span className="truncate">{transfer.note}</span>
-              </>
+              <span className="truncate sm:text-right">{transfer.note}</span>
             ) : null}
           </div>
         </div>
@@ -315,15 +321,9 @@ function TransferRow({
           <strong className="text-[0.94rem] font-semibold tracking-[-0.035em] text-accent-strong sm:text-[1rem]">
             {formatCurrency(transfer.amount)}
           </strong>
-          {hasFee ? (
-            <span className="whitespace-nowrap text-[0.72rem] leading-4 text-text-2">
-              {language === 'id' ? 'Keluar total' : 'Total deducted'}: {formatCurrency(totalDeducted)}
-            </span>
-          ) : (
-            <span className="whitespace-nowrap text-[0.72rem] leading-4 text-text-3">
-              {language === 'id' ? 'Tanpa potongan' : 'No fee'}
-            </span>
-          )}
+          <span className="whitespace-nowrap text-[var(--font-size-meta)] leading-4 text-text-3">
+            {hasFee ? language === 'id' ? 'Dengan potongan' : 'With fee' : language === 'id' ? 'Tanpa potongan' : 'No fee'}
+          </span>
         </div>
 
         <DropdownMenu>
@@ -364,8 +364,8 @@ function TransferSummaryItem({
   tone?: 'default' | 'warning';
 }) {
   return (
-    <div className="grid gap-0.5 px-0 py-2.5 first:pt-0 last:pb-0 sm:px-3 sm:py-0 sm:first:pl-0 sm:last:pr-0">
-      <span className="text-[0.76rem] font-medium text-text-2">{label}</span>
+    <div className="grid gap-0.5 px-3 py-2.5 first:pt-0 last:pb-0 sm:py-3">
+      <span className="text-[var(--font-size-meta)] font-medium text-text-2">{label}</span>
       <strong
         className={
           tone === 'warning'
@@ -397,3 +397,6 @@ export default function TransferPage() {
     </Suspense>
   );
 }
+
+
+

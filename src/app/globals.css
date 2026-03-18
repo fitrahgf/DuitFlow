@@ -6,33 +6,33 @@
   :root {
     color-scheme: light;
 
-    --bg-canvas-channel: 154 18% 97%;
-    --bg-subtle-channel: 154 14% 95%;
+    --bg-canvas-channel: 84 18% 95%;
+    --bg-subtle-channel: 90 16% 92%;
     --surface-1-channel: 0 0% 100%;
-    --surface-2-channel: 154 16% 97%;
-    --surface-3-channel: 154 12% 93%;
-    --surface-accent-channel: 145 42% 95%;
+    --surface-2-channel: 84 18% 97%;
+    --surface-3-channel: 84 12% 91%;
+    --surface-accent-channel: 154 34% 93%;
 
-    --border-subtle-channel: 154 10% 84%;
-    --border-strong-channel: 154 10% 72%;
+    --border-subtle-channel: 92 12% 82%;
+    --border-strong-channel: 92 11% 68%;
 
-    --text-1-channel: 154 18% 14%;
-    --text-2-channel: 154 11% 31%;
-    --text-3-channel: 154 8% 46%;
+    --text-1-channel: 156 14% 13%;
+    --text-2-channel: 156 10% 29%;
+    --text-3-channel: 156 8% 44%;
     --text-inverse-channel: 0 0% 100%;
 
-    --accent-channel: 151 44% 34%;
-    --accent-strong-channel: 151 50% 29%;
-    --accent-soft-channel: 150 42% 91%;
-    --accent-secondary-channel: 164 20% 40%;
-    --accent-secondary-soft-channel: 164 22% 91%;
+    --accent-channel: 158 33% 31%;
+    --accent-strong-channel: 158 38% 24%;
+    --accent-soft-channel: 156 34% 90%;
+    --accent-secondary-channel: 190 18% 36%;
+    --accent-secondary-soft-channel: 190 26% 91%;
 
-    --success-channel: 145 62% 38%;
-    --success-soft-channel: 145 62% 92%;
-    --warning-channel: 36 92% 46%;
-    --warning-soft-channel: 36 100% 93%;
-    --danger-channel: 8 70% 55%;
-    --danger-soft-channel: 8 82% 94%;
+    --success-channel: 150 58% 35%;
+    --success-soft-channel: 150 52% 92%;
+    --warning-channel: 34 82% 48%;
+    --warning-soft-channel: 34 94% 92%;
+    --danger-channel: 8 68% 53%;
+    --danger-soft-channel: 8 78% 93%;
 
     --bg-canvas: hsl(var(--bg-canvas-channel));
     --bg-subtle: hsl(var(--bg-subtle-channel));
@@ -62,10 +62,11 @@
     --danger: hsl(var(--danger-channel));
     --danger-soft: hsl(var(--danger-soft-channel));
 
-    --shadow-xs: 0 1px 2px hsla(156, 18%, 14%, 0.05),
-      0 10px 24px hsla(156, 18%, 14%, 0.03);
-    --shadow-sm: 0 14px 32px hsla(156, 18%, 12%, 0.05);
-    --shadow-md: 0 20px 44px hsla(156, 18%, 10%, 0.08);
+    --shadow-xs: 0 1px 2px hsla(156, 12%, 14%, 0.04),
+      0 10px 26px hsla(156, 14%, 12%, 0.05);
+    --shadow-sm: 0 18px 40px hsla(156, 16%, 12%, 0.08);
+    --shadow-md: 0 24px 56px hsla(156, 18%, 10%, 0.12);
+    --shadow-featured: 0 26px 64px hsla(156, 18%, 10%, 0.12);
 
     --radius-card: 1.1rem;
     --radius-control: 0.82rem;
@@ -76,31 +77,38 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --mobile-header-height: 3.25rem;
     --fab-size: 3.75rem;
-    --sidebar-width: 13.75rem;
-    --max-content-width: clamp(68rem, calc(100vw - 21.5rem), 74rem);
-    --page-gutter: 0.8125rem;
-    --page-top-space: 0.75rem;
-    --page-bottom-space: 0.875rem;
-    --page-section-gap: 0.875rem;
-    --page-section-gap-lg: 1.25rem;
-    --page-header-gap: 0.625rem;
-    --page-header-padding-bottom: 0.75rem;
+    --sidebar-width: 14.5rem;
+    --max-content-width: clamp(69rem, calc(100vw - 22rem), 77rem);
+    --page-gutter: 0.875rem;
+    --page-top-space: 0.9rem;
+    --page-bottom-space: 1rem;
+    --page-section-gap: 1rem;
+    --page-section-gap-lg: 1.4rem;
+    --page-header-gap: 0.7rem;
+    --page-header-padding-bottom: 0.9rem;
     --space-stack: var(--page-section-gap);
     --space-stack-lg: var(--page-section-gap-lg);
-    --space-panel-tight: 0.75rem;
-    --space-panel: 0.875rem;
-    --space-panel-lg: 1rem;
-    --space-cluster-tight: 0.5rem;
-    --space-cluster: 0.625rem;
-    --control-height: 2.625rem;
-    --control-height-sm: 2.25rem;
-    --control-height-icon: 2.25rem;
-    --tab-height: 2.25rem;
-    --chip-height: 1.75rem;
+    --space-panel-tight: 0.8rem;
+    --space-panel: 1rem;
+    --space-panel-lg: 1.1rem;
+    --space-panel-embedded: 0.7rem;
+    --space-cluster-tight: 0.55rem;
+    --space-cluster: 0.7rem;
+    --control-height: 2.75rem;
+    --control-height-sm: 2.35rem;
+    --control-height-icon: 2.35rem;
+    --tab-height: 2.35rem;
+    --chip-height: 1.8rem;
     --empty-state-height: 6.25rem;
     --panel-header-min-height: 2.5rem;
     --list-row-min-height: 3.75rem;
     --shell-sticky-offset: calc(var(--mobile-header-height) + 0.375rem);
+    --number-hero-size: clamp(2.3rem, 1.92rem + 1.3vw, 3.35rem);
+    --number-section-size: clamp(1.24rem, 1.08rem + 0.52vw, 1.62rem);
+    --font-size-body: 0.88rem;
+    --font-size-meta: 0.78rem;
+    --font-size-chip: 0.72rem;
+    --font-size-helper: 0.82rem;
 
     --transition-fast: 160ms ease;
     --transition-base: 220ms ease;
@@ -124,10 +132,10 @@
     --color-surface-alt: var(--surface-2);
     --color-border: var(--border-subtle);
     --color-border-strong: var(--border-strong);
-    --color-card-shadow: hsla(156, 16%, 16%, 0.12);
-    --color-overlay: hsla(156, 20%, 8%, 0.48);
-    --color-overlay-soft: hsla(156, 20%, 8%, 0.34);
-    --color-ghost-hover: hsla(149, 46%, 92%, 0.74);
+    --color-card-shadow: hsla(156, 16%, 14%, 0.14);
+    --color-overlay: hsla(156, 22%, 7%, 0.48);
+    --color-overlay-soft: hsla(156, 22%, 7%, 0.34);
+    --color-ghost-hover: hsla(156, 34%, 89%, 0.72);
     --color-shell-hover: hsl(var(--surface-2-channel));
     --color-shell-card: hsl(var(--surface-1-channel));
     --color-shell-card-hover: hsl(var(--surface-2-channel));
@@ -137,81 +145,128 @@
     --color-text-inverse: var(--text-inverse);
     --color-login-card-border: hsla(156, 12%, 84%, 0.6);
     --color-login-kicker-bg: hsla(149, 46%, 92%, 0.92);
-    --gradient-shell: none;
-    --gradient-surface: none;
-    --gradient-glass: none;
-    --gradient-shell-panel: none;
-    --gradient-header: none;
-    --gradient-header-desktop: none;
+    --gradient-shell: radial-gradient(circle at top left, hsla(154, 34%, 86%, 0.36), transparent 28%),
+      radial-gradient(circle at top right, hsla(190, 24%, 88%, 0.28), transparent 26%),
+      linear-gradient(180deg, hsla(84, 18%, 96%, 1), hsla(84, 17%, 94%, 1));
+    --gradient-surface: linear-gradient(
+      180deg,
+      hsla(0, 0%, 100%, 0.94),
+      hsla(84, 22%, 98%, 0.9)
+    );
+    --gradient-glass: linear-gradient(
+      180deg,
+      hsla(0, 0%, 100%, 0.72),
+      hsla(84, 18%, 96%, 0.62)
+    );
+    --gradient-shell-panel: linear-gradient(
+      180deg,
+      hsla(0, 0%, 100%, 0.72),
+      hsla(84, 20%, 97%, 0.82)
+    );
+    --gradient-header: linear-gradient(
+      180deg,
+      hsla(84, 18%, 96%, 0.92),
+      hsla(84, 18%, 96%, 0.74)
+    );
+    --gradient-header-desktop: linear-gradient(
+      180deg,
+      hsla(84, 18%, 96%, 0.82),
+      hsla(84, 18%, 96%, 0.58)
+    );
     --gradient-login-card: linear-gradient(
       145deg,
       hsla(0, 0%, 100%, 0.98),
-      hsla(148, 28%, 96%, 0.94)
+      hsla(156, 22%, 95%, 0.94)
     );
     --gradient-login-title: linear-gradient(
       135deg,
       hsl(var(--text-1-channel)),
       hsl(var(--accent-channel))
     );
+    --chart-ring-channel: 0 0% 100%;
   }
 
   html.dark {
     color-scheme: dark;
 
-    --bg-canvas-channel: 156 18% 8%;
-    --bg-subtle-channel: 156 16% 10%;
-    --surface-1-channel: 156 14% 12%;
-    --surface-2-channel: 156 12% 14%;
-    --surface-3-channel: 156 11% 17%;
-    --surface-accent-channel: 149 24% 18%;
+    --bg-canvas-channel: 165 16% 8%;
+    --bg-subtle-channel: 165 14% 10%;
+    --surface-1-channel: 165 12% 12%;
+    --surface-2-channel: 165 11% 15%;
+    --surface-3-channel: 165 10% 18%;
+    --surface-accent-channel: 157 22% 19%;
 
-    --border-subtle-channel: 156 10% 24%;
-    --border-strong-channel: 156 10% 32%;
+    --border-subtle-channel: 165 8% 24%;
+    --border-strong-channel: 165 8% 34%;
 
-    --text-1-channel: 0 0% 97%;
-    --text-2-channel: 156 10% 76%;
-    --text-3-channel: 156 9% 58%;
-    --text-inverse-channel: 156 18% 8%;
+    --text-1-channel: 84 18% 95%;
+    --text-2-channel: 84 10% 78%;
+    --text-3-channel: 84 8% 60%;
+    --text-inverse-channel: 165 16% 8%;
 
-    --accent-channel: 149 48% 48%;
-    --accent-strong-channel: 149 55% 54%;
-    --accent-soft-channel: 149 28% 20%;
-    --accent-secondary-channel: 170 26% 62%;
-    --accent-secondary-soft-channel: 170 20% 18%;
+    --accent-channel: 156 42% 54%;
+    --accent-strong-channel: 156 50% 61%;
+    --accent-soft-channel: 156 24% 21%;
+    --accent-secondary-channel: 190 28% 67%;
+    --accent-secondary-soft-channel: 190 20% 18%;
 
-    --success-channel: 145 58% 50%;
-    --success-soft-channel: 145 28% 19%;
-    --warning-channel: 38 92% 58%;
-    --warning-soft-channel: 38 34% 19%;
-    --danger-channel: 7 78% 62%;
-    --danger-soft-channel: 7 30% 20%;
+    --success-channel: 150 52% 55%;
+    --success-soft-channel: 150 24% 20%;
+    --warning-channel: 36 90% 62%;
+    --warning-soft-channel: 36 30% 20%;
+    --danger-channel: 8 78% 66%;
+    --danger-soft-channel: 8 26% 21%;
 
-    --shadow-xs: 0 1px 2px hsla(156, 28%, 2%, 0.24),
-      0 12px 28px hsla(156, 28%, 2%, 0.18);
-    --shadow-sm: 0 16px 34px hsla(156, 28%, 2%, 0.2);
-    --shadow-md: 0 24px 48px hsla(156, 28%, 0%, 0.28);
+    --shadow-xs: 0 1px 2px hsla(165, 28%, 2%, 0.22),
+      0 14px 30px hsla(165, 28%, 2%, 0.18);
+    --shadow-sm: 0 18px 36px hsla(165, 28%, 2%, 0.24);
+    --shadow-md: 0 28px 60px hsla(165, 32%, 0%, 0.34);
+    --shadow-featured: 0 30px 70px hsla(165, 32%, 0%, 0.38);
 
-    --color-login-card-border: hsla(156, 10%, 32%, 0.72);
-    --color-login-kicker-bg: hsla(149, 28%, 20%, 0.94);
-    --color-overlay: hsla(156, 30%, 2%, 0.7);
-    --color-overlay-soft: hsla(156, 30%, 2%, 0.56);
-    --color-ghost-hover: hsla(156, 12%, 18%, 0.92);
-    --gradient-shell: none;
-    --gradient-surface: none;
-    --gradient-glass: none;
-    --gradient-shell-panel: none;
-    --gradient-header: none;
-    --gradient-header-desktop: none;
+    --color-login-card-border: hsla(165, 8%, 34%, 0.72);
+    --color-login-kicker-bg: hsla(156, 24%, 21%, 0.94);
+    --color-overlay: hsla(165, 34%, 2%, 0.74);
+    --color-overlay-soft: hsla(165, 34%, 2%, 0.58);
+    --color-ghost-hover: hsla(165, 12%, 18%, 0.92);
+    --gradient-shell: radial-gradient(circle at top left, hsla(156, 28%, 18%, 0.34), transparent 28%),
+      radial-gradient(circle at top right, hsla(190, 22%, 18%, 0.22), transparent 24%),
+      linear-gradient(180deg, hsla(165, 16%, 9%, 1), hsla(165, 17%, 7%, 1));
+    --gradient-surface: linear-gradient(
+      180deg,
+      hsla(165, 12%, 13%, 0.96),
+      hsla(165, 12%, 11%, 0.92)
+    );
+    --gradient-glass: linear-gradient(
+      180deg,
+      hsla(165, 12%, 14%, 0.76),
+      hsla(165, 11%, 10%, 0.68)
+    );
+    --gradient-shell-panel: linear-gradient(
+      180deg,
+      hsla(165, 12%, 14%, 0.84),
+      hsla(165, 11%, 11%, 0.92)
+    );
+    --gradient-header: linear-gradient(
+      180deg,
+      hsla(165, 15%, 9%, 0.94),
+      hsla(165, 15%, 9%, 0.72)
+    );
+    --gradient-header-desktop: linear-gradient(
+      180deg,
+      hsla(165, 15%, 10%, 0.8),
+      hsla(165, 15%, 10%, 0.56)
+    );
     --gradient-login-card: linear-gradient(
       145deg,
-      hsla(156, 14%, 12%, 0.98),
-      hsla(156, 13%, 15%, 0.94)
+      hsla(165, 14%, 12%, 0.98),
+      hsla(165, 13%, 15%, 0.94)
     );
     --gradient-login-title: linear-gradient(
       135deg,
       hsl(0 0% 100%),
       hsl(var(--accent-strong-channel))
     );
+    --chart-ring-channel: 165 18% 8%;
   }
 
   *,
@@ -230,6 +285,8 @@
     @apply min-h-screen bg-canvas text-text-1 font-sans antialiased;
     margin: 0;
     text-rendering: optimizeLegibility;
+    background-image: var(--gradient-shell);
+    background-attachment: fixed;
   }
 
   body.app-shell-locked {
@@ -312,11 +369,17 @@
   }
 
   .card {
-    @apply rounded-[var(--radius-card)] border border-border-subtle/90 bg-surface-1 shadow-xs;
+    @apply rounded-[var(--radius-card)] border border-border-subtle/90 shadow-xs;
+    background: var(--gradient-surface);
+  }
+
+  .surface-featured {
+    box-shadow: var(--shadow-featured);
   }
 
   .badge {
-    @apply inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-[0.68rem] font-semibold;
+    @apply inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 font-semibold;
+    font-size: var(--font-size-chip);
     min-height: var(--chip-height);
   }
 
@@ -354,7 +417,8 @@
   }
 
   .list-row {
-    @apply rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45;
+    @apply rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle;
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
     min-height: var(--list-row-min-height);
   }
 
