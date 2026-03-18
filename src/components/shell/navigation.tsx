@@ -222,8 +222,6 @@ export function buildShellNavigation({
     mobilePrimary: getItemsByHref(mobilePrimaryOrder),
     moreItems: getItemsByHref(moreItemsOrder),
     currentPage: pageMap[pathname] || "DuitFlow",
-    brandMeta: language === "id" ? "Keuangan pribadi" : "Personal finance",
-    accountLabel: language === "id" ? "Akun" : "Account",
     activeAccountLabel: language === "id" ? "Akun aktif" : "Active account",
     unreadBadgeLabel: unreadCount > 99 ? "99+" : unreadCount,
   };

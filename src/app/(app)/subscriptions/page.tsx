@@ -45,10 +45,12 @@ function SubscriptionOverviewStat({
   label,
   value,
   tone = "default",
+  className,
 }: {
   label: string;
   value: React.ReactNode;
   tone?: "default" | "accent" | "success" | "warning";
+  className?: string;
 }) {
   const dotClassName =
     tone === "accent"
@@ -60,7 +62,7 @@ function SubscriptionOverviewStat({
           : "bg-text-3/35";
 
   return (
-    <div className="grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0">
+    <div className={cn("grid gap-1 px-3 py-2.5 first:pl-0 last:pr-0", className)}>
       <div className="inline-flex items-center gap-2">
         <span className={cn("h-1.5 w-1.5 rounded-full", dotClassName)} aria-hidden="true" />
         <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
@@ -225,11 +227,7 @@ export default function SubscriptionsPage() {
         <section className="grid gap-3 xl:grid-cols-[minmax(16rem,0.76fr)_minmax(0,1.24fr)] xl:items-start">
           <SurfaceCard padding="compact" className="xl:sticky xl:top-[var(--shell-sticky-offset)]">
             <div className="grid gap-3">
-              <SectionHeading
-                title={language === "id" ? "Ringkasan langganan" : "Subscription overview"}
-              />
-
-              <div className="grid gap-0 divide-y divide-border-subtle/80">
+              <div className="grid gap-0 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 sm:grid-cols-2 xl:grid-cols-1">
                 <SubscriptionOverviewStat
                   label={t("subscriptions.totalMonthly")}
                   value={loading ? "..." : formatCurrency(monthlyTotal)}
@@ -239,23 +237,26 @@ export default function SubscriptionsPage() {
                   label={t("subscriptions.activeServices")}
                   value={loading ? "..." : activeSubscriptions.length}
                   tone="success"
+                  className="border-t border-border-subtle/75 sm:border-l sm:border-t-0 xl:border-l-0 xl:border-t"
                 />
                 <SubscriptionOverviewStat
                   label={language === "id" ? "Dijeda" : "Paused"}
                   value={loading ? "..." : pausedCount}
+                  className="border-t border-border-subtle/75 xl:border-t"
                 />
                 <SubscriptionOverviewStat
                   label={t("subscriptions.upcoming")}
                   value={loading ? "..." : upcomingCount}
                   tone={upcomingCount > 0 ? "warning" : "default"}
+                  className="border-t border-border-subtle/75 sm:border-l sm:border-t xl:border-l-0"
                 />
               </div>
 
-              <div className="grid gap-1.5 rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/90 bg-surface-2/35 px-3 py-3">
-                <span className="text-[0.72rem] font-medium tracking-[0.08em] text-text-2">
+              <div className="grid gap-1 border-t border-border-subtle/75 pt-2.5">
+                <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
                   {language === "id" ? "Tagihan terdekat" : "Next billing"}
                 </span>
-                <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                <strong className="text-[0.96rem] font-semibold tracking-[-0.03em] text-text-1">
                   {loading
                     ? "..."
                     : nextBillingSubscription?.name ??
@@ -263,7 +264,7 @@ export default function SubscriptionsPage() {
                         ? "Belum ada layanan aktif."
                         : "No active service yet.")}
                 </strong>
-                <span className="text-[0.82rem] leading-5 text-text-2">
+                <span className="text-[0.78rem] leading-5 text-text-2">
                   {loading
                     ? "..."
                     : nextBillingSubscription
@@ -280,12 +281,6 @@ export default function SubscriptionsPage() {
             <div className="grid gap-3">
               <SectionHeading
                 title={language === "id" ? "Daftar langganan" : "Subscription list"}
-                description={
-                  language === "id"
-                    ? "Lebih padat, dengan nominal, status, dan jadwal tagihan yang lebih cepat dipindai."
-                    : "Denser rows with clearer amount, status, and billing cadence."
-                }
-                hideDescriptionOnMobile={false}
               />
 
               {loading ? (
@@ -331,11 +326,11 @@ export default function SubscriptionsPage() {
                     return (
                       <article
                         key={subscription.id}
-                        className="grid gap-3 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center"
+                        className="grid gap-2.5 py-3 first:pt-0 last:pb-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                       >
-                        <div className="flex items-start gap-3">
+                        <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-3">
                           <div
-                            className="grid h-10 w-10 place-items-center rounded-2xl"
+                            className="grid h-9 w-9 place-items-center rounded-[calc(var(--radius-control)+0.1rem)]"
                             style={{
                               backgroundColor: subscription.is_active
                                 ? "var(--accent-soft)"
@@ -346,15 +341,15 @@ export default function SubscriptionsPage() {
                             }}
                           >
                             {subscription.is_active ? (
-                              <Play size={22} fill="currentColor" />
+                              <Play size={18} fill="currentColor" />
                             ) : (
-                              <Pause size={22} />
+                              <Pause size={18} />
                             )}
                           </div>
 
-                          <div className="grid gap-1.5">
+                          <div className="grid min-w-0 gap-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
+                              <strong className="truncate text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
                                 {subscription.name}
                               </strong>
                               <Badge
@@ -367,33 +362,34 @@ export default function SubscriptionsPage() {
                                   language,
                                 )}
                               </Badge>
-                              {upcoming ? (
-                                <Badge variant="warning">
-                                  {t("subscriptions.upcoming")}
-                                </Badge>
-                              ) : null}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[0.78rem] text-text-2">
+                            <div className="flex flex-wrap items-center gap-2 text-[0.77rem] text-text-2">
                               <span>
                                 {t("subscriptions.billingOn")}{" "}
                                 {subscription.billing_day}
                               </span>
                               <span aria-hidden="true">/</span>
-                              <span>
+                              <span className={cn(upcoming && "text-warning")}>
                                 {getDaysUntilBilling(subscription.billing_day)}{" "}
                                 {language === "id" ? "hari lagi" : "days left"}
                               </span>
+                              {upcoming ? (
+                                <>
+                                  <span aria-hidden="true">/</span>
+                                  <span>{t("subscriptions.upcoming")}</span>
+                                </>
+                              ) : null}
                             </div>
                           </div>
-                        </div>
 
-                        <div className="grid justify-items-start gap-0.5 lg:justify-items-end">
-                          <span className="text-[0.72rem] font-medium tracking-[0.01em] text-text-2">
-                            {language === "id" ? "Biaya bulanan" : "Monthly cost"}
-                          </span>
-                          <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
-                            {formatCurrency(subscription.amount)}
-                          </strong>
+                          <div className="grid justify-items-start gap-0.5 sm:justify-items-end">
+                            <span className="text-[0.7rem] font-medium tracking-[0.01em] text-text-2">
+                              {language === "id" ? "Bulanan" : "Monthly"}
+                            </span>
+                            <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+                              {formatCurrency(subscription.amount)}
+                            </strong>
+                          </div>
                         </div>
 
                         <div className="flex flex-wrap gap-2 lg:justify-end">
@@ -413,12 +409,16 @@ export default function SubscriptionsPage() {
                             {subscription.is_active ? (
                               <>
                                 <Pause size={14} />
-                                {t("subscriptions.pause")}
+                                <span className="max-sm:hidden">
+                                  {t("subscriptions.pause")}
+                                </span>
                               </>
                             ) : (
                               <>
                                 <Play size={14} />
-                                {t("subscriptions.resume")}
+                                <span className="max-sm:hidden">
+                                  {t("subscriptions.resume")}
+                                </span>
                               </>
                             )}
                           </Button>

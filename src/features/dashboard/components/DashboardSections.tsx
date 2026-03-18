@@ -5,7 +5,6 @@ import { differenceInCalendarDays, parseISO } from 'date-fns';
 import Link from 'next/link';
 import {
   ArrowLeftRight,
-  Clock3,
   PieChart,
   ReceiptText,
   Target,
@@ -19,7 +18,6 @@ import TransactionForm, {
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ModalShell } from '@/components/shared/ModalShell';
 import {
-  ProgressMeter,
   SectionHeading,
   SurfaceCard,
 } from '@/components/shared/PagePrimitives';
@@ -27,15 +25,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
-  getBudgetTone,
   type BudgetTone,
 } from '@/lib/budgetMath';
 import { getCategoryIcon } from '@/lib/icons';
-import type {
-  DashboardBudgetRecord,
-  DashboardWalletSummary,
-  DashboardWishlistItem,
-} from '@/lib/queries/dashboard';
+import type { DashboardWalletSummary, DashboardWishlistItem } from '@/lib/queries/dashboard';
 import {
   getTransactionDisplayDate,
   type TransactionDisplayItem,
@@ -43,13 +36,6 @@ import {
 import { cn } from '@/lib/utils';
 
 type DashboardInsightView = 'activity' | 'breakdown';
-
-const toneToProgressTone: Record<BudgetTone, 'success' | 'warning' | 'danger'> =
-  {
-    ok: 'success',
-    warning: 'warning',
-    danger: 'danger',
-  };
 
 const toneToBadgeVariant: Record<BudgetTone, 'success' | 'warning' | 'danger'> =
   {
@@ -76,6 +62,28 @@ function getWalletShare(wallet: DashboardWalletSummary, totalBalance: number) {
   return Math.max(0, Math.round((wallet.balance / totalBalance) * 100));
 }
 
+function normalizeHexColor(color?: string | null) {
+  if (!color) {
+    return null;
+  }
+
+  const trimmed = color.trim();
+  if (!trimmed.startsWith('#')) {
+    return null;
+  }
+
+  if (trimmed.length === 4) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+
+  return trimmed.length === 7 ? trimmed : null;
+}
+
+function withHexAlpha(color: string | null | undefined, alpha: string) {
+  const normalized = normalizeHexColor(color);
+  return normalized ? `${normalized}${alpha}` : undefined;
+}
+
 function getWishlistCountdownLabel(
   item: DashboardWishlistItem,
   language: 'en' | 'id',
@@ -100,7 +108,6 @@ function getWishlistCountdownLabel(
 
 interface DashboardTopSectionProps {
   loading: boolean;
-  monthKey?: string;
   totalBalance: number;
   totalIncome: number;
   totalExpense: number;
@@ -112,7 +119,6 @@ interface DashboardTopSectionProps {
   overallBudgetLimit: number;
   overallBudgetSpent: number;
   overallBudgetRemaining: number;
-  overallBudgetRatio: number;
   budgetTone: BudgetTone;
   budgetStatusLabel: string;
   primaryWishlistItem: DashboardWishlistItem | null;
@@ -138,7 +144,6 @@ interface DashboardTopSectionProps {
 
 export function DashboardTopSection({
   loading,
-  monthKey,
   totalBalance,
   totalIncome,
   totalExpense,
@@ -150,7 +155,6 @@ export function DashboardTopSection({
   overallBudgetLimit,
   overallBudgetSpent,
   overallBudgetRemaining,
-  overallBudgetRatio,
   budgetTone,
   budgetStatusLabel,
   primaryWishlistItem,
@@ -168,49 +172,43 @@ export function DashboardTopSection({
   const monthlyNet = totalIncome - totalExpense;
   const netFlowLabel =
     language === 'id' ? 'Arus bersih bulan ini' : 'Net flow this month';
-  const quickInputLabel =
-    language === 'id' ? 'Catat cepat' : 'Quick capture';
-  const activeWalletsLabel =
-    language === 'id'
-      ? `${wallets.length} dompet aktif`
-      : `${wallets.length} active wallets`;
   const plannerLabel =
     language === 'id' ? 'Fokus bulan ini' : 'Monthly focus';
-  const walletSnapshotTitle =
-    language === 'id' ? 'Distribusi dompet utama' : 'Top wallet distribution';
+  const quickInputLabel = language === 'id' ? 'Input cepat' : 'Quick input';
+  const walletSummaryTitle =
+    language === 'id' ? 'Ringkasan dompet' : 'Wallet summary';
 
   return (
     <>
-      <section className="hidden gap-3 sm:grid">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.42fr)_minmax(22rem,0.84fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.5fr)_minmax(24rem,0.74fr)]">
-          <SurfaceCard className="overflow-hidden border-border-strong/50">
-            <div className="grid gap-3.5">
-              <div className="grid gap-2">
-                <span className="text-[0.74rem] font-medium tracking-[0.08em] text-text-2">
+      <section className="hidden gap-2.5 sm:grid">
+        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.62fr)_minmax(19rem,0.68fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.66fr)_minmax(19.75rem,0.64fr)]">
+          <SurfaceCard
+            padding="compact"
+            className="border-border-strong/30 bg-surface-1/98 shadow-[0_14px_34px_-30px_rgba(15,23,42,0.18)]"
+          >
+            <div className="grid gap-2.5">
+              <div className="grid gap-1.5">
+                <h2 className="m-0 text-[0.82rem] font-medium tracking-[0.01em] text-text-2">
                   {t('dashboard.totalBalance')}
-                </span>
-                <strong className="text-[clamp(2.7rem,2.38rem+1.6vw,4.1rem)] font-semibold leading-none tracking-[-0.088em] text-text-1">
+                </h2>
+                <strong className="text-[clamp(2.34rem,2.08rem+1.18vw,3.3rem)] font-semibold leading-none tracking-[-0.084em] text-text-1">
                   {loading ? '...' : formatCurrency(totalBalance)}
                 </strong>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.84rem] text-text-2">
+                <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] text-text-2">
                   <span>{netFlowLabel}</span>
                   <strong
                     className={cn(
-                      'text-[0.94rem] font-semibold tracking-[-0.03em]',
+                      'text-[0.86rem] font-semibold tracking-[-0.03em]',
                       monthlyNet >= 0 ? 'text-success' : 'text-danger',
                     )}
                   >
                     {monthlyNet >= 0 ? '+' : '-'}
                     {formatCurrency(Math.abs(monthlyNet))}
                   </strong>
-                  <span className="text-text-2">{activeWalletsLabel}</span>
-                  {overallBudgetLimit > 0 ? (
-                    <span className="text-text-2">{budgetStatusLabel}</span>
-                  ) : null}
                 </div>
               </div>
 
-              <div className="grid gap-0 border-y border-border-subtle/90 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/90">
+              <div className="grid gap-3 border-t border-border-subtle/35 pt-1.5 sm:grid-cols-3">
                 <DashboardHeroMetric
                   label={t('dashboard.monthlyIncome')}
                   value={loading ? '...' : formatCurrency(totalIncome)}
@@ -220,7 +218,6 @@ export function DashboardTopSection({
                   label={t('dashboard.monthlyExpense')}
                   value={loading ? '...' : formatCurrency(totalExpense)}
                   tone="danger"
-                  className="sm:border-0"
                 />
                 <DashboardHeroMetric
                   label={t('dashboard.monthlyTransfers')}
@@ -228,74 +225,41 @@ export function DashboardTopSection({
                   tone="accent"
                 />
               </div>
-
-              <div className="grid gap-2 border-t border-border-subtle/90 pt-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="grid gap-0.5">
-                    <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-                      {t('dashboard.walletSnapshotTitle')}
-                    </span>
-                    <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                      {walletSnapshotTitle}
-                    </strong>
-                  </div>
-                  <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
-                    <Link href="/wallets">{t('dashboard.viewAll')}</Link>
-                  </Button>
-                </div>
-
-                {wallets.length > 0 ? (
-                  <div className="grid gap-0 divide-y divide-border-subtle">
-                    {topWallets.map((wallet) => (
-                      <HeroWalletSummaryRow
-                        key={wallet.id}
-                        wallet={wallet}
-                        totalBalance={totalWalletBalance}
-                        formatCurrency={formatCurrency}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <CompactEmptyLine
-                    icon={<Wallet size={15} />}
-                    label={
-                      language === 'id'
-                        ? 'Belum ada dompet aktif.'
-                        : 'No active wallets yet.'
-                    }
-                  />
-                )}
-
-                {wallets.length > topWallets.length ? (
-                  <span className="text-[0.76rem] text-text-2">
-                    {language === 'id'
-                      ? `+${wallets.length - topWallets.length} dompet lainnya`
-                      : `+${wallets.length - topWallets.length} more wallets`}
-                  </span>
-                ) : null}
-              </div>
             </div>
           </SurfaceCard>
 
-          <DashboardDesktopSupportSection
-            overallBudgetLimit={overallBudgetLimit}
-            overallBudgetSpent={overallBudgetSpent}
-            overallBudgetRemaining={overallBudgetRemaining}
-            overallBudgetRatio={overallBudgetRatio}
-            budgetTone={budgetTone}
-            budgetStatusLabel={budgetStatusLabel}
-            primaryWishlistItem={primaryWishlistItem}
-            readyWishlistItemsCount={readyWishlistItemsCount}
-            plannerLabel={plannerLabel}
+          <DashboardDesktopQuickInputSection
             quickInputLabel={quickInputLabel}
-            language={language}
-            t={t}
-            formatCurrency={formatCurrency}
             onReviewQuickAdd={onReviewQuickAdd}
           />
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.08fr)_minmax(23rem,0.92fr)]">
+        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.18fr)_minmax(18rem,0.82fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.2fr)_minmax(18.5rem,0.8fr)]">
+          <DashboardDesktopWalletSummarySection
+            wallets={wallets}
+            topWallets={topWallets}
+            totalWalletBalance={totalWalletBalance}
+            walletSummaryTitle={walletSummaryTitle}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+          />
+
+          <DashboardDesktopFocusSection
+            overallBudgetLimit={overallBudgetLimit}
+            overallBudgetSpent={overallBudgetSpent}
+            overallBudgetRemaining={overallBudgetRemaining}
+            budgetTone={budgetTone}
+            budgetStatusLabel={budgetStatusLabel}
+            primaryWishlistItem={primaryWishlistItem}
+            plannerLabel={plannerLabel}
+            language={language}
+            t={t}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.05fr)_minmax(21rem,0.95fr)] xl:items-start 2xl:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)]">
           <DashboardRecentTransactionsSection
             loading={loading}
             recentTransactions={recentTransactions}
@@ -316,78 +280,54 @@ export function DashboardTopSection({
         </div>
       </section>
 
-      <section className="grid gap-2.5 sm:hidden">
+      <section className="grid gap-2 sm:hidden">
         <SurfaceCard className="overflow-hidden">
-          <div className="grid gap-2.75">
-            <div className="flex items-start justify-between gap-3">
-              <div className="grid gap-1">
-                <span className="text-[0.74rem] font-medium tracking-[0.08em] text-text-2">
-                  {t('dashboard.totalBalance')}
-                </span>
-                <strong className="text-[clamp(2.3rem,2.1rem+1.35vw,3.1rem)] font-semibold leading-none tracking-[-0.08em] text-text-1">
-                  {loading ? '...' : formatCurrency(totalBalance)}
-                </strong>
-              </div>
-              <Badge variant="accent" className="self-start">
-                {monthKey ?? '---- --'}
-              </Badge>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.82rem] text-text-2">
-              <span>{netFlowLabel}</span>
-              <strong
-                className={cn(
-                  'text-[0.88rem] font-semibold tracking-[-0.03em]',
-                  monthlyNet >= 0 ? 'text-success' : 'text-danger',
-                )}
-              >
-                {monthlyNet >= 0 ? '+' : '-'}
-                {formatCurrency(Math.abs(monthlyNet))}
+          <div className="grid gap-2.5">
+            <div className="grid gap-1">
+              <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+                {t('dashboard.totalBalance')}
+              </span>
+              <strong className="text-[clamp(2.18rem,2.02rem+1.2vw,2.9rem)] font-semibold leading-none tracking-[-0.082em] text-text-1">
+                {loading ? '...' : formatCurrency(totalBalance)}
               </strong>
             </div>
 
-            <div className="grid gap-2 border-t border-border-subtle/90 pt-2.5">
-              <div className="grid grid-cols-2 gap-2">
-                <DashboardMobilePrimaryMetric
-                  label={t('dashboard.monthlyIncome')}
-                  value={loading ? '...' : formatCurrency(totalIncome)}
-                  tone="success"
-                />
-                <DashboardMobilePrimaryMetric
-                  label={t('dashboard.monthlyExpense')}
-                  value={loading ? '...' : formatCurrency(totalExpense)}
-                  tone="danger"
-                />
-              </div>
-
-              <div className="flex items-center justify-between gap-3 rounded-[calc(var(--radius-control)+0.02rem)] border border-border-subtle/80 bg-surface-2/42 px-3 py-2.5">
-                <div className="grid gap-0.5">
-                  <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-                    {t('dashboard.monthlyTransfers')}
-                  </span>
-                  <strong className="text-[0.98rem] font-semibold tracking-[-0.045em] text-accent-strong">
-                    {loading ? '...' : formatCurrency(totalTransfers)}
-                  </strong>
-                </div>
-                <Badge variant="accent" className="min-h-0 px-2.5 py-1 text-[0.68rem] font-medium">
-                  {activeWalletsLabel}
-                </Badge>
-              </div>
+            <div className="grid grid-cols-3 gap-1.5 border-t border-border-subtle/85 pt-2.5">
+              <DashboardMobilePrimaryMetric
+                label={t('dashboard.monthlyIncome')}
+                value={loading ? '...' : formatCurrency(totalIncome)}
+                tone="success"
+              />
+              <DashboardMobilePrimaryMetric
+                label={t('dashboard.monthlyExpense')}
+                value={loading ? '...' : formatCurrency(totalExpense)}
+                tone="danger"
+              />
+              <DashboardMobilePrimaryMetric
+                label={t('dashboard.monthlyTransfers')}
+                value={loading ? '...' : formatCurrency(totalTransfers)}
+                tone="accent"
+              />
             </div>
           </div>
         </SurfaceCard>
 
-        <DashboardMobileSupportSection
-          wallets={wallets}
-          topWallets={topWallets}
-          totalWalletBalance={totalWalletBalance}
+        <DashboardMobileFocusSection
           overallBudgetLimit={overallBudgetLimit}
           overallBudgetSpent={overallBudgetSpent}
           overallBudgetRemaining={overallBudgetRemaining}
-          overallBudgetRatio={overallBudgetRatio}
+          budgetTone={budgetTone}
           budgetStatusLabel={budgetStatusLabel}
           primaryWishlistItem={primaryWishlistItem}
           readyWishlistItemsCount={readyWishlistItemsCount}
+          language={language}
+          t={t}
+          formatCurrency={formatCurrency}
+        />
+
+        <DashboardMobileWalletSummarySection
+          wallets={wallets}
+          topWallets={topWallets}
           language={language}
           t={t}
           formatCurrency={formatCurrency}
@@ -409,165 +349,181 @@ export function DashboardTopSection({
 }
 
 interface DashboardDesktopSupportSectionProps {
-  overallBudgetLimit: number;
-  overallBudgetSpent: number;
-  overallBudgetRemaining: number;
-  overallBudgetRatio: number;
-  budgetTone: BudgetTone;
-  budgetStatusLabel: string;
-  primaryWishlistItem: DashboardWishlistItem | null;
-  readyWishlistItemsCount: number;
-  plannerLabel: string;
   quickInputLabel: string;
-  language: 'en' | 'id';
-  t: (path: string) => string;
-  formatCurrency: (amount: number) => string;
   onReviewQuickAdd: (draft: TransactionFormPrefill) => void;
 }
 
-function DashboardDesktopSupportSection({
-  overallBudgetLimit,
-  overallBudgetSpent,
-  overallBudgetRemaining,
-  overallBudgetRatio,
-  budgetTone,
-  budgetStatusLabel,
-  primaryWishlistItem,
-  readyWishlistItemsCount,
-  plannerLabel,
+function DashboardDesktopQuickInputSection({
   quickInputLabel,
-  language,
-  t,
-  formatCurrency,
   onReviewQuickAdd,
 }: DashboardDesktopSupportSectionProps) {
   return (
     <SurfaceCard
       padding="compact"
-      className="grid h-full content-start gap-3 border-border-strong/50"
+      className="grid h-full content-start gap-1.5 border-border-strong/24 bg-surface-2/10"
     >
-        <div className="grid gap-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="grid gap-0.5">
-              <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-                {quickInputLabel}
-              </span>
-            <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
-              {t('nav.quickTransaction')}
-            </strong>
-          </div>
-          <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
-            <Link href="/transactions">{t('dashboard.quickAdd.openForm')}</Link>
-          </Button>
-        </div>
-        <QuickAddComposer onReview={onReviewQuickAdd} />
+      <div className="grid gap-0.5">
+        <h2 className="m-0 text-[0.9rem] font-semibold tracking-[-0.04em] text-text-1">
+          {quickInputLabel}
+        </h2>
       </div>
-
-      <div className="h-px bg-border-subtle" />
-
-      <div className="grid gap-2.5">
-        <div className="grid gap-0.5">
-          <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-            {plannerLabel}
-          </span>
-          <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-            {language === 'id'
-              ? 'Budget dan wishlist prioritas'
-              : 'Budget and wishlist priorities'}
-          </strong>
-        </div>
-
-        <div className="grid gap-0 divide-y divide-border-subtle/90">
-          <DashboardPlannerModule
-            eyebrow={t('dashboard.budgetTitle')}
-            href="/budgets"
-            actionLabel={t('dashboard.viewAll')}
-          >
-            {overallBudgetLimit > 0 ? (
-              <div className="grid gap-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="grid gap-0.5">
-                    <strong className="text-lg font-semibold tracking-[-0.05em] text-text-1">
-                      {formatCurrency(overallBudgetSpent)}
-                    </strong>
-                    <span className="text-[0.76rem] text-text-2">
-                      {t('dashboard.budgetSpent')}
-                    </span>
-                  </div>
-                  <Badge variant={toneToBadgeVariant[budgetTone]}>
-                    {budgetStatusLabel}
-                  </Badge>
-                </div>
-                <ProgressMeter
-                  value={overallBudgetRatio}
-                  tone={toneToProgressTone[budgetTone]}
-                  className="h-1.5 bg-surface-1"
-                  ariaLabel={t('dashboard.budgetTitle')}
-                />
-                <div className="flex items-center justify-between gap-2 text-[0.76rem] text-text-2">
-                  <span>{formatCurrency(overallBudgetRemaining)}</span>
-                  <span>{formatCurrency(overallBudgetLimit)}</span>
-                </div>
-              </div>
-            ) : (
-              <CompactEmptyLine
-                icon={<Target size={15} />}
-                label={t('dashboard.noBudget')}
-              />
-            )}
-          </DashboardPlannerModule>
-
-          <DashboardPlannerModule
-            eyebrow={t('dashboard.wishlistTitle')}
-            href="/wishlist"
-            actionLabel={
-              readyWishlistItemsCount > 0
-                ? t('dashboard.reviewNow')
-                : t('dashboard.viewAll')
-            }
-          >
-            {primaryWishlistItem ? (
-              <div className="grid gap-2">
-                <div className="grid gap-0.5">
-                  <strong className="truncate text-base font-semibold tracking-[-0.04em] text-text-1">
-                    {primaryWishlistItem.item_name}
-                  </strong>
-                  <span className="text-[0.76rem] text-text-2">
-                    {getWishlistCountdownLabel(primaryWishlistItem, language)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-[0.76rem] text-text-2">
-                  <span>
-                    {readyWishlistItemsCount > 0
-                      ? t('dashboard.reviewNow')
-                      : t('dashboard.viewAll')}
-                  </span>
-                  <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                    {formatCurrency(primaryWishlistItem.target_price ?? 0)}
-                  </strong>
-                </div>
-              </div>
-            ) : (
-              <CompactEmptyLine
-                icon={<Clock3 size={15} />}
-                label={t('dashboard.noWishlistItems')}
-              />
-            )}
-          </DashboardPlannerModule>
-        </div>
-      </div>
+      <QuickAddComposer variant="dashboard" onReview={onReviewQuickAdd} />
     </SurfaceCard>
   );
 }
 
-interface DashboardMobileSupportSectionProps {
+interface DashboardDesktopWalletSummarySectionProps {
   wallets: DashboardWalletSummary[];
   topWallets: DashboardWalletSummary[];
   totalWalletBalance: number;
+  walletSummaryTitle: string;
+  language: 'en' | 'id';
+  t: (path: string) => string;
+  formatCurrency: (amount: number) => string;
+}
+
+function DashboardDesktopWalletSummarySection({
+  wallets,
+  topWallets,
+  totalWalletBalance,
+  walletSummaryTitle,
+  language,
+  t,
+  formatCurrency,
+}: DashboardDesktopWalletSummarySectionProps) {
+  return (
+    <div className="grid gap-2 self-start">
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid gap-0.5">
+          <h2 className="m-0 text-[0.92rem] font-semibold tracking-[-0.04em] text-text-1">
+            {walletSummaryTitle}
+          </h2>
+        </div>
+        <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[0.74rem]">
+          <Link href="/wallets">{t('dashboard.viewAll')}</Link>
+        </Button>
+      </div>
+
+      {wallets.length > 0 ? (
+        <div className="grid gap-2 sm:grid-cols-3">
+          {topWallets.slice(0, 3).map((wallet) => (
+            <DashboardWalletMiniCard
+              key={wallet.id}
+              wallet={wallet}
+              totalBalance={totalWalletBalance}
+              formatCurrency={formatCurrency}
+            />
+          ))}
+        </div>
+      ) : (
+        <CompactEmptyLine
+          icon={<Wallet size={15} />}
+          label={
+            language === 'id' ? 'Belum ada dompet aktif.' : 'No active wallets yet.'
+          }
+        />
+      )}
+
+      {wallets.length > topWallets.length ? (
+        <span className="text-[0.74rem] text-text-2">
+          {language === 'id'
+            ? `+${wallets.length - topWallets.length} dompet lainnya`
+            : `+${wallets.length - topWallets.length} more wallets`}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+interface DashboardDesktopFocusSectionProps {
   overallBudgetLimit: number;
   overallBudgetSpent: number;
   overallBudgetRemaining: number;
-  overallBudgetRatio: number;
+  budgetTone: BudgetTone;
+  budgetStatusLabel: string;
+  primaryWishlistItem: DashboardWishlistItem | null;
+  plannerLabel: string;
+  language: 'en' | 'id';
+  t: (path: string) => string;
+  formatCurrency: (amount: number) => string;
+}
+
+function DashboardDesktopFocusSection({
+  overallBudgetLimit,
+  overallBudgetSpent,
+  overallBudgetRemaining,
+  budgetTone,
+  budgetStatusLabel,
+  primaryWishlistItem,
+  plannerLabel,
+  language,
+  t,
+  formatCurrency,
+}: DashboardDesktopFocusSectionProps) {
+  const hasBudget = overallBudgetLimit > 0;
+  const hasWishlist = Boolean(primaryWishlistItem);
+  const showCombinedEmpty = !hasBudget && !hasWishlist;
+  const wishlistItem = primaryWishlistItem;
+  const budgetEmptyLabel = language === 'id' ? 'Belum diatur' : 'Not set';
+  const wishlistEmptyLabel =
+    language === 'id' ? 'Belum ada prioritas' : 'No priority yet';
+
+  return (
+    <div className="grid gap-1.5 self-start">
+      <div className="grid gap-0.5">
+        <h2 className="m-0 text-[0.88rem] font-semibold tracking-[-0.04em] text-text-1">
+          {plannerLabel}
+        </h2>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <DashboardFocusMiniBlock
+          href="/budgets"
+          label={t('dashboard.budgetTitle')}
+          status={hasBudget ? budgetStatusLabel : budgetEmptyLabel}
+          meta={
+            hasBudget
+              ? `${formatCurrency(overallBudgetSpent)} / ${formatCurrency(overallBudgetLimit)}`
+              : undefined
+          }
+          value={hasBudget ? formatCurrency(overallBudgetRemaining) : undefined}
+          valueTone={hasBudget ? toneToBadgeVariant[budgetTone] : 'default'}
+          muted={!hasBudget && !showCombinedEmpty}
+        />
+        <DashboardFocusMiniBlock
+          href="/wishlist"
+          label={t('dashboard.wishlistTitle')}
+          status={
+            hasWishlist && wishlistItem
+              ? wishlistItem.item_name
+              : wishlistEmptyLabel
+          }
+          meta={
+            hasWishlist && wishlistItem
+              ? getWishlistCountdownLabel(wishlistItem, language)
+              : showCombinedEmpty
+                ? language === 'id'
+                  ? 'Belum ada item prioritas'
+                  : 'No priority item yet'
+                : undefined
+          }
+          value={
+            hasWishlist && wishlistItem?.target_price
+              ? formatCurrency(wishlistItem.target_price)
+              : undefined
+          }
+          muted={!hasWishlist && !showCombinedEmpty}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface DashboardMobileFocusSectionProps {
+  overallBudgetLimit: number;
+  overallBudgetSpent: number;
+  overallBudgetRemaining: number;
+  budgetTone: BudgetTone;
   budgetStatusLabel: string;
   primaryWishlistItem: DashboardWishlistItem | null;
   readyWishlistItemsCount: number;
@@ -576,128 +532,129 @@ interface DashboardMobileSupportSectionProps {
   formatCurrency: (amount: number) => string;
 }
 
-function DashboardMobileSupportSection({
-  wallets,
-  topWallets,
-  totalWalletBalance,
+function DashboardMobileFocusSection({
   overallBudgetLimit,
   overallBudgetSpent,
   overallBudgetRemaining,
-  overallBudgetRatio,
+  budgetTone,
   budgetStatusLabel,
   primaryWishlistItem,
   readyWishlistItemsCount,
   language,
   t,
   formatCurrency,
-}: DashboardMobileSupportSectionProps) {
-  const hasWallets = wallets.length > 0;
-  const showSection =
-    hasWallets || overallBudgetLimit > 0 || Boolean(primaryWishlistItem);
+}: DashboardMobileFocusSectionProps) {
+  const hasBudget = overallBudgetLimit > 0;
+  const hasWishlist = Boolean(primaryWishlistItem) || readyWishlistItemsCount > 0;
+  const isEmpty = !hasBudget && !hasWishlist;
 
-  if (!showSection) {
+  const budgetValueToneClassName =
+    budgetTone === 'danger'
+      ? 'text-danger'
+      : budgetTone === 'warning'
+        ? 'text-warning'
+        : 'text-text-1';
+
+  return (
+    <SurfaceCard padding="compact" className="grid gap-1.5 sm:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
+          {language === 'id' ? 'Fokus bulan ini' : 'Monthly focus'}
+        </h2>
+      </div>
+
+      {isEmpty ? (
+        <CompactEmptyLine
+          icon={<Target size={15} />}
+          label={
+            language === 'id'
+              ? 'Belum ada budget atau wishlist prioritas.'
+              : 'No budget or wishlist priorities yet.'
+          }
+        />
+      ) : (
+        <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {hasBudget ? (
+          <MobileFocusRow
+            href="/budgets"
+            label={t('dashboard.budgetTitle')}
+            meta={`${formatCurrency(overallBudgetSpent)} / ${formatCurrency(overallBudgetLimit)}`}
+            value={formatCurrency(overallBudgetRemaining)}
+            valueClassName={budgetValueToneClassName}
+            hint={budgetStatusLabel}
+          />
+        ) : null}
+
+        {hasWishlist ? (
+          <MobileFocusRow
+            href="/wishlist"
+            label={t('dashboard.wishlistTitle')}
+            meta={
+              primaryWishlistItem
+                ? getWishlistCountdownLabel(primaryWishlistItem, language)
+                : language === 'id'
+                  ? `${readyWishlistItemsCount} siap ditinjau`
+                  : `${readyWishlistItemsCount} ready to review`
+            }
+            value={
+              primaryWishlistItem?.target_price
+                ? formatCurrency(primaryWishlistItem.target_price)
+                : undefined
+            }
+            hint={primaryWishlistItem?.item_name ?? t('dashboard.noWishlistItems')}
+          />
+        ) : null}
+        </div>
+      )}
+    </SurfaceCard>
+  );
+}
+
+interface DashboardMobileWalletSummarySectionProps {
+  wallets: DashboardWalletSummary[];
+  topWallets: DashboardWalletSummary[];
+  language: 'en' | 'id';
+  t: (path: string) => string;
+  formatCurrency: (amount: number) => string;
+}
+
+function DashboardMobileWalletSummarySection({
+  wallets,
+  topWallets,
+  language,
+  t,
+  formatCurrency,
+}: DashboardMobileWalletSummarySectionProps) {
+  if (wallets.length === 0) {
     return null;
   }
 
-  const budgetMeta =
-    overallBudgetLimit > 0
-      ? `${formatCurrency(overallBudgetSpent)} / ${formatCurrency(overallBudgetLimit)}`
-      : undefined;
-  const wishlistMeta = primaryWishlistItem?.target_price
-    ? formatCurrency(primaryWishlistItem.target_price)
-    : readyWishlistItemsCount > 0
-      ? language === 'id'
-        ? `${readyWishlistItemsCount} siap ditinjau`
-        : `${readyWishlistItemsCount} ready to review`
-      : undefined;
-  const walletSummaryLabel =
-    language === 'id'
-      ? `${wallets.length} dompet aktif`
-      : `${wallets.length} active wallets`;
-
   return (
-    <SurfaceCard padding="compact" className="grid gap-3 sm:hidden">
-      <div className="grid grid-cols-2 gap-2">
-        <MobilePriorityCard
-          href="/budgets"
-          eyebrow={t('dashboard.budgetTitle')}
-          title={
-            overallBudgetLimit > 0
-              ? budgetStatusLabel
-              : t('dashboard.noBudget')
-          }
-          value={
-            overallBudgetLimit > 0
-              ? language === 'id'
-                ? `Sisa ${formatCurrency(overallBudgetRemaining)}`
-                : `Remaining ${formatCurrency(overallBudgetRemaining)}`
-              : undefined
-          }
-          meta={budgetMeta}
-          tone={
-            overallBudgetLimit > 0
-              ? overallBudgetRatio >= 1
-                ? 'danger'
-                : overallBudgetRatio >= 0.8
-                  ? 'warning'
-                  : 'accent'
-              : 'default'
-          }
-        />
-        <MobilePriorityCard
-          href="/wishlist"
-          eyebrow={t('dashboard.wishlistTitle')}
-          title={
-            primaryWishlistItem
-              ? primaryWishlistItem.item_name
-              : t('dashboard.noWishlistItems')
-          }
-          value={
-            primaryWishlistItem
-              ? getWishlistCountdownLabel(primaryWishlistItem, language)
-              : undefined
-          }
-          meta={wishlistMeta}
-          tone={primaryWishlistItem ? 'accent' : 'default'}
-        />
+    <SurfaceCard padding="compact" className="grid gap-1.5 sm:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="grid gap-0.5">
+          <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
+            {t('dashboard.walletSnapshotTitle')}
+          </h2>
+          <span className="text-[0.76rem] text-text-2">
+            {language === 'id'
+              ? `${wallets.length} dompet aktif`
+              : `${wallets.length} active wallets`}
+          </span>
+        </div>
+        <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
+          <Link href="/wallets">{t('dashboard.viewAll')}</Link>
+        </Button>
       </div>
 
-      <div className="grid gap-2.5 border-t border-border-subtle/80 pt-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="grid gap-0.5">
-            <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-              {t('dashboard.walletSnapshotTitle')}
-            </span>
-            <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-              {walletSummaryLabel}
-            </strong>
-          </div>
-          <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
-            <Link href="/wallets">{t('dashboard.viewAll')}</Link>
-          </Button>
-        </div>
-
-        {hasWallets ? (
-          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {topWallets.map((wallet) => (
-              <MobileWalletStripCard
-                key={wallet.id}
-                wallet={wallet}
-                totalBalance={totalWalletBalance}
-                formatCurrency={formatCurrency}
-              />
-            ))}
-          </div>
-        ) : (
-          <CompactEmptyLine
-            icon={<Wallet size={15} />}
-            label={
-              language === 'id'
-                ? 'Belum ada dompet aktif.'
-                : 'No active wallets yet.'
-            }
+      <div className="grid gap-0 divide-y divide-border-subtle/80">
+        {topWallets.slice(0, 3).map((wallet) => (
+          <MobileWalletListRow
+            key={wallet.id}
+            wallet={wallet}
+            formatCurrency={formatCurrency}
           />
-        )}
+        ))}
       </div>
     </SurfaceCard>
   );
@@ -782,13 +739,21 @@ export function DashboardRecentTransactionsSection({
   className,
 }: DashboardRecentTransactionsSectionProps) {
   return (
-    <SurfaceCard className={cn('h-full', className)}>
-      <div className="grid h-full gap-2">
+    <SurfaceCard
+      padding="compact"
+      className={cn('h-full border-border-strong/26 bg-surface-1/96', className)}
+    >
+      <div className="grid h-full gap-0.75">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="m-0 text-[0.95rem] font-semibold tracking-[-0.035em] text-text-1">
+          <h2 className="m-0 text-[0.94rem] font-semibold tracking-[-0.04em] text-text-1">
             {t('dashboard.recentTransactions')}
           </h2>
-          <Button asChild variant="ghost" size="sm" className="h-6.5 px-2.5 sm:h-7">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-[0.74rem]"
+          >
             <Link href="/transactions">{t('dashboard.viewAll')}</Link>
           </Button>
         </div>
@@ -810,7 +775,7 @@ export function DashboardRecentTransactionsSection({
                 language={language}
                 t={t}
                 formatCurrency={formatCurrency}
-                className={index > 0 ? 'border-t border-border-subtle' : undefined}
+                className={index > 0 ? 'border-t border-border-subtle/70' : undefined}
               />
             ))}
           </div>
@@ -848,31 +813,34 @@ export function DashboardDesktopInsightsSection({
   hasCategoryBreakdown,
 }: DashboardDesktopInsightsSectionProps) {
   return (
-    <SurfaceCard className="hidden h-full sm:grid">
-      <div className="grid h-full gap-3">
-        <SectionHeading
-          title={language === 'id' ? 'Insights' : 'Insights'}
-          actions={
-            <div className="inline-flex rounded-full border border-border-subtle bg-surface-2 p-1">
-              <InsightToggleButton
-                active={insightView === 'activity'}
-                onClick={() => onInsightViewChange('activity')}
-              >
-                {language === 'id' ? 'Aktivitas' : 'Activity'}
-              </InsightToggleButton>
-              <InsightToggleButton
-                active={insightView === 'breakdown'}
-                onClick={() => onInsightViewChange('breakdown')}
-              >
-                {language === 'id' ? 'Kategori' : 'Category'}
-              </InsightToggleButton>
-            </div>
-          }
-        />
+    <SurfaceCard
+      padding="compact"
+      className="hidden h-full border-border-strong/24 bg-surface-2/10 sm:grid"
+    >
+      <div className="grid h-full gap-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="m-0 text-[0.9rem] font-semibold tracking-[-0.04em] text-text-1">
+            {language === 'id' ? 'Insights' : 'Insights'}
+          </h2>
+          <div className="inline-flex rounded-full border border-border-subtle/55 bg-surface-1/72 p-0.5">
+            <InsightToggleButton
+              active={insightView === 'activity'}
+              onClick={() => onInsightViewChange('activity')}
+            >
+              {language === 'id' ? 'Aktivitas' : 'Activity'}
+            </InsightToggleButton>
+            <InsightToggleButton
+              active={insightView === 'breakdown'}
+              onClick={() => onInsightViewChange('breakdown')}
+            >
+              {language === 'id' ? 'Kategori' : 'Category'}
+            </InsightToggleButton>
+          </div>
+        </div>
 
         {insightView === 'activity' ? (
-          <div className="grid h-full gap-3">
-            <div className="flex flex-wrap items-center gap-2 text-[0.74rem] font-medium text-text-2">
+          <div className="grid h-full gap-1.5">
+            <div className="flex flex-wrap items-center gap-2 text-[0.7rem] font-medium text-text-2">
               <ChartLegendLabel
                 colorClassName="bg-success"
                 label={t('dashboard.monthlyIncome')}
@@ -883,15 +851,15 @@ export function DashboardDesktopInsightsSection({
               />
             </div>
             <ChartSurface className="h-full">
-              <div className="h-[11.5rem] xl:h-[12rem] 2xl:h-[12.5rem]">
+              <div className="h-[9.4rem] xl:h-[9.8rem] 2xl:h-[10.1rem]">
                 <TransactionBarChart data={barData} />
               </div>
             </ChartSurface>
           </div>
         ) : (
-          <div className="grid h-full gap-3">
+          <div className="grid h-full gap-1.5">
             <ChartSurface className="h-full">
-              <div className="h-[11.5rem] xl:h-[12rem] 2xl:h-[12.5rem]">
+              <div className="h-[9.4rem] xl:h-[9.8rem] 2xl:h-[10.1rem]">
                 {hasCategoryBreakdown ? (
                   <CategoryDoughnutChart data={categoryData} />
                 ) : (
@@ -915,16 +883,6 @@ export function DashboardDesktopInsightsSection({
 interface DashboardMobilePanelsSectionProps {
   insightView: DashboardInsightView;
   onInsightViewChange: (view: DashboardInsightView) => void;
-  overallBudgetLimit: number;
-  overallBudgetSpent: number;
-  overallBudgetRemaining: number;
-  overallBudgetRatio: number;
-  budgetTone: BudgetTone;
-  budgetStatusLabel: string;
-  categoryBudgetRows: Array<DashboardBudgetRecord & { spent: number; ratio: number }>;
-  wishlistItems: DashboardWishlistItem[];
-  wishlistHighlights: DashboardWishlistItem[];
-  primaryWishlistItem: DashboardWishlistItem | null;
   language: 'en' | 'id';
   t: (path: string) => string;
   formatCurrency: (amount: number) => string;
@@ -944,19 +902,8 @@ interface DashboardMobilePanelsSectionProps {
 export function DashboardMobilePanelsSection({
   insightView,
   onInsightViewChange,
-  overallBudgetLimit,
-  overallBudgetSpent,
-  overallBudgetRemaining,
-  overallBudgetRatio,
-  budgetTone,
-  budgetStatusLabel,
-  categoryBudgetRows,
-  wishlistItems,
-  wishlistHighlights,
-  primaryWishlistItem,
   language,
   t,
-  formatCurrency,
   barData,
   categoryData,
   hasCategoryBreakdown,
@@ -965,198 +912,74 @@ export function DashboardMobilePanelsSection({
     barData.income.some((value) => value > 0) ||
     barData.expense.some((value) => value > 0);
   const hasInsights = hasActivityData || hasCategoryBreakdown;
-  const hasPlannerDetails =
-    overallBudgetLimit > 0 || wishlistItems.length > 0 || categoryBudgetRows.length > 0;
 
-  if (!hasInsights && !hasPlannerDetails) {
+  if (!hasInsights) {
     return null;
   }
 
   return (
     <section className="grid gap-2.5 sm:hidden">
-      {hasInsights ? (
-        <MobileDisclosureCard
-          title={language === 'id' ? 'Insights' : 'Insights'}
-          description={
-            insightView === 'activity'
-              ? t('dashboard.weeklyActivity')
-              : t('dashboard.expenseBreakdown')
-          }
-        >
-          <div className="grid gap-3">
-            <div className="inline-flex w-fit rounded-full border border-border-subtle bg-surface-2 p-1">
-              <InsightToggleButton
-                active={insightView === 'activity'}
-                onClick={() => onInsightViewChange('activity')}
-              >
-                {language === 'id' ? 'Aktivitas' : 'Activity'}
-              </InsightToggleButton>
-              <InsightToggleButton
-                active={insightView === 'breakdown'}
-                onClick={() => onInsightViewChange('breakdown')}
-              >
-                {language === 'id' ? 'Kategori' : 'Category'}
-              </InsightToggleButton>
-            </div>
-
-            {insightView === 'activity' ? (
-              <div className="grid gap-3">
-                <SectionHeading
-                  title={t('dashboard.weeklyActivity')}
-                  actions={
-                    <div className="flex items-center gap-3 text-[0.74rem] font-medium text-text-2">
-                      <ChartLegendLabel
-                        colorClassName="bg-success"
-                        label={t('dashboard.monthlyIncome')}
-                      />
-                      <ChartLegendLabel
-                        colorClassName="bg-danger"
-                        label={t('dashboard.monthlyExpense')}
-                      />
-                    </div>
-                  }
-                />
-                <ChartSurface>
-                  <div className="h-[13.5rem]">
-                    <TransactionBarChart data={barData} />
-                  </div>
-                </ChartSurface>
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                <SectionHeading title={t('dashboard.expenseBreakdown')} />
-                <ChartSurface>
-                  <div className="h-[13.5rem]">
-                    {hasCategoryBreakdown ? (
-                      <CategoryDoughnutChart data={categoryData} />
-                    ) : (
-                      <div className="grid h-full place-items-center">
-                        <EmptyState
-                          title={t('dashboard.noExpenseData')}
-                          compact
-                          icon={<PieChart size={18} />}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </ChartSurface>
-              </div>
-            )}
+      <MobileDisclosureCard
+        title={language === 'id' ? 'Insights' : 'Insights'}
+        description={
+          insightView === 'activity'
+            ? t('dashboard.weeklyActivity')
+            : t('dashboard.expenseBreakdown')
+        }
+      >
+        <div className="grid gap-2.5">
+          <div className="inline-flex w-fit rounded-full border border-border-subtle bg-surface-2 p-1">
+            <InsightToggleButton
+              active={insightView === 'activity'}
+              onClick={() => onInsightViewChange('activity')}
+            >
+              {language === 'id' ? 'Aktivitas' : 'Activity'}
+            </InsightToggleButton>
+            <InsightToggleButton
+              active={insightView === 'breakdown'}
+              onClick={() => onInsightViewChange('breakdown')}
+            >
+              {language === 'id' ? 'Kategori' : 'Category'}
+            </InsightToggleButton>
           </div>
-        </MobileDisclosureCard>
-      ) : null}
 
-      {hasPlannerDetails ? (
-        <MobileDisclosureCard
-          title={language === 'id' ? 'Budget & wishlist' : 'Budget & wishlist'}
-          description={
-            overallBudgetLimit > 0
-              ? budgetStatusLabel
-              : primaryWishlistItem
-                ? primaryWishlistItem.item_name
-                : undefined
-          }
-          defaultOpen={overallBudgetRatio >= 0.8}
-        >
-          <div className="grid gap-3">
-            <div className="grid gap-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
-                  {t('dashboard.budgetTitle')}
-                </strong>
-                <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
-                  <Link href="/budgets">{t('dashboard.viewAll')}</Link>
-                </Button>
-              </div>
-
-              {overallBudgetLimit > 0 ? (
-                <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.1rem)] border border-border-subtle/80 bg-surface-2/45 px-3 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="grid gap-0.5">
-                      <strong className="text-base font-semibold tracking-[-0.04em] text-text-1">
-                        {formatCurrency(overallBudgetSpent)}
-                      </strong>
-                      <span className="text-[0.78rem] text-text-2">
-                        {t('dashboard.budgetSpent')}
-                      </span>
-                    </div>
-                    <Badge variant={toneToBadgeVariant[budgetTone]}>
-                      {budgetStatusLabel}
-                    </Badge>
-                  </div>
-
-                  <ProgressMeter
-                    value={overallBudgetRatio}
-                    tone={toneToProgressTone[budgetTone]}
-                    className="h-2 bg-surface-1"
-                    ariaLabel={t('dashboard.budgetTitle')}
-                  />
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[0.78rem] text-text-2">
-                    <span>
-                      {t('dashboard.budgetRemaining')}: {formatCurrency(overallBudgetRemaining)}
-                    </span>
-                    <span>
-                      {t('dashboard.budgetLimit')}: {formatCurrency(overallBudgetLimit)}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <CompactEmptyLine
-                  icon={<Target size={15} />}
-                  label={t('dashboard.noBudget')}
+          {insightView === 'activity' ? (
+            <div className="grid gap-2">
+              <div className="flex items-center gap-3 text-[0.74rem] font-medium text-text-2">
+                <ChartLegendLabel
+                  colorClassName="bg-success"
+                  label={t('dashboard.monthlyIncome')}
                 />
-              )}
-
-              {categoryBudgetRows.length > 0 ? (
-                <div className="grid gap-1.5">
-                  {categoryBudgetRows.map((budget) => (
-                    <BudgetUsageRow
-                      key={budget.id}
-                      budget={budget}
-                      formatCurrency={formatCurrency}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="h-px bg-border-subtle/80" />
-
-            <div className="grid gap-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
-                  {t('dashboard.wishlistTitle')}
-                </strong>
-                <Button asChild variant="ghost" size="sm" className="h-7 px-2.5">
-                  <Link href="/wishlist">
-                    {primaryWishlistItem ? t('dashboard.reviewNow') : t('dashboard.viewAll')}
-                  </Link>
-                </Button>
-              </div>
-
-              {wishlistItems.length === 0 ? (
-                <CompactEmptyLine
-                  icon={<Clock3 size={15} />}
-                  label={t('dashboard.noWishlistItems')}
+                <ChartLegendLabel
+                  colorClassName="bg-danger"
+                  label={t('dashboard.monthlyExpense')}
                 />
-              ) : (
-                <div className="overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/45">
-                  {wishlistHighlights.map((item, index) => (
-                    <WishlistReviewRow
-                      key={item.id}
-                      item={item}
-                      language={language}
-                      formatCurrency={formatCurrency}
-                      className={index > 0 ? 'border-t border-border-subtle' : undefined}
-                    />
-                  ))}
+              </div>
+              <ChartSurface>
+                <div className="h-[12.5rem]">
+                  <TransactionBarChart data={barData} />
                 </div>
-              )}
+              </ChartSurface>
             </div>
-          </div>
-        </MobileDisclosureCard>
-      ) : null}
+          ) : (
+            <ChartSurface>
+              <div className="h-[12.5rem]">
+                {hasCategoryBreakdown ? (
+                  <CategoryDoughnutChart data={categoryData} />
+                ) : (
+                  <div className="grid h-full place-items-center">
+                    <EmptyState
+                      title={t('dashboard.noExpenseData')}
+                      compact
+                      icon={<PieChart size={18} />}
+                    />
+                  </div>
+                )}
+              </div>
+            </ChartSurface>
+          )}
+        </div>
+      </MobileDisclosureCard>
     </section>
   );
 }
@@ -1191,48 +1014,6 @@ export function DashboardQuickTransactionDialog({
         onCancel={() => onOpenChange(false)}
       />
     </ModalShell>
-  );
-}
-
-function MobilePriorityCard({
-  href,
-  eyebrow,
-  title,
-  value,
-  meta,
-  tone = 'default',
-}: {
-  href: string;
-  eyebrow: string;
-  title: string;
-  value?: string;
-  meta?: string;
-  tone?: 'default' | 'accent' | 'warning' | 'danger';
-}) {
-  const toneClassName = {
-    default: 'border-border-subtle/80 bg-surface-2/35',
-    accent: 'border-accent/20 bg-surface-accent/35',
-    warning: 'border-warning/25 bg-warning-soft/25',
-    danger: 'border-danger/25 bg-danger-soft/20',
-  }[tone];
-
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'grid gap-1.25 rounded-[calc(var(--radius-card)-0.14rem)] border px-3 py-2.5 transition-all duration-300 hover:border-border-strong hover:bg-surface-2/65',
-        toneClassName,
-      )}
-    >
-      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
-        {eyebrow}
-      </span>
-      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-        {title}
-      </strong>
-      {value ? <span className="text-[0.78rem] text-text-2">{value}</span> : null}
-      {meta ? <span className="text-[0.72rem] text-text-2">{meta}</span> : null}
-    </Link>
   );
 }
 
@@ -1354,18 +1135,18 @@ function DashboardMobilePrimaryMetric({
   return (
     <div
       className={cn(
-        'grid gap-1 rounded-[calc(var(--radius-control)+0.02rem)] border px-3 py-2.5',
+        'grid min-w-0 gap-0.75 rounded-[calc(var(--radius-control)+0.02rem)] border px-2.5 py-2',
         toneClassName,
         className,
       )}
     >
       <div className="inline-flex items-center gap-2">
         <span className={cn('h-1.5 w-1.5 rounded-full', dotClassName)} />
-        <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+        <span className="truncate text-[0.7rem] font-medium tracking-[-0.01em] text-text-2">
           {label}
         </span>
       </div>
-      <strong className="text-[1rem] font-semibold tracking-[-0.045em] text-text-1">
+      <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.045em] text-text-1">
         {value}
       </strong>
     </div>
@@ -1390,39 +1171,13 @@ function DashboardHeroMetric({
   }[tone];
 
   return (
-    <div className={cn('grid gap-1 px-3 py-2.5 sm:min-h-[4.45rem]', className)}>
-      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+    <div className={cn('grid gap-0.5 sm:min-h-0', className)}>
+      <span className="text-[0.68rem] font-medium tracking-[0.01em] text-text-2">
         {label}
       </span>
-      <strong className={cn('text-[1rem] font-semibold tracking-[-0.045em]', toneClassName)}>
+      <strong className={cn('text-[0.94rem] font-semibold tracking-[-0.04em]', toneClassName)}>
         {value}
       </strong>
-    </div>
-  );
-}
-
-function DashboardPlannerModule({
-  eyebrow,
-  href,
-  actionLabel,
-  children,
-}: {
-  eyebrow: string;
-  href: string;
-  actionLabel: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="grid gap-2.5 py-2.5 first:pt-0 last:pb-0">
-      <div className="flex items-center justify-between gap-2">
-        <strong className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2">
-          {eyebrow}
-        </strong>
-        <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[0.72rem]">
-          <Link href={href}>{actionLabel}</Link>
-        </Button>
-      </div>
-      {children}
     </div>
   );
 }
@@ -1444,7 +1199,7 @@ function CompactEmptyLine({
   );
 }
 
-function HeroWalletSummaryRow({
+function DashboardWalletMiniCard({
   wallet,
   totalBalance,
   formatCurrency,
@@ -1454,23 +1209,99 @@ function HeroWalletSummaryRow({
   formatCurrency: (amount: number) => string;
 }) {
   const share = getWalletShare(wallet, totalBalance);
+  const accentColor = normalizeHexColor(wallet.color) ?? 'var(--accent)';
+  const accentBorderColor = withHexAlpha(wallet.color, '2c');
+  const accentBackgroundColor = withHexAlpha(wallet.color, '12');
+  const accentChipColor = withHexAlpha(wallet.color, '18');
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 first:pt-0 last:pb-0">
-      <div className="flex min-w-0 items-center gap-2">
+    <Link
+      href="/wallets"
+      className="grid gap-2 rounded-[calc(var(--radius-control)+0.08rem)] border border-border-subtle/60 bg-surface-1/90 px-3.5 py-3 shadow-[0_10px_24px_-24px_rgba(15,23,42,0.24)] transition-[border-color,background-color,transform] duration-200 hover:-translate-y-[1px] hover:bg-surface-1"
+      style={{
+        borderColor: accentBorderColor,
+        backgroundColor: accentBackgroundColor,
+      }}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-2">
         <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: wallet.color || 'var(--accent)' }}
-        />
-        <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
-          {wallet.name}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-[0.9rem] border border-white/65 bg-surface-1/82"
+          style={{
+            color: accentColor,
+            backgroundColor: accentChipColor,
+          }}
+        >
+          <Wallet size={15} />
+        </span>
+        <span className="inline-flex min-h-[1.35rem] items-center rounded-full bg-surface-1/78 px-2 py-0.5 text-[0.66rem] font-medium text-text-2">
+          {share}%
+        </span>
+      </div>
+      <div className="grid gap-0.75">
+        <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
+            {wallet.name}
+        </strong>
+        <strong className="whitespace-nowrap text-[1.02rem] font-semibold tracking-[-0.045em] text-text-1">
+          {formatCurrency(wallet.balance)}
         </strong>
       </div>
-      <strong className="whitespace-nowrap text-sm font-semibold tracking-[-0.03em] text-text-1">
-        {formatCurrency(wallet.balance)}
+    </Link>
+  );
+}
+
+function DashboardFocusMiniBlock({
+  href,
+  label,
+  status,
+  meta,
+  value,
+  valueTone = 'default',
+  muted = false,
+}: {
+  href: string;
+  label: string;
+  status: string;
+  meta?: string;
+  value?: string;
+  valueTone?: 'default' | 'accent' | 'success' | 'warning' | 'danger';
+  muted?: boolean;
+}) {
+  const valueToneClassName = {
+    default: 'text-text-1',
+    accent: 'text-accent-strong',
+    success: 'text-success',
+    warning: 'text-warning',
+    danger: 'text-danger',
+  }[valueTone];
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'grid gap-1 rounded-[calc(var(--radius-control)+0.02rem)] border border-border-subtle/55 px-3 py-2 transition-[border-color,background-color] duration-200 hover:border-border-strong/45',
+        muted ? 'bg-surface-1/46' : 'bg-surface-1/78',
+      )}
+    >
+      <span className="text-[0.68rem] font-medium tracking-[0.01em] text-text-2">
+        {label}
+      </span>
+      <strong className="truncate text-[0.82rem] font-semibold tracking-[-0.03em] text-text-1">
+        {status}
       </strong>
-      <span className="text-[0.72rem] font-medium text-text-2">{share}%</span>
-    </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-text-2">
+        {meta ? <span className="truncate">{meta}</span> : <span className="sr-only">-</span>}
+        {value ? (
+          <strong
+            className={cn(
+              'whitespace-nowrap font-semibold tracking-[-0.02em]',
+              valueToneClassName,
+            )}
+          >
+            {value}
+          </strong>
+        ) : null}
+      </div>
+    </Link>
   );
 }
 
@@ -1488,8 +1319,10 @@ function InsightToggleButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-[var(--chip-height)] items-center rounded-full px-3 text-[0.74rem] font-medium transition-all duration-300',
-        active ? 'bg-surface-1 text-text-1 shadow-xs' : 'text-text-2 hover:text-text-1',
+        'inline-flex min-h-[1.72rem] items-center rounded-full px-2.25 text-[0.66rem] font-medium transition-all duration-300',
+        active
+          ? 'bg-surface-1/92 text-text-1 shadow-[0_6px_16px_-16px_rgba(15,23,42,0.45)]'
+          : 'text-text-2 hover:text-text-1',
       )}
     >
       {children}
@@ -1497,71 +1330,76 @@ function InsightToggleButton({
   );
 }
 
-function MobileWalletStripCard({
-  wallet,
-  totalBalance,
-  formatCurrency,
+function MobileFocusRow({
+  href,
+  label,
+  hint,
+  meta,
+  value,
+  valueClassName,
 }: {
-  wallet: DashboardWalletSummary;
-  totalBalance: number;
-  formatCurrency: (amount: number) => string;
+  href: string;
+  label: string;
+  hint: string;
+  meta?: string;
+  value?: string;
+  valueClassName?: string;
 }) {
-  const share = getWalletShare(wallet, totalBalance);
-
   return (
     <Link
-      href="/wallets"
-      className="grid min-w-[8.8rem] gap-1 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle/80 bg-surface-1 px-2.75 py-2"
+      href={href}
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: wallet.color || 'var(--accent)' }}
-          />
-          <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
-            {wallet.name}
-          </strong>
-        </div>
-        <span className="text-[0.7rem] font-medium text-text-2">{share}%</span>
+      <div className="grid min-w-0 gap-0.5">
+        <span className="text-[0.74rem] font-medium tracking-[-0.01em] text-text-2">
+          {label}
+        </span>
+        <strong className="truncate text-sm font-semibold tracking-[-0.03em] text-text-1">
+          {hint}
+        </strong>
       </div>
-      <strong className="text-[0.94rem] font-semibold tracking-[-0.03em] text-text-1">
-        {formatCurrency(wallet.balance)}
-      </strong>
+      <div className="grid justify-items-end gap-0.5 text-right">
+        {value ? (
+          <strong
+            className={cn(
+              'whitespace-nowrap text-sm font-semibold tracking-[-0.03em] text-text-1',
+              valueClassName,
+            )}
+          >
+            {value}
+          </strong>
+        ) : null}
+        {meta ? <span className="text-[0.74rem] text-text-2">{meta}</span> : null}
+      </div>
     </Link>
   );
 }
 
-function BudgetUsageRow({
-  budget,
+function MobileWalletListRow({
+  wallet,
   formatCurrency,
 }: {
-  budget: DashboardBudgetRecord & { spent: number; ratio: number };
+  wallet: DashboardWalletSummary;
   formatCurrency: (amount: number) => string;
 }) {
-  const tone = getBudgetTone(budget.ratio);
-
   return (
-    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/55 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
-          {budget.categories?.name || 'Category'}
+    <Link
+      href="/wallets"
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: wallet.color || 'var(--accent)' }}
+        />
+        <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
+          {wallet.name}
         </strong>
-        <span className="text-[0.74rem] font-medium text-text-2">
-          {Math.min(Math.round(budget.ratio * 100), 999)}%
-        </span>
       </div>
-      <ProgressMeter
-        value={budget.ratio}
-        tone={toneToProgressTone[tone]}
-        className="h-1.5 bg-surface-1"
-        ariaLabel={budget.categories?.name || 'Category'}
-      />
-      <div className="flex items-center justify-between gap-3 text-[0.78rem] text-text-2">
-        <span>{formatCurrency(budget.spent)}</span>
-        <span>{formatCurrency(budget.amount_limit ?? 0)}</span>
-      </div>
-    </div>
+      <strong className="whitespace-nowrap text-sm font-semibold tracking-[-0.03em] text-text-1">
+        {formatCurrency(wallet.balance)}
+      </strong>
+    </Link>
   );
 }
 
@@ -1579,36 +1417,33 @@ function RecentActivityRow({
   className?: string;
 }) {
   if (transaction.kind === 'transfer') {
-    const transferMeta = [transaction.fromWalletName, transaction.toWalletName]
+    const supportingMeta = [transaction.fromWalletName, transaction.toWalletName]
       .filter(Boolean)
       .join(' -> ');
-    const supportingMeta = transaction.note
-      ? `${transferMeta} / ${transaction.note}`
-      : transferMeta;
 
     return (
       <div
         className={cn(
-          'grid min-h-[3.6rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 px-2.75 py-2 sm:min-h-[4rem] sm:gap-3 sm:px-3 sm:py-2.5',
+          'grid min-h-[2.56rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 px-0.5 py-1.25 sm:min-h-[2.9rem] sm:gap-2 sm:px-1.5 sm:py-1.5',
           className,
         )}
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-7.5 w-7.5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent-strong sm:h-8 sm:w-8">
-            <ArrowLeftRight size={16} />
-          </span>
-          <div className="grid min-w-0 gap-0.5">
-            <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
+        <div className="flex min-w-0 items-center gap-2">
+            <span className="grid h-5.5 w-5.5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent-strong sm:h-6 sm:w-6">
+              <ArrowLeftRight size={14} />
+            </span>
+            <div className="grid min-w-0 gap-0.5">
+            <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
               {transaction.title}
             </strong>
-            <span className="truncate text-[0.78rem] text-text-2">{supportingMeta}</span>
+            <span className="truncate text-[0.7rem] text-text-2">{supportingMeta}</span>
           </div>
         </div>
         <div className="grid gap-0.5 text-right">
-          <strong className="text-sm font-semibold tracking-[-0.03em] text-accent-strong">
+          <strong className="text-[0.88rem] font-semibold tracking-[-0.03em] text-accent-strong">
             {formatCurrency(transaction.amount)}
           </strong>
-          <span className="text-[0.74rem] text-text-2">
+          <span className="text-[0.7rem] text-text-2">
             {formatShortDate(getTransactionDisplayDate(transaction), language)}
           </span>
         </div>
@@ -1620,94 +1455,54 @@ function RecentActivityRow({
     transaction.type === 'income'
       ? 'bg-success-soft text-success'
       : 'bg-danger-soft text-danger';
-  const supportingMeta = [
-    transaction.wallets?.name || t('transactions.unknownWallet'),
-    transaction.categories?.name || t('common.uncategorized'),
-  ].join(' / ');
+  const supportingMeta =
+    transaction.categories?.name ||
+    transaction.wallets?.name ||
+    t('common.uncategorized');
 
   return (
     <div
-        className={cn(
-        'grid min-h-[3.6rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 px-2.75 py-2 sm:min-h-[4rem] sm:gap-3 sm:px-3 sm:py-2.5',
+      className={cn(
+        'grid min-h-[2.56rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 px-0.5 py-1.25 sm:min-h-[2.9rem] sm:gap-2 sm:px-1.5 sm:py-1.5',
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-3">
-        <span className={cn('grid h-7.5 w-7.5 shrink-0 place-items-center rounded-full sm:h-8 sm:w-8', toneClassName)}>
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className={cn(
+            'grid h-5.5 w-5.5 shrink-0 place-items-center rounded-full sm:h-6 sm:w-6',
+            toneClassName,
+          )}
+        >
           {getCategoryIcon(
             transaction.categories?.name,
             transaction.type,
-            16,
+            15,
             transaction.categories?.icon ?? undefined,
           )}
         </span>
         <div className="grid min-w-0 gap-0.5">
-          <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
+          <strong className="truncate text-[0.88rem] font-semibold tracking-[-0.02em] text-text-1">
             {transaction.title || transaction.note || t('common.noNote')}
           </strong>
-          <span className="truncate text-[0.78rem] text-text-2">{supportingMeta}</span>
+          <span className="truncate text-[0.7rem] text-text-2">{supportingMeta}</span>
         </div>
       </div>
       <div className="grid gap-0.5 text-right">
         <strong
           className={cn(
-            'text-sm font-semibold tracking-[-0.03em]',
+            'text-[0.88rem] font-semibold tracking-[-0.03em]',
             transaction.type === 'income' ? 'text-success' : 'text-danger',
           )}
         >
           {transaction.type === 'income' ? '+' : '-'}
           {formatCurrency(transaction.amount)}
         </strong>
-        <span className="text-[0.74rem] text-text-2">
+        <span className="text-[0.7rem] text-text-2">
           {formatShortDate(getTransactionDisplayDate(transaction), language)}
         </span>
       </div>
     </div>
-  );
-}
-
-function WishlistReviewRow({
-  item,
-  language,
-  formatCurrency,
-  className,
-}: {
-  item: DashboardWishlistItem;
-  language: 'en' | 'id';
-  formatCurrency: (amount: number) => string;
-  className?: string;
-}) {
-  const ready =
-    differenceInCalendarDays(parseISO(item.review_date), new Date()) <= 0;
-
-  return (
-    <Link
-      href="/wishlist"
-      className={cn(
-        'flex min-h-[var(--list-row-min-height)] items-center justify-between gap-3.5 px-3 py-3 transition-all duration-300 hover:bg-surface-2/75',
-        className,
-      )}
-    >
-      <div className="grid min-w-0 gap-1">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              'h-2.5 w-2.5 rounded-full',
-              ready ? 'bg-accent-strong' : 'bg-border-strong',
-            )}
-          />
-          <strong className="truncate text-sm font-semibold tracking-[-0.02em] text-text-1">
-            {item.item_name}
-          </strong>
-        </div>
-        <span className="truncate text-[0.78rem] text-text-2">
-          {getWishlistCountdownLabel(item, language)}
-        </span>
-      </div>
-      <strong className="whitespace-nowrap text-sm font-semibold tracking-[-0.03em] text-text-1">
-        {item.target_price ? formatCurrency(item.target_price) : '-'}
-      </strong>
-    </Link>
   );
 }
 
@@ -1721,7 +1516,7 @@ function ChartSurface({
   return (
     <div
       className={cn(
-        'rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/22 px-2 py-2 sm:px-2.5',
+        'rounded-[calc(var(--radius-card)-0.18rem)] border border-border-subtle/35 bg-surface-1/54 px-1.5 py-1 sm:px-2',
         className,
       )}
     >

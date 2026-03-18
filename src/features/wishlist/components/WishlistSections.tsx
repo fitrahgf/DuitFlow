@@ -16,7 +16,6 @@ import TransactionForm, {
 import { ModalShell } from "@/components/shared/ModalShell";
 import {
   EmptyState,
-  EmptyStateWorkspace,
 } from "@/components/shared/EmptyState";
 import { FieldError } from "@/components/shared/FieldError";
 import {
@@ -359,12 +358,12 @@ export function WishlistBoardSection({
 
   return (
     <SurfaceCard padding="compact">
-      <div className="grid gap-2.5">
-        <div className="pb-1">
+      <div className="grid gap-3">
+        <div>
           <div
             role="tablist"
             aria-label={tabsLabel}
-            className="grid w-full grid-cols-2 justify-start overflow-hidden rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/75 p-1 md:flex md:flex-wrap"
+            className="flex w-full items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {tabs.map((tab) => (
               <button
@@ -376,16 +375,16 @@ export function WishlistBoardSection({
                 aria-controls={`wishlist-panel-${tab.key}`}
                 tabIndex={activeTab === tab.key ? 0 : -1}
                 className={cn(
-                  "inline-flex min-w-0 w-full items-center justify-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color,box-shadow] md:flex-1",
+                  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.78rem] font-medium text-text-2 transition-[background-color,color,border-color] sm:min-w-[unset]",
                   activeTab === tab.key
-                    ? "bg-surface-1 text-text-1 shadow-xs"
-                    : "hover:bg-surface-1/80 hover:text-text-1",
+                    ? "bg-surface-2 text-text-1"
+                    : "hover:bg-surface-2/75 hover:text-text-1",
                 )}
                 data-state={activeTab === tab.key ? "active" : "inactive"}
                 onClick={() => onTabChange(tab.key)}
               >
                 <span>{tab.label}</span>
-                <span className="inline-flex h-[1.125rem] min-w-[1.25rem] items-center justify-center rounded-full bg-surface-1/80 px-1.5 text-[0.64rem] font-bold text-text-3">
+                <span className="inline-flex h-[1.05rem] min-w-[1.2rem] items-center justify-center rounded-full bg-surface-1/90 px-1.5 text-[0.64rem] font-semibold text-text-3">
                   {tab.count}
                 </span>
               </button>
@@ -404,44 +403,14 @@ export function WishlistBoardSection({
           ) : isError ? (
             <EmptyState title={t("wishlist.loadError")} compact />
           ) : items.length === 0 ? (
-            <EmptyStateWorkspace
-              eyebrow={language === "id" ? "Wishlist board" : "Wishlist board"}
-              title={t("wishlist.emptyTitle")}
-              description={t("wishlist.emptyDescription")}
-              icon={<ShoppingBasket size={20} />}
-              action={
-                <Button type="button" variant="primary" onClick={onCreateItem}>
-                  <ShoppingBasket size={16} />
-                  {t("wishlist.addItem")}
-                </Button>
-              }
-              supporting={<WishlistEmptyWorkflowAside language={language} t={t} />}
-            />
+            <WishlistEmptyBoard language={language} t={t} onCreateItem={onCreateItem} />
           ) : !hasAnyVisibleItem ? (
-            <EmptyStateWorkspace
-              eyebrow={language === "id" ? "Tab aktif" : "Active tab"}
-              title={t("wishlist.emptyTabTitle")}
-              description={t("wishlist.emptyTabDescription")}
-              icon={<Clock3 size={18} />}
-              action={
-                activeTab !== "all" ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => onTabChange("all")}
-                  >
-                    {t("wishlist.tabs.all")}
-                  </Button>
-                ) : undefined
-              }
-              supporting={
-                <WishlistAvailableTabsAside
-                  tabs={tabs}
-                  activeTab={activeTab}
-                  onTabChange={onTabChange}
-                  language={language}
-                />
-              }
+            <WishlistEmptyTabState
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              language={language}
+              t={t}
             />
           ) : (
             <div className="grid gap-3">
@@ -521,115 +490,138 @@ export function WishlistBoardSection({
   );
 }
 
-function WishlistEmptyWorkflowAside({
+function WishlistEmptyBoard({
   language,
   t,
+  onCreateItem,
 }: {
   language: "en" | "id";
   t: (key: string) => string;
+  onCreateItem: () => void;
 }) {
   const steps = [
     {
-      number: "01",
       title: t("wishlist.addItem"),
-      description:
-        language === "id"
-          ? "Simpan barang yang ingin ditimbang tanpa buru-buru checkout."
-          : "Capture the item first before deciding to buy.",
+      description: language === "id" ? "Simpan dulu" : "Save it first",
     },
     {
-      number: "02",
       title: t("wishlist.actions.reviewNow"),
-      description:
-        language === "id"
-          ? "Biarkan periode cooling-off berjalan lalu review saat jatuh tempo."
-          : "Let the cooling period run, then review it when due.",
+      description: language === "id" ? "Tinjau saat jatuh tempo" : "Review when due",
     },
     {
-      number: "03",
       title: t("wishlist.actions.convert"),
       description:
-        language === "id"
-          ? "Item yang lolos review bisa langsung diubah jadi transaksi."
-          : "Items that pass review can be converted into a transaction.",
+        language === "id" ? "Ubah jadi transaksi" : "Convert to a transaction",
     },
   ];
 
   return (
-    <>
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
-        {language === "id" ? "Alur board" : "Board flow"}
-      </span>
-      <div className="grid gap-0 divide-y divide-border-subtle/80">
-        {steps.map((step) => (
-          <div
-            key={step.number}
-            className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5 py-2.5 first:pt-0 last:pb-0"
-          >
-            <span className="text-[0.72rem] font-semibold tracking-[0.08em] text-text-3">
-              {step.number}
+    <div className="grid gap-3 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-1 text-text-2">
+            <ShoppingBasket size={18} />
+          </span>
+          <div className="grid gap-1">
+            <strong className="text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1">
+              {t("wishlist.emptyTitle")}
+            </strong>
+            <span className="text-[0.82rem] leading-5 text-text-2">
+              {language === "id"
+                ? "Simpan barang yang ingin ditimbang, lalu review saat waktunya tiba."
+                : "Save items to think through, then review them when they are due."}
             </span>
-            <div className="grid gap-0.5">
-              <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                {step.title}
-              </strong>
-              <span className="text-[0.76rem] leading-5 text-text-3">
-                {step.description}
-              </span>
-            </div>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="primary"
+          onClick={onCreateItem}
+          className="sm:min-w-[9.5rem]"
+        >
+          <ShoppingBasket size={16} />
+          {t("wishlist.addItem")}
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border-subtle/70 pt-2.5 text-[0.76rem] text-text-2">
+        <span className="font-medium text-text-2">
+          {language === "id" ? "Alur singkat" : "Quick flow"}
+        </span>
+        {steps.map((step, index) => (
+          <div key={step.title} className="inline-flex items-center gap-2">
+            <span>{step.description}</span>
+            {index < steps.length - 1 ? (
+              <span className="text-text-3/80">/</span>
+            ) : null}
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
-function WishlistAvailableTabsAside({
+function WishlistEmptyTabState({
   tabs,
   activeTab,
   onTabChange,
   language,
+  t,
 }: {
   tabs: Array<{ key: string; label: string; count: number }>;
   activeTab: string;
   onTabChange: (value: string) => void;
   language: "en" | "id";
+  t: (key: string) => string;
 }) {
   const availableTabs = tabs.filter(
     (tab) => tab.key !== activeTab && tab.count > 0,
   );
 
   return (
-    <>
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
-        {language === "id" ? "Pindah ke tab berisi" : "Tabs with items"}
-      </span>
+    <div className="grid gap-3 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/45 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="flex items-start gap-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-1 text-text-2">
+          <Clock3 size={16} />
+        </span>
+        <div className="grid gap-1">
+          <strong className="text-[0.96rem] font-semibold tracking-[-0.04em] text-text-1">
+            {t("wishlist.emptyTabTitle")}
+          </strong>
+          <span className="text-[0.8rem] leading-5 text-text-2">
+            {language === "id"
+              ? "Tab ini belum punya item."
+              : "This tab does not have any items yet."}
+          </span>
+        </div>
+      </div>
+
       {availableTabs.length > 0 ? (
-        <div className="grid gap-0 divide-y divide-border-subtle/80">
+        <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle/70 pt-2.5">
           {availableTabs.slice(0, 3).map((tab) => (
             <button
               key={tab.key}
               type="button"
-              className="flex items-center justify-between gap-3 py-2.5 text-left transition first:pt-0 last:pb-0 hover:text-text-1"
+              className="inline-flex items-center gap-2 rounded-full bg-surface-1 px-2.5 py-1.5 text-left transition hover:bg-surface-1/80 hover:text-text-1"
               onClick={() => onTabChange(tab.key)}
             >
-              <span className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+              <span className="text-[0.8rem] font-medium tracking-[-0.01em] text-text-1">
                 {tab.label}
               </span>
-              <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-surface-1/85 px-1.5 py-0.5 text-[0.7rem] font-semibold text-text-3">
+              <span className="inline-flex min-w-[1.35rem] items-center justify-center rounded-full bg-surface-1/90 px-1.5 py-0.5 text-[0.66rem] font-semibold text-text-3">
                 {tab.count}
               </span>
             </button>
           ))}
         </div>
       ) : (
-        <div className="border-t border-border-subtle/80 pt-2.5 text-[0.78rem] text-text-3">
+        <div className="border-t border-border-subtle/70 pt-2.5 text-[0.78rem] text-text-2">
           {language === "id"
             ? "Belum ada tab lain yang berisi item."
             : "There are no other tabs with items yet."}
         </div>
       )}
-    </>
+    </div>
   );
 }
 

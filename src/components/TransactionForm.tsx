@@ -76,6 +76,7 @@ interface TransactionFormProps {
   onCancel: () => void;
   variant?: "dialog" | "sheet";
   createSource?: "manual" | "quick_add" | "wishlist_conversion";
+  presentation?: "default" | "minimal";
 }
 
 function getDefaultValues(
@@ -115,10 +116,12 @@ export default function TransactionForm({
   onCancel,
   variant = "dialog",
   createSource = "manual",
+  presentation = "default",
 }: TransactionFormProps) {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const compactSheet = variant === "sheet";
+  const minimalPresentation = presentation === "minimal";
   const {
     control,
     register,
@@ -157,6 +160,12 @@ export default function TransactionForm({
   const selectedWalletName =
     wallets.find((wallet) => wallet.id === selectedWalletId)?.name ||
     t("transactions.form.noWallets");
+  const subtleLabelClassName =
+    "text-[0.72rem] font-medium normal-case tracking-[-0.01em] text-text-2";
+  const sectionClassName = cn(
+    minimalPresentation && "gap-2 border-t border-border-subtle/70 pt-3 first:border-t-0 first:pt-0",
+  );
+  const sectionContentClassName = cn(minimalPresentation ? "gap-2" : "gap-2.5");
 
   useEffect(() => {
     reset(getDefaultValues(transaction, defaultWalletId, initialValues));
@@ -227,12 +236,16 @@ export default function TransactionForm({
   return (
     <form
       className={cn(
-        "grid gap-3 rounded-[inherit] bg-surface-1 p-3 md:p-4",
-        compactSheet && "gap-2.5 p-0",
+        "grid rounded-[inherit] bg-surface-1",
+        compactSheet
+          ? "gap-2.5 p-0"
+          : minimalPresentation
+            ? "gap-3 px-3 pb-3 pt-2.5 md:px-4 md:pb-4 md:pt-3"
+            : "gap-3 p-3 md:p-4",
       )}
       onSubmit={handleSubmit((values) => transactionMutation.mutate(values))}
     >
-      {!compactSheet ? (
+      {!compactSheet && !minimalPresentation ? (
         <div className="grid gap-1">
           <span className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-text-3">
             {transaction
@@ -245,14 +258,32 @@ export default function TransactionForm({
         </div>
       ) : null}
 
-      <FormSection step="01" title={essentialTitle} contentClassName="gap-2.5">
-        <fieldset className="grid gap-2">
-          <FormLegend>{t("transactions.form.type")}</FormLegend>
-          <div className="grid grid-cols-2 gap-1 rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-1/88 p-1">
+      <FormSection
+        step="01"
+        title={essentialTitle}
+        surface={minimalPresentation ? "plain" : "boxed"}
+        headerTone={minimalPresentation ? "light" : "default"}
+        stepVariant={minimalPresentation ? "inline" : "badge"}
+        className={sectionClassName}
+        contentClassName={sectionContentClassName}
+      >
+        <fieldset className="grid gap-1.5">
+          <FormLegend className={minimalPresentation ? subtleLabelClassName : undefined}>
+            {t("transactions.form.type")}
+          </FormLegend>
+          <div
+            className={cn(
+              "grid grid-cols-2 gap-1 rounded-[var(--radius-control)] p-1",
+              minimalPresentation
+                ? "bg-surface-2/55"
+                : "border border-border-subtle bg-surface-1/88",
+            )}
+          >
             <button
               type="button"
               className={cn(
-                "inline-flex min-h-[2.7rem] items-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-left transition-[background-color,color,box-shadow] duration-200",
+                "inline-flex items-center justify-center gap-1.5 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-center transition-[background-color,color,box-shadow] duration-200",
+                minimalPresentation ? "min-h-[2.45rem]" : "min-h-[2.7rem]",
                 selectedType === "expense"
                   ? "bg-danger-soft text-danger shadow-xs"
                   : "text-text-2 hover:bg-surface-2/72 hover:text-text-1",
@@ -264,14 +295,7 @@ export default function TransactionForm({
                 })
               }
             >
-              <span
-                className={cn(
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] transition-colors",
-                  selectedType === "expense" ? "bg-white/80" : "bg-surface-2/65",
-                )}
-              >
-                <ArrowDownLeft size={16} />
-              </span>
+              <ArrowDownLeft size={15} />
               <span className="text-[0.8rem] font-semibold">
                 {t("transactions.expense")}
               </span>
@@ -279,7 +303,8 @@ export default function TransactionForm({
             <button
               type="button"
               className={cn(
-                "inline-flex min-h-[2.7rem] items-center gap-2 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-left transition-[background-color,color,box-shadow] duration-200",
+                "inline-flex items-center justify-center gap-1.5 rounded-[calc(var(--radius-control)-0.06rem)] px-3 py-2 text-center transition-[background-color,color,box-shadow] duration-200",
+                minimalPresentation ? "min-h-[2.45rem]" : "min-h-[2.7rem]",
                 selectedType === "income"
                   ? "bg-accent-soft text-accent-strong shadow-xs"
                   : "text-text-2 hover:bg-surface-2/72 hover:text-text-1",
@@ -291,14 +316,7 @@ export default function TransactionForm({
                 })
               }
             >
-              <span
-                className={cn(
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.08rem)] transition-colors",
-                  selectedType === "income" ? "bg-white/82" : "bg-surface-2/65",
-                )}
-              >
-                <ArrowUpRight size={16} />
-              </span>
+              <ArrowUpRight size={15} />
               <span className="text-[0.8rem] font-semibold">
                 {t("transactions.income")}
               </span>
@@ -308,7 +326,10 @@ export default function TransactionForm({
 
         <FieldRow className="gap-2.5">
           <FormField className="md:col-span-2">
-            <FormLabel htmlFor="transaction-amount">
+            <FormLabel
+              htmlFor="transaction-amount"
+              className={minimalPresentation ? subtleLabelClassName : undefined}
+            >
               {t("transactions.form.amount")}
             </FormLabel>
             <Controller
@@ -324,7 +345,12 @@ export default function TransactionForm({
                   onNumberValueChange={field.onChange}
                   ref={field.ref}
                   aria-invalid={errors.amount ? "true" : "false"}
-                  className="min-h-[2.8rem] px-3.5 py-2"
+                  className={cn(
+                    "px-3.5",
+                    minimalPresentation
+                      ? "min-h-[3.15rem] py-2.5 text-[1rem] font-semibold tracking-[-0.03em]"
+                      : "min-h-[2.8rem] py-2",
+                  )}
                   required
                 />
               )}
@@ -337,14 +363,21 @@ export default function TransactionForm({
           </FormField>
 
           <FormField>
-            <FormLabel htmlFor="transaction-title">
+            <FormLabel
+              htmlFor="transaction-title"
+              className={minimalPresentation ? subtleLabelClassName : undefined}
+            >
               {t("transactions.form.title")}
             </FormLabel>
             <Input
               id="transaction-title"
               type="text"
               aria-invalid={errors.title ? "true" : "false"}
-              className="min-h-[2.8rem] px-3.5 py-2"
+              className={cn(
+                minimalPresentation
+                  ? "min-h-[2.7rem] px-3.5 py-2"
+                  : "min-h-[2.8rem] px-3.5 py-2",
+              )}
               placeholder={t("transactions.form.titlePlaceholder")}
               {...register("title")}
               required
@@ -357,7 +390,10 @@ export default function TransactionForm({
           </FormField>
 
           <FormField>
-            <FormLabel htmlFor="transaction-wallet">
+            <FormLabel
+              htmlFor="transaction-wallet"
+              className={minimalPresentation ? subtleLabelClassName : undefined}
+            >
               {t("transactions.form.wallet")}
             </FormLabel>
             <NativeSelect
@@ -387,10 +423,21 @@ export default function TransactionForm({
         </FieldRow>
       </FormSection>
 
-      <FormSection step="02" title={detailsTitle}>
+      <FormSection
+        step="02"
+        title={detailsTitle}
+        surface={minimalPresentation ? "plain" : "boxed"}
+        headerTone={minimalPresentation ? "light" : "default"}
+        stepVariant={minimalPresentation ? "inline" : "badge"}
+        className={sectionClassName}
+        contentClassName={sectionContentClassName}
+      >
         <FieldRow className="gap-2.5">
           <FormField>
-            <FormLabel htmlFor="transaction-category">
+            <FormLabel
+              htmlFor="transaction-category"
+              className={minimalPresentation ? subtleLabelClassName : undefined}
+            >
               {t("transactions.form.category")}
             </FormLabel>
             <NativeSelect
@@ -408,13 +455,20 @@ export default function TransactionForm({
           </FormField>
 
           <FormField>
-            <FormLabel htmlFor="transaction-date">
+            <FormLabel
+              htmlFor="transaction-date"
+              className={minimalPresentation ? subtleLabelClassName : undefined}
+            >
               {t("transactions.form.date")}
             </FormLabel>
             <Input
               id="transaction-date"
               type="date"
-              className="min-h-[2.8rem] px-3.5 py-2"
+              className={cn(
+                minimalPresentation
+                  ? "min-h-[2.7rem] px-3.5 py-2"
+                  : "min-h-[2.8rem] px-3.5 py-2",
+              )}
               {...register("date")}
               required
             />
@@ -422,40 +476,49 @@ export default function TransactionForm({
         </FieldRow>
       </FormSection>
 
-      <FormSection step="03" title={optionalTitle} className="gap-2.5">
+      <FormSection
+        step="03"
+        title={optionalTitle}
+        surface={minimalPresentation ? "plain" : "boxed"}
+        headerTone={minimalPresentation ? "light" : "default"}
+        stepVariant={minimalPresentation ? "inline" : "badge"}
+        className={cn(sectionClassName, "gap-2.5")}
+        contentClassName={sectionContentClassName}
+      >
         <FormField>
-          <FormLabel htmlFor="transaction-note">
+          <FormLabel
+            htmlFor="transaction-note"
+            className={minimalPresentation ? subtleLabelClassName : undefined}
+          >
             {t("transactions.form.note")}
           </FormLabel>
           <Textarea
             id="transaction-note"
             aria-invalid={errors.note ? "true" : "false"}
-            className="min-h-[4.5rem] px-3.5 py-2.5"
+            className={cn(
+              minimalPresentation
+                ? "min-h-[4rem] px-3.5 py-2"
+                : "min-h-[4.5rem] px-3.5 py-2.5",
+            )}
             placeholder={t("transactions.form.notePlaceholder")}
             {...register("note")}
           />
         </FormField>
       </FormSection>
 
-      <SaveHints className={cn(compactSheet && "p-2.5")}>
+      <SaveHints
+        variant={minimalPresentation ? "inline" : "card"}
+        className={cn(compactSheet && "p-2.5", minimalPresentation && "gap-1.25")}
+      >
         <FormMetaChip
-          icon={
-            transactionType === "income" ? (
-              <ArrowUpRight size={15} />
-            ) : (
-              <ArrowDownLeft size={15} />
-            )
-          }
-          value={
-            transactionType === "income"
-              ? t("transactions.income")
-              : t("transactions.expense")
-          }
+          icon={<Wallet2 size={14} />}
+          value={selectedWalletName}
+          variant={minimalPresentation ? "subtle" : "default"}
         />
-        <FormMetaChip icon={<Wallet2 size={15} />} value={selectedWalletName} />
         <FormMetaChip
-          icon={<CalendarDays size={15} />}
+          icon={<CalendarDays size={14} />}
           value={selectedDate || toDateInputValue()}
+          variant={minimalPresentation ? "subtle" : "default"}
         />
       </SaveHints>
 
@@ -463,6 +526,7 @@ export default function TransactionForm({
         sticky={compactSheet}
         className={cn(
           "sm:grid-cols-2",
+          minimalPresentation && !compactSheet && "border-t border-border-subtle/75 pt-3",
           !compactSheet && "md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]",
         )}
       >

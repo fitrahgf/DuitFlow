@@ -231,7 +231,6 @@ export function TransactionsPageContent() {
     new Date(value).toLocaleDateString(language === "id" ? "id-ID" : "en-US", {
       day: "numeric",
       month: "short",
-      year: "numeric",
     });
 
   const transactions = transactionsQuery.data ?? [];
@@ -306,11 +305,11 @@ export function TransactionsPageContent() {
   return (
     <PageShell className="animate-fade-in">
       <PageHeader>
-        <PageHeading eyebrow="Ledger" title={t("transactions.title")} />
+        <PageHeading title={t("transactions.title")} />
         <PageHeaderActions>
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
             size="sm"
             className="hidden sm:inline-flex"
             onClick={handleExportCsv}
@@ -326,7 +325,7 @@ export function TransactionsPageContent() {
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
             size="sm"
             className="hidden sm:inline-flex"
             onClick={() => router.push("/transfer")}

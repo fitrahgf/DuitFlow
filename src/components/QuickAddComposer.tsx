@@ -24,7 +24,7 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface QuickAddComposerProps {
-  variant?: 'panel' | 'sheet';
+  variant?: 'panel' | 'sheet' | 'dashboard';
   onReview: (draft: TransactionFormPrefill) => void;
   onSaved?: () => void;
 }
@@ -285,10 +285,13 @@ export default function QuickAddComposer({
   const statusBadgeVariant =
     preview?.status === 'ready' ? 'success' : preview?.status === 'partial' ? 'warning' : 'default';
   const isPanel = variant === 'panel';
+  const isDashboard = variant === 'dashboard';
+  const controlGapClassName = isDashboard ? 'gap-1 sm:gap-1.5' : isPanel ? 'gap-2' : 'gap-2.5';
+  const surfaceGapClassName = isDashboard ? 'gap-1 sm:gap-1.5' : isPanel ? 'gap-2' : 'gap-2.5';
 
   return (
-    <div className={cn('grid', isPanel ? 'gap-2' : 'gap-2.5')}>
-      <form className={cn('grid', isPanel ? 'gap-2' : 'gap-2.5')} onSubmit={handleSubmit}>
+    <div className={cn('grid', surfaceGapClassName)}>
+      <form className={cn('grid', controlGapClassName)} onSubmit={handleSubmit}>
         <Input
           ref={inputRef}
           type="text"
@@ -305,11 +308,17 @@ export default function QuickAddComposer({
         {preview ? (
           <Card
             className={cn(
-                'grid border shadow-none',
-                isPanel ? 'gap-2 p-2.5 md:p-3' : 'gap-2.5 p-3 md:p-3.5',
-                preview.status === 'ready'
-                  ? 'border-success/18 bg-success-soft/35'
-                  : 'border-border-subtle bg-surface-2/55'
+              'grid border shadow-none',
+              isDashboard
+                ? 'gap-1.5 rounded-[var(--radius-control)] border-border-subtle/55 bg-surface-1/80 p-2'
+                : isPanel
+                  ? 'gap-2 p-2.5 md:p-3'
+                  : 'gap-2.5 p-3 md:p-3.5',
+              preview.status === 'ready'
+                ? isDashboard
+                  ? 'border-success/18 bg-success-soft/24'
+                  : 'border-success/18 bg-success-soft/35'
+                : undefined,
             )}
           >
             <div className="flex flex-wrap items-center gap-2">
@@ -323,11 +332,16 @@ export default function QuickAddComposer({
             </div>
 
             <div className="grid gap-2">
-              <strong className={cn('font-semibold tracking-[-0.03em] text-text-1', isPanel ? 'text-[0.95rem]' : 'text-base')}>
+              <strong
+                className={cn(
+                  'font-semibold tracking-[-0.03em] text-text-1',
+                  isDashboard ? 'text-[0.92rem]' : isPanel ? 'text-[0.95rem]' : 'text-base',
+                )}
+              >
                 {preview.title || t('dashboard.quickAdd.missingTitle')}
               </strong>
 
-              <div className="flex flex-wrap gap-2">
+              <div className={cn('flex flex-wrap', isDashboard ? 'gap-1.5' : 'gap-2')}>
                 <QuickAddChip>
                   {preview.amount ? formatCurrency(preview.amount) : t('dashboard.quickAdd.missingAmount')}
                 </QuickAddChip>
@@ -355,7 +369,11 @@ export default function QuickAddComposer({
           <div
             className={cn(
               'grid rounded-[var(--radius-card)] border border-border-subtle bg-surface-2/55 animate-fade-in',
-              isPanel ? 'gap-2 p-2.5' : 'gap-2.5 p-3',
+              isDashboard
+                ? 'gap-1.5 rounded-[var(--radius-control)] border-border-subtle/55 bg-surface-1/72 p-2'
+                : isPanel
+                  ? 'gap-2 p-2.5'
+                  : 'gap-2.5 p-3',
             )}
           >
             {showTransferHint ? (
@@ -369,7 +387,14 @@ export default function QuickAddComposer({
 
             {categorySuggestions.length > 0 ? (
               <div className="grid gap-2">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                <p
+                  className={cn(
+                    'font-semibold text-text-3',
+                    isDashboard
+                      ? 'text-[0.72rem] tracking-[-0.01em]'
+                      : 'text-[0.72rem] uppercase tracking-[0.16em]',
+                  )}
+                >
                   {t('dashboard.quickAdd.suggestedCategories')}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -383,7 +408,11 @@ export default function QuickAddComposer({
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
                         className={cn(
-                          isPanel ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3' : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
+                          isDashboard
+                            ? 'min-h-[2rem] rounded-[var(--radius-control)] px-2.5'
+                            : isPanel
+                              ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3'
+                              : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
                           selected && 'ring-2 ring-accent-soft',
                         )}
                         onClick={() => setOverrideCategoryId((current) => (current === suggestion.id ? null : suggestion.id))}
@@ -400,7 +429,14 @@ export default function QuickAddComposer({
 
             {walletSuggestions.length > 0 ? (
               <div className="grid gap-2">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+                <p
+                  className={cn(
+                    'font-semibold text-text-3',
+                    isDashboard
+                      ? 'text-[0.72rem] tracking-[-0.01em]'
+                      : 'text-[0.72rem] uppercase tracking-[0.16em]',
+                  )}
+                >
                   {t('dashboard.quickAdd.suggestedWallets')}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -414,7 +450,11 @@ export default function QuickAddComposer({
                         variant={selected ? 'primary' : 'secondary'}
                         size="sm"
                         className={cn(
-                          isPanel ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3' : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
+                          isDashboard
+                            ? 'min-h-[2rem] rounded-[var(--radius-control)] px-2.5'
+                            : isPanel
+                              ? 'min-h-[2.25rem] rounded-[var(--radius-control)] px-3'
+                              : 'min-h-[2.45rem] rounded-[var(--radius-control)] px-3',
                           selected && 'ring-2 ring-accent-soft',
                         )}
                         onClick={() => setOverrideWalletId((current) => (current === suggestion.id ? null : suggestion.id))}
@@ -431,7 +471,14 @@ export default function QuickAddComposer({
           </div>
         ) : null}
 
-        <div className={cn('grid gap-1.5', preview?.status === 'ready' ? 'sm:grid-cols-[minmax(0,1fr)_auto]' : 'sm:grid-cols-1')}>
+        <div
+          className={cn(
+            'grid gap-1.5',
+            preview?.status === 'ready' && !isDashboard
+              ? 'sm:grid-cols-[minmax(0,1fr)_auto]'
+              : 'sm:grid-cols-1',
+          )}
+        >
           <Button
             type="submit"
             variant="primary"
@@ -445,7 +492,7 @@ export default function QuickAddComposer({
           >
             {quickAddMutation.isPending ? '...' : primaryActionLabel}
           </Button>
-          {preview?.status === 'ready' ? (
+          {preview?.status === 'ready' && !isDashboard ? (
             <Button
               type="button"
               variant="secondary"
@@ -459,7 +506,7 @@ export default function QuickAddComposer({
       </form>
 
       {!preview ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className={cn('flex flex-wrap', isDashboard ? 'gap-1' : 'gap-1.5')}>
           {examples.map((example) => (
             <Button
               key={example}
@@ -467,9 +514,11 @@ export default function QuickAddComposer({
               variant="secondary"
               size="sm"
               className={cn(
-                isPanel
-                  ? 'min-h-[2rem] rounded-[var(--radius-control)] px-3 text-accent-strong'
-                  : 'min-h-[2.15rem] rounded-[var(--radius-control)] px-3 text-accent-strong',
+                isDashboard
+                  ? 'min-h-[1.7rem] rounded-[var(--radius-control)] px-2.25 text-[0.72rem] text-text-2 hover:text-text-1'
+                  : isPanel
+                    ? 'min-h-[2rem] rounded-[var(--radius-control)] px-3 text-accent-strong'
+                    : 'min-h-[2.15rem] rounded-[var(--radius-control)] px-3 text-accent-strong',
               )}
               onClick={() => {
                 setInput(example);
@@ -485,10 +534,17 @@ export default function QuickAddComposer({
       ) : null}
 
       {(walletsQuery.data?.length ?? 0) === 0 && !walletsQuery.isLoading ? (
-        <Card className="grid gap-2.5 border-warning/30 bg-warning-soft p-3.5">
-          <AlertCircle size={18} className="text-warning" />
-          <p className="text-sm text-text-2">{t('dashboard.quickAdd.noWallets')}</p>
-        </Card>
+        isDashboard ? (
+          <div className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-warning-soft px-3 py-2 text-[0.82rem] text-text-2">
+            <AlertCircle size={16} className="text-warning" />
+            <span>{t('dashboard.quickAdd.noWallets')}</span>
+          </div>
+        ) : (
+          <Card className="grid gap-2.5 border-warning/30 bg-warning-soft p-3.5">
+            <AlertCircle size={18} className="text-warning" />
+            <p className="text-sm text-text-2">{t('dashboard.quickAdd.noWallets')}</p>
+          </Card>
+        )
       ) : null}
     </div>
   );

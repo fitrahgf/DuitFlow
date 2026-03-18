@@ -58,22 +58,49 @@ interface FormSectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   step: string;
   title: string;
   description?: string;
+  tone?: "default" | "light";
+  stepVariant?: "badge" | "inline";
 }
 
 export function FormSectionHeader({
   step,
   title,
   description,
+  tone = "default",
+  stepVariant = "badge",
   className,
   ...props
 }: FormSectionHeaderProps) {
+  const lightTone = tone === "light";
+
   return (
-    <div className={cn("grid grid-cols-[auto_1fr] items-start gap-2.5", className)} {...props}>
-      <span className="inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full border border-border-subtle bg-surface-2/75 px-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-text-3">
+    <div
+      className={cn(
+        "grid items-start",
+        stepVariant === "inline"
+          ? "grid-cols-[auto_1fr] gap-2"
+          : "grid-cols-[auto_1fr] gap-2.5",
+        className,
+      )}
+      {...props}
+    >
+      <span
+        className={cn(
+          stepVariant === "inline"
+            ? "pt-0.5 text-[0.68rem] font-medium tracking-[0.02em] text-text-3"
+            : "inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full border border-border-subtle bg-surface-2/75 px-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-text-3",
+        )}
+      >
         {step}
       </span>
       <div className="grid gap-0.5">
-        <strong className="text-[0.95rem] font-semibold tracking-[-0.03em] text-text-1">
+        <strong
+          className={cn(
+            lightTone
+              ? "text-[0.86rem] font-medium tracking-[-0.02em] text-text-2"
+              : "text-[0.95rem] font-semibold tracking-[-0.03em] text-text-1",
+          )}
+        >
           {title}
         </strong>
         {description ? (
@@ -87,24 +114,35 @@ export function FormSectionHeader({
 interface FormMetaChipProps extends HTMLAttributes<HTMLSpanElement> {
   icon: ReactNode;
   value: ReactNode;
+  variant?: "default" | "subtle";
 }
 
 export function FormMetaChip({
   icon,
   value,
+  variant = "default",
   className,
   ...props
 }: FormMetaChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex min-h-[1.78rem] items-center gap-1.5 rounded-full border border-border-subtle/90 bg-surface-1/78 px-2.25 py-0.5",
+        variant === "subtle"
+          ? "inline-flex min-h-[1.65rem] items-center gap-1 rounded-full border border-border-subtle/75 bg-surface-1/65 px-2 py-0.5"
+          : "inline-flex min-h-[1.78rem] items-center gap-1.5 rounded-full border border-border-subtle/90 bg-surface-1/78 px-2.25 py-0.5",
         className,
       )}
       {...props}
     >
       <span className="text-text-3">{icon}</span>
-      <span className="truncate text-[0.76rem] font-medium text-text-1">{value}</span>
+      <span
+        className={cn(
+          "truncate text-text-1",
+          variant === "subtle" ? "text-[0.72rem] font-medium" : "text-[0.76rem] font-medium",
+        )}
+      >
+        {value}
+      </span>
     </span>
   );
 }

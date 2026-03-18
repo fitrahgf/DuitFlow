@@ -12,7 +12,6 @@ import {
   PageHeader,
   PageHeading,
   PageShell,
-  SectionHeading,
   SurfaceCard,
 } from "@/components/shared/PagePrimitives";
 import { Badge } from "@/components/ui/badge";
@@ -248,47 +247,26 @@ export default function SettingsPage() {
   const tabs: {
     value: ExtendedSettingsTab;
     label: string;
-    description: string;
   }[] = [
     {
       value: "profile",
       label: t("settings.profile.title"),
-      description:
-        language === "id"
-          ? "Kelola identitas akun yang tampil di workspace Anda."
-          : "Manage the account identity shown across your workspace.",
     },
     {
       value: "regional",
       label: t("settings.language.title"),
-      description:
-        language === "id"
-          ? "Atur bahasa, zona waktu, dan mata uang kerja utama."
-          : "Set your language, timezone, and working currency.",
     },
     {
       value: "appearance",
       label: t("settings.appearance.title"),
-      description:
-        language === "id"
-          ? "Sesuaikan tema visual tanpa mengubah alur kerja inti."
-          : "Adjust the visual theme without changing the core workflow.",
     },
     {
       value: "notifications",
       label: t("settings.notifications.title"),
-      description:
-        language === "id"
-          ? "Tentukan pengingat penting yang masih ingin Anda terima."
-          : "Choose which important reminders should still reach you.",
     },
     {
       value: "integrations",
       label: t("settings.telegram.title"),
-      description:
-        language === "id"
-          ? "Hubungkan Telegram untuk capture dan notifikasi cepat."
-          : "Connect Telegram for quicker capture and notification flows.",
     },
   ];
   const currencyOptions = supportedCurrencyCodes.map((currencyCode) => ({
@@ -302,7 +280,6 @@ export default function SettingsPage() {
   );
   const activeTabMeta = tabs.find((tab) => tab.value === activeTab) ?? tabs[0];
   const activeTabLabel = activeTabMeta.label;
-  const activeTabDescription = activeTabMeta.description;
   const currentThemeLabel =
     themeOptions.find((option) => option.value === selectedTheme)?.label ??
     t("settings.appearance.system");
@@ -313,8 +290,6 @@ export default function SettingsPage() {
     notificationPreferences ?? {},
   ).filter(Boolean).length;
   const notSetLabel = language === "id" ? "Belum diatur" : "Not set";
-  const preferencesLabel =
-    language === "id" ? "Preferensi workspace" : "Workspace preferences";
   const unsavedChangesLabel =
     language === "id" ? "Perubahan belum disimpan" : "Unsaved changes";
   const savedStateLabel =
@@ -367,39 +342,23 @@ export default function SettingsPage() {
         onSubmit={handleSubmit(async (values) => {
           await profileMutation.mutateAsync(values);
         })}
-      >
+        >
         <SurfaceCard padding="compact" className="mx-auto w-full max-w-[66rem]">
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as ExtendedSettingsTab)}
-            className="grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)] xl:gap-6"
+            className="grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)] xl:gap-5"
           >
-            <div className="grid gap-3 border-b border-border-subtle/80 pb-3 xl:border-b-0 xl:border-r xl:border-border-subtle/80 xl:pb-0 xl:pr-5">
-              <div className="hidden xl:grid gap-1.5 pb-1">
-                <span className="text-[0.72rem] font-semibold tracking-[0.08em] text-text-3">
-                  {preferencesLabel}
-                </span>
-                <strong className="text-base font-semibold tracking-[-0.03em] text-text-1">
-                  {t("settings.title")}
-                </strong>
-                <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
-                  {t("settings.subtitle")}
-                </p>
-              </div>
-              <TabsList className="!flex !w-auto gap-1 rounded-[calc(var(--radius-control)+0.06rem)] border border-border-subtle/75 bg-surface-2/52 p-0.5 sm:!grid sm:!w-full sm:grid-cols-3 xl:!grid xl:!w-full xl:grid-cols-1 xl:gap-1 xl:!border-0 xl:!bg-transparent xl:!p-0">
+            <div className="grid gap-3 border-b border-border-subtle/80 pb-3 xl:border-b-0 xl:border-r xl:border-border-subtle/80 xl:pb-0 xl:pr-4">
+              <TabsList className="!flex !w-auto gap-1 rounded-[calc(var(--radius-control)+0.04rem)] border border-border-subtle/75 bg-surface-2/44 p-0.5 sm:!grid sm:!w-full sm:grid-cols-3 xl:!grid xl:!w-full xl:grid-cols-1 xl:gap-1 xl:!border-0 xl:!bg-transparent xl:!p-0">
                 {tabs.map((tab) => (
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="min-w-max shrink-0 rounded-[calc(var(--radius-control)-0.06rem)] px-3.5 py-2 text-[0.77rem] sm:min-w-0 sm:w-full md:flex-1 xl:min-h-[auto] xl:w-full xl:justify-start xl:rounded-[calc(var(--radius-card)-0.16rem)] xl:px-3 xl:py-2.5 xl:text-left xl:data-[state=active]:bg-surface-2 xl:data-[state=active]:shadow-none"
+                    className="min-w-max shrink-0 rounded-[calc(var(--radius-control)-0.06rem)] px-3.5 py-2 text-[0.8rem] sm:min-w-0 sm:w-full md:flex-1 xl:min-h-[auto] xl:w-full xl:justify-start xl:rounded-[calc(var(--radius-card)-0.18rem)] xl:px-3 xl:py-2.5 xl:text-left xl:data-[state=active]:bg-surface-2/88 xl:data-[state=active]:shadow-none"
                   >
-                    <span className="grid gap-0.5 text-left">
-                      <span className="text-[0.82rem] font-semibold tracking-[-0.01em] text-text-1">
-                        {tab.label}
-                      </span>
-                      <span className="hidden text-[0.72rem] leading-5 text-text-2 xl:block">
-                        {tab.description}
-                      </span>
+                    <span className="text-[0.83rem] font-semibold tracking-[-0.01em] text-text-1">
+                      {tab.label}
                     </span>
                   </TabsTrigger>
                 ))}
@@ -407,17 +366,11 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-4 xl:gap-5">
-              <div className="grid gap-2 border-b border-border-subtle/80 pb-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-                <div className="grid gap-1">
-                  <span className="text-[0.72rem] font-semibold tracking-[0.08em] text-text-3">
-                    {preferencesLabel}
-                  </span>
+              <div className="grid gap-2 border-b border-border-subtle/80 pb-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                <div className="grid gap-0.5">
                   <strong className="text-lg font-semibold tracking-[-0.04em] text-text-1">
                     {activeTabLabel}
                   </strong>
-                  <p className="m-0 max-w-[42rem] text-[0.84rem] leading-[1.6] text-text-2">
-                    {activeTabDescription}
-                  </p>
                 </div>
                 <Badge variant={isDirty ? "accent" : "default"}>
                   {isDirty ? unsavedChangesLabel : savedStateLabel}
@@ -444,7 +397,6 @@ export default function SettingsPage() {
                   <SettingsField
                     label={t("settings.profile.email")}
                     htmlFor="account_email"
-                    description={t("settings.profile.emailHint")}
                   >
                     <Input
                       id="account_email"
@@ -458,12 +410,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsSectionCard>
               <SettingsContextPanel
-                title={language === "id" ? "Ringkasan akun" : "Account snapshot"}
-                description={
-                  language === "id"
-                    ? "Rangkuman cepat untuk identitas dan preferensi kerja aktif."
-                    : "A quick read of the identity and workspace preferences currently in use."
-                }
+                title={language === "id" ? "Ringkasan" : "Summary"}
               >
                 <SettingsInfoRow
                   label={t("settings.profile.fullName")}
@@ -490,12 +437,10 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="regional" className="mt-0">
-            <SettingsTabPanel>
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
+            <SettingsTabPanel className="xl:grid-cols-[minmax(0,1fr)_minmax(15rem,0.82fr)] xl:items-start">
+              <div className="grid gap-4">
                 <SettingsSectionCard
                   title={t("settings.language.title")}
-                  description={t("settings.language.subtitle")}
-                  className="xl:border-r xl:border-border-subtle/80 xl:pr-6"
                 >
                   <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.16rem)] bg-surface-2/35 p-1 sm:grid-cols-2 xl:grid-cols-1">
                     {languageOptions.map((option) => (
@@ -587,15 +532,32 @@ export default function SettingsPage() {
                   </div>
                 </SettingsSectionCard>
               </div>
+              <SettingsContextPanel
+                title={language === "id" ? "Ringkasan wilayah" : "Region summary"}
+              >
+                <SettingsInfoRow
+                  label={t("settings.language.title")}
+                  value={currentLanguageLabel}
+                />
+                <SettingsInfoRow
+                  label={t("settings.regional.timezone")}
+                  value={selectedTimezone ?? "Asia/Jakarta"}
+                />
+                <SettingsInfoRow
+                  label={t("settings.regional.currency")}
+                  value={selectedCurrency ?? "IDR"}
+                />
+                <SettingsInfoRow
+                  label={language === "id" ? "Contoh" : "Preview"}
+                  value={currencyPreview}
+                />
+              </SettingsContextPanel>
             </SettingsTabPanel>
           </TabsContent>
 
           <TabsContent value="appearance" className="mt-0">
             <SettingsTabPanel className="xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.86fr)] xl:items-start">
-              <SettingsSectionCard
-                title={t("settings.appearance.title")}
-                description={t("settings.appearance.subtitle")}
-              >
+              <SettingsSectionCard title={t("settings.appearance.title")}>
                 <div className="grid gap-1 rounded-[calc(var(--radius-card)-0.14rem)] bg-surface-2/35 p-1 sm:grid-cols-3">
                   {themeOptions.map((option) => (
                     <button
@@ -632,12 +594,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsSectionCard>
               <SettingsContextPanel
-                title={language === "id" ? "Preview aktif" : "Current preview"}
-                description={
-                  language === "id"
-                    ? "Ringkasan kecil untuk memastikan kombinasi tampilan tetap konsisten."
-                    : "A compact snapshot to verify the active appearance setup stays consistent."
-                }
+                title={language === "id" ? "Aktif" : "Current"}
               >
                 <SettingsInfoRow
                   label={t("settings.appearance.title")}
@@ -659,10 +616,7 @@ export default function SettingsPage() {
             <SettingsTabPanel className="xl:grid-cols-[minmax(0,1.08fr)_minmax(16rem,0.92fr)] xl:items-start">
               <SettingsSectionCard title={t("settings.notifications.title")}>
                 <div className="grid gap-2">
-                  <ToggleField
-                    title={t("settings.notifications.wishlistDue")}
-                    description={t("settings.notifications.wishlistDueHint")}
-                  >
+                  <ToggleField title={t("settings.notifications.wishlistDue")}>
                     <Controller
                       control={control}
                       name="notification_preferences.wishlist_due"
@@ -676,10 +630,7 @@ export default function SettingsPage() {
                     />
                   </ToggleField>
 
-                  <ToggleField
-                    title={t("settings.notifications.budgetWarning")}
-                    description={t("settings.notifications.budgetWarningHint")}
-                  >
+                  <ToggleField title={t("settings.notifications.budgetWarning")}>
                     <Controller
                       control={control}
                       name="notification_preferences.budget_warning"
@@ -693,10 +644,7 @@ export default function SettingsPage() {
                     />
                   </ToggleField>
 
-                  <ToggleField
-                    title={t("settings.notifications.budgetExceeded")}
-                    description={t("settings.notifications.budgetExceededHint")}
-                  >
+                  <ToggleField title={t("settings.notifications.budgetExceeded")}>
                     <Controller
                       control={control}
                       name="notification_preferences.budget_exceeded"
@@ -712,12 +660,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsSectionCard>
               <SettingsContextPanel
-                title={language === "id" ? "Status pengingat" : "Reminder status"}
-                description={
-                  language === "id"
-                    ? "Gunakan ringkasan ini untuk menjaga notifikasi tetap penting, bukan ramai."
-                    : "Use this summary to keep notifications important instead of noisy."
-                }
+                title={language === "id" ? "Status" : "Status"}
               >
                 <SettingsInfoRow
                   label={language === "id" ? "Aktif" : "Enabled"}
@@ -754,7 +697,7 @@ export default function SettingsPage() {
           <TabsContent value="integrations" className="mt-0">
             <SettingsTabPanel className="xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.9fr)] xl:items-start">
               <SettingsSectionCard title={t("settings.telegram.title")}>
-                <div className="grid gap-3 border-t border-border-subtle/80 pt-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div className="flex items-start gap-3">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-2/65 text-text-1">
                       <Bot size={18} />
@@ -818,12 +761,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsSectionCard>
               <SettingsContextPanel
-                title={language === "id" ? "Status integrasi" : "Integration status"}
-                description={
-                  language === "id"
-                    ? "Ringkas, tapi cukup untuk memastikan channel capture aktif saat dibutuhkan."
-                    : "Compact, but enough to confirm the capture channel is ready when needed."
-                }
+                title={language === "id" ? "Status" : "Status"}
               >
                 <SettingsInfoRow
                   label={language === "id" ? "Koneksi" : "Connection"}
@@ -858,8 +796,8 @@ export default function SettingsPage() {
         </SurfaceCard>
 
         <div className="sticky bottom-[calc(4.75rem+var(--safe-bottom))] z-10 mx-auto w-full max-w-[66rem] pt-1 md:bottom-0">
-          <div className="rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-1/95 px-3 py-2.5 shadow-xs backdrop-blur">
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-[calc(var(--radius-card)-0.12rem)] border border-border-subtle/80 bg-surface-1/92 px-3 py-2 shadow-xs">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <span
                   className={cn(
@@ -911,19 +849,19 @@ function SettingsField({
   return (
     <div
       className={cn(
-        "grid gap-2 border-b border-border-subtle/80 py-3 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,0.78fr)_minmax(0,1fr)] sm:items-start",
+        "grid gap-1.5 border-b border-border-subtle/80 py-2.5 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] sm:items-start",
         className,
       )}
     >
       <div className="grid gap-0.5">
         <label
-          className="text-[0.76rem] font-medium tracking-[0.01em] text-text-2"
+          className="text-[0.8rem] font-medium tracking-[-0.01em] text-text-2"
           htmlFor={htmlFor}
         >
           {label}
         </label>
         {description ? (
-          <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
+          <p className="m-0 text-[0.78rem] leading-[1.45] text-text-2">
             {description}
           </p>
         ) : null}
@@ -948,12 +886,17 @@ function SettingsSectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("grid gap-2.5 sm:gap-3", className)}>
-      <SectionHeading
-        title={title}
-        description={description}
-        hideDescriptionOnMobile={false}
-      />
+    <div className={cn("grid gap-2.5", className)}>
+      <div className="grid gap-0.5">
+        <strong className="text-[0.95rem] font-semibold tracking-[-0.03em] text-text-1">
+          {title}
+        </strong>
+        {description ? (
+          <p className="m-0 text-[0.8rem] leading-[1.5] text-text-2">
+            {description}
+          </p>
+        ) : null}
+      </div>
       {children}
     </div>
   );
@@ -969,9 +912,9 @@ function SettingsContextPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-3 rounded-[calc(var(--radius-card)-0.08rem)] border border-border-subtle bg-surface-2/38 p-3 sm:p-4">
+    <div className="grid gap-2.5 rounded-[calc(var(--radius-card)-0.12rem)] bg-surface-2/32 p-3 sm:p-3.5">
       <div className="grid gap-0.5">
-        <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
+        <strong className="text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1">
           {title}
         </strong>
         {description ? (
@@ -996,7 +939,7 @@ function SettingsInfoRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
-      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+      <span className="text-[0.76rem] font-medium tracking-[-0.01em] text-text-2">
         {label}
       </span>
       <span className="text-right text-sm font-semibold tracking-[-0.02em] text-text-1">
@@ -1013,7 +956,7 @@ function SettingsTabPanel({
   className?: string;
   children: React.ReactNode;
 }) {
-  return <div className={cn("grid gap-4 sm:gap-5", className)}>{children}</div>;
+  return <div className={cn("grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(15rem,0.82fr)] xl:gap-5", className)}>{children}</div>;
 }
 
 function ToggleField({
@@ -1026,7 +969,7 @@ function ToggleField({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 border-b border-border-subtle/80 py-3 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+    <div className="grid gap-2 border-b border-border-subtle/80 py-2.5 last:border-b-0 last:pb-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="grid gap-0.5">
         <strong className="text-sm font-semibold tracking-[-0.02em] text-text-1">
           {title}

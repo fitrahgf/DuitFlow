@@ -187,8 +187,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     mobilePrimary,
     moreItems,
     currentPage,
-    brandMeta,
-    accountLabel,
     activeAccountLabel,
     unreadBadgeLabel,
   } = buildShellNavigation({
@@ -206,9 +204,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         contentSize={contentSize}
         sidebar={
           <Sidebar
-            accountLabel={accountLabel}
             activeAccountLabel={activeAccountLabel}
-            brandMeta={brandMeta}
             desktopSections={desktopSections}
             moreLabel={t("nav.more")}
             moreOpen={moreOpen}

@@ -12,12 +12,10 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ModalShell } from '@/components/shared/ModalShell';
 import {
-  MetricCard,
   PageHeader,
   PageHeaderActions,
   PageHeading,
   PageShell,
-  SectionHeading,
   SurfaceCard,
 } from '@/components/shared/PagePrimitives';
 import { Button } from '@/components/ui/button';
@@ -169,29 +167,38 @@ function TransferPageContent() {
           )}
       </ModalShell>
 
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard
-          label={t('transfers.summary.totalMoved')}
-          value={formatCurrency(totalMoved)}
-          tone="accent"
-          className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
-        />
-        <MetricCard
-          label={t('transfers.summary.totalFees')}
-          value={formatCurrency(totalFees)}
-          tone={totalFees > 0 ? 'warning' : 'default'}
-          className="min-h-[4.35rem] p-[var(--space-panel-tight)]"
-        />
-        <MetricCard
-          label={t('transfers.summary.count')}
-          value={transfers.length}
-          className="col-span-2 min-h-[4.35rem] p-[var(--space-panel-tight)] sm:col-span-1"
-        />
-      </section>
+      <SurfaceCard padding="compact">
+        <div className="grid gap-0 divide-y divide-border-subtle/80 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <TransferSummaryItem
+            label={t('transfers.summary.totalMoved')}
+            value={formatCurrency(totalMoved)}
+          />
+          <TransferSummaryItem
+            label={t('transfers.summary.totalFees')}
+            value={formatCurrency(totalFees)}
+            tone={totalFees > 0 ? 'warning' : 'default'}
+          />
+          <TransferSummaryItem
+            label={t('transfers.summary.count')}
+            value={String(transfers.length)}
+          />
+        </div>
+      </SurfaceCard>
 
       <SurfaceCard padding="compact">
-        <div className="grid gap-2.5">
-          <SectionHeading title={t('transfers.list.title')} />
+        <div className="grid gap-2">
+          <div className="flex items-end justify-between gap-3">
+            <div className="grid gap-0.5">
+              <h2 className="m-0 text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+                {t('transfers.list.title')}
+              </h2>
+              <span className="text-[0.8rem] text-text-2">
+                {language === 'id'
+                  ? `${transfers.length} transfer terbaru`
+                  : `${transfers.length} recent transfers`}
+              </span>
+            </div>
+          </div>
 
           {transfersQuery.isLoading ? (
             <EmptyState title={t('common.loading')} compact />
@@ -217,7 +224,7 @@ function TransferPageContent() {
               }
             />
           ) : (
-            <div className="grid gap-1.5">
+            <div className="grid gap-0 divide-y divide-border-subtle/80">
               {transfers.map((transfer) => (
                 <TransferRow
                   key={transfer.id}
@@ -258,76 +265,117 @@ function TransferRow({
 }) {
   const { formatCurrency } = useCurrencyPreferences();
   const totalDeducted = transfer.amount + transfer.fee_amount;
+  const hasFee = transfer.fee_amount > 0;
 
   return (
-    <article className="list-row group min-h-0 p-2.5 transition-all duration-200 hover:border-border-strong hover:bg-surface-2/75 md:p-3">
-      <div className="flex items-start gap-2.5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.02rem)] bg-accent-soft text-accent-strong">
+    <article className="group grid gap-2.5 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.02rem)] bg-accent-soft/80 text-accent-strong">
           <ArrowLeftRight size={17} />
         </span>
 
-        <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="grid min-w-0 gap-0.5">
-              <strong className="truncate text-[0.86rem] font-semibold tracking-[-0.025em] text-text-1 sm:text-sm">
-                {transfer.from_wallet?.name || '-'} {'->'} {transfer.to_wallet?.name || '-'}
-              </strong>
-
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.72rem] leading-4 text-text-3">
-                <span className="whitespace-nowrap">
-                  {formatDate(transfer.transfer_date, language)}
-                </span>
-                {transfer.fee_amount > 0 ? (
-                  <>
-                    <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
-                    <span className="whitespace-nowrap">
-                      {t('transfers.list.fee')}: {formatCurrency(transfer.fee_amount)}
-                    </span>
-                  </>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-start gap-1.5 pl-2">
-              <div className="grid justify-items-end gap-0.5 text-right">
-                <strong className="text-[0.86rem] font-semibold tracking-[-0.03em] text-accent-strong sm:text-[0.92rem]">
-                  {formatCurrency(transfer.amount)}
-                </strong>
-                <span className="whitespace-nowrap text-[0.68rem] leading-4 text-text-3">
-                  {t('transfers.list.totalDeducted')}: {formatCurrency(totalDeducted)}
-                </span>
-              </div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 min-w-[2rem] justify-self-start text-text-3 md:justify-self-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
-                    aria-label={t('nav.more')}
-                  >
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={onEdit}>
-                    <Pencil size={16} />
-                    {t('common.edit')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-danger focus:text-danger" onSelect={onDelete} disabled={deleting}>
-                    <Trash2 size={16} />
-                    {t('common.delete')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+        <div className="grid min-w-0 flex-1 gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[0.96rem]">
+              {transfer.from_wallet?.name || '-'} {'->'} {transfer.to_wallet?.name || '-'}
+            </strong>
+            {hasFee ? (
+              <span className="rounded-full bg-warning-soft/80 px-2 py-0.5 text-[0.68rem] font-medium text-warning-strong">
+                {language === 'id' ? 'Ada potongan' : 'Fee'}
+              </span>
+            ) : null}
           </div>
 
-          {transfer.note ? <p className="m-0 overflow-hidden text-ellipsis whitespace-nowrap text-[0.72rem] leading-4 text-text-2">{transfer.note}</p> : null}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem] leading-5 text-text-2">
+            <span className="whitespace-nowrap">{formatDate(transfer.transfer_date, language)}</span>
+            {hasFee ? (
+              <>
+                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
+                <span className="whitespace-nowrap">
+                  {t('transfers.list.fee')}: {formatCurrency(transfer.fee_amount)}
+                </span>
+                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
+                <span className="whitespace-nowrap">
+                  {t('transfers.list.totalDeducted')}: {formatCurrency(totalDeducted)}
+                </span>
+              </>
+            ) : null}
+            {transfer.note ? (
+              <>
+                <span className="h-1 w-1 rounded-full bg-border-strong/80" aria-hidden="true" />
+                <span className="truncate">{transfer.note}</span>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
+
+      <div className="flex items-center justify-between gap-3 md:justify-end">
+        <div className="grid justify-items-start gap-0.5 text-left md:justify-items-end md:text-right">
+          <strong className="text-[0.94rem] font-semibold tracking-[-0.035em] text-accent-strong sm:text-[1rem]">
+            {formatCurrency(transfer.amount)}
+          </strong>
+          {hasFee ? (
+            <span className="whitespace-nowrap text-[0.72rem] leading-4 text-text-2">
+              {language === 'id' ? 'Keluar total' : 'Total deducted'}: {formatCurrency(totalDeducted)}
+            </span>
+          ) : (
+            <span className="whitespace-nowrap text-[0.72rem] leading-4 text-text-3">
+              {language === 'id' ? 'Tanpa potongan' : 'No fee'}
+            </span>
+          )}
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 min-w-[2rem] text-text-3 md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
+              aria-label={t('nav.more')}
+            >
+              <MoreHorizontal size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={onEdit}>
+              <Pencil size={16} />
+              {t('common.edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-danger focus:text-danger" onSelect={onDelete} disabled={deleting}>
+              <Trash2 size={16} />
+              {t('common.delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </article>
+  );
+}
+
+function TransferSummaryItem({
+  label,
+  value,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  tone?: 'default' | 'warning';
+}) {
+  return (
+    <div className="grid gap-0.5 px-0 py-2.5 first:pt-0 last:pb-0 sm:px-3 sm:py-0 sm:first:pl-0 sm:last:pr-0">
+      <span className="text-[0.76rem] font-medium text-text-2">{label}</span>
+      <strong
+        className={
+          tone === 'warning'
+            ? 'text-[0.98rem] font-semibold tracking-[-0.04em] text-warning-strong'
+            : 'text-[0.98rem] font-semibold tracking-[-0.04em] text-text-1'
+        }
+      >
+        {value}
+      </strong>
+    </div>
   );
 }
 

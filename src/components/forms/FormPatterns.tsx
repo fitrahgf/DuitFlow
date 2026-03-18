@@ -8,6 +8,9 @@ interface FormSectionProps extends HTMLAttributes<HTMLElement> {
   title: string;
   description?: string;
   contentClassName?: string;
+  surface?: "boxed" | "plain";
+  headerTone?: "default" | "light";
+  stepVariant?: "badge" | "inline";
 }
 
 export function FormSection({
@@ -16,15 +19,28 @@ export function FormSection({
   description,
   className,
   contentClassName,
+  surface = "boxed",
+  headerTone = "default",
+  stepVariant = "badge",
   children,
   ...props
 }: FormSectionProps) {
   return (
     <section className={cn("grid gap-2.5", className)} {...props}>
-      <FormSectionHeader step={step} title={title} description={description} />
-      <div className="rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-2/35 p-3 shadow-none sm:p-3.5">
+      <FormSectionHeader
+        step={step}
+        title={title}
+        description={description}
+        tone={headerTone}
+        stepVariant={stepVariant}
+      />
+      {surface === "boxed" ? (
+        <div className="rounded-[calc(var(--radius-card)-0.14rem)] border border-border-subtle bg-surface-2/35 p-3 shadow-none sm:p-3.5">
+          <div className={cn("grid gap-2.5", contentClassName)}>{children}</div>
+        </div>
+      ) : (
         <div className={cn("grid gap-2.5", contentClassName)}>{children}</div>
-      </div>
+      )}
     </section>
   );
 }
@@ -65,8 +81,23 @@ type SaveHintsProps = ComponentPropsWithoutRef<typeof Card>;
 export function SaveHints({
   className,
   children,
+  variant = "card",
   ...props
-}: SaveHintsProps) {
+}: SaveHintsProps & { variant?: "card" | "inline" }) {
+  if (variant === "inline") {
+    return (
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-1.5 border-t border-border-subtle/75 pt-2 text-[0.78rem] text-text-2",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
     <Card
       className={cn(

@@ -122,7 +122,7 @@ function BudgetInlineEmpty({
   onAction?: () => void;
 }) {
   return (
-    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-dashed border-border-subtle bg-surface-2/45 px-3 py-3">
+    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] bg-surface-2/45 px-3 py-3">
       <div className="flex items-start gap-3">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[calc(var(--radius-control)+0.02rem)] bg-surface-1 text-text-3">
           <Target size={17} />
@@ -537,8 +537,8 @@ export default function BudgetsPage() {
         padding="compact"
         className="sticky top-[var(--shell-sticky-offset)] z-20 sm:static"
       >
-        <div className="grid gap-3">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5">
+        <div className="grid gap-2.5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
             <Button
               type="button"
               variant="secondary"
@@ -554,10 +554,10 @@ export default function BudgetsPage() {
             </Button>
 
             <div className="grid min-w-0 gap-0.5 text-center">
-              <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
+              <span className="text-[0.72rem] font-medium tracking-[0.01em] text-text-2">
                 {t("budgets.currentMonth")}
               </span>
-              <strong className="truncate text-[0.92rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[1rem]">
+              <strong className="truncate text-[0.9rem] font-semibold tracking-[-0.03em] text-text-1 sm:text-[0.98rem]">
                 {monthLabel}
               </strong>
             </div>
@@ -577,7 +577,7 @@ export default function BudgetsPage() {
             </Button>
           </div>
 
-          <div className="grid gap-0 border-t border-border-subtle/85 pt-2 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/85 xl:pt-3">
+          <div className="grid gap-0 border-t border-border-subtle/75 pt-2 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-border-subtle/75 xl:pt-2.5">
             <BudgetUtilityStat
               label={t("budgets.summary.spent")}
               value={formatCurrency(totalSpent)}
@@ -752,10 +752,10 @@ export default function BudgetsPage() {
         </SurfaceCard>
       ) : (
         <>
-          <section className="grid gap-3 xl:grid-cols-[minmax(19rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+          <section className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
             <div className="grid gap-3 xl:sticky xl:top-[var(--shell-sticky-offset)]">
               <SurfaceCard padding="compact">
-                <div className="grid gap-2.5">
+                <div className="grid gap-2">
                   <SectionHeading
                     title={t("budgets.overallTitle")}
                     actions={
@@ -788,8 +788,8 @@ export default function BudgetsPage() {
                   />
 
                   {globalBudget ? (
-                    <div className="grid gap-2.5">
-                      <div className="grid gap-0 border-y border-border-subtle/85 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/85">
+                    <div className="grid gap-2">
+                      <div className="grid gap-0 border-y border-border-subtle/75 py-0.5 sm:grid-cols-3 sm:divide-x sm:divide-border-subtle/75">
                         <BudgetSummaryStripStat
                           label={t("budgets.summary.limit")}
                           value={formatCurrency(globalBudget.total_limit ?? 0)}
@@ -807,7 +807,7 @@ export default function BudgetsPage() {
                         />
                       </div>
 
-                      <div className="grid gap-2 border-t border-border-subtle/80 pt-3">
+                      <div className="grid gap-2 pt-1">
                         <ProgressMeter
                           value={overallRatio}
                           tone={toneToProgressTone[overallTone]}
@@ -825,7 +825,7 @@ export default function BudgetsPage() {
                                 ? t("budgets.status.warning")
                                 : t("budgets.status.ok")}
                           </Badge>
-                          <span className="text-[0.72rem] text-text-3">
+                          <span className="text-[0.72rem] text-text-2">
                             {Math.round(overallRatio * 100)}%
                           </span>
                         </div>
@@ -839,24 +839,24 @@ export default function BudgetsPage() {
                     />
                   )}
 
-                  <div className="grid gap-2.5 border-t border-border-subtle/85 pt-3">
-                    <SectionHeading
-                      title={t("budgets.untrackedTitle")}
-                      description={t("budgets.untrackedSubtitle")}
-                      hideDescriptionOnMobile={false}
-                    />
-                    {renderUntrackedList(true)}
-                  </div>
+                  {hasCategoryBudgets ? (
+                    <div className="grid gap-2 border-t border-border-subtle/75 pt-2.5">
+                      <SectionHeading
+                        title={t("budgets.untrackedTitle")}
+                        hideDescriptionOnMobile
+                      />
+                      {renderUntrackedList(true)}
+                    </div>
+                  ) : null}
                 </div>
               </SurfaceCard>
             </div>
 
             <SurfaceCard padding="compact" className={cn(hasCategoryBudgets && "xl:min-h-full")}>
-              <div className="grid gap-2.5">
+              <div className="grid gap-2">
                 <SectionHeading
                   title={t("budgets.categoryTitle")}
-                  description={t("budgets.categorySubtitle")}
-                  hideDescriptionOnMobile={false}
+                  hideDescriptionOnMobile
                   actions={
                     !hasCategoryBudgets ? (
                       <Button
@@ -877,7 +877,7 @@ export default function BudgetsPage() {
                       ({ budget, spent, limit, ratio, tone }) => (
                         <div
                           key={budget.id}
-                          className="grid gap-2.5 py-3 first:pt-0 last:pb-0"
+                          className="grid gap-2 py-2.5 first:pt-0 last:pb-0"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="grid gap-1">
@@ -914,7 +914,7 @@ export default function BudgetsPage() {
                               </Button>
                             </div>
                           </div>
-                          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                          <div className="grid gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                             <ProgressMeter
                               value={ratio}
                               tone={toneToProgressTone[tone]}
@@ -945,23 +945,34 @@ export default function BudgetsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid gap-3 lg:grid-cols-[minmax(0,0.92fr)_minmax(16rem,1.08fr)] lg:items-start">
-                    <BudgetInlineEmpty
-                      title={t("budgets.noCategories")}
-                      actionLabel={t("budgets.addCategory")}
-                      onAction={() => openCreateForm("category")}
-                    />
-                    <div className="grid gap-2 rounded-[calc(var(--radius-card)-0.12rem)] border border-dashed border-border-subtle bg-surface-2/32 px-3 py-3">
-                      <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
-                        {language === "id"
-                          ? "Belum ada budget kategori aktif."
-                          : "No category budgets yet."}
-                      </strong>
-                      <p className="m-0 text-[0.82rem] leading-[1.55] text-text-2">
-                        {language === "id"
-                          ? "Tambahkan budget kategori untuk memecah pengeluaran rutin per pos. Pengeluaran tanpa budget tetap muncul di ringkasan kiri."
-                          : "Add category budgets to break recurring spending into clearer envelopes. Untracked spend still appears in the left overview."}
-                      </p>
+                  <div className="grid gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[calc(var(--radius-card)-0.14rem)] bg-surface-2/4૫ px-3 py-3">
+                      <div className="grid gap-0.5">
+                        <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+                          {t("budgets.noCategories")}
+                        </strong>
+                        <span className="text-[0.8rem] text-text-2">
+                          {language === "id"
+                            ? "Mulai dari kategori yang paling sering dipakai."
+                            : "Start with the categories you use most."}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openCreateForm("category")}
+                      >
+                        {t("budgets.addCategory")}
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-1.5 border-t border-border-subtle/75 pt-2.5">
+                      <SectionHeading
+                        title={t("budgets.untrackedTitle")}
+                        hideDescriptionOnMobile
+                      />
+                      {renderUntrackedList()}
                     </div>
                   </div>
                 )}

@@ -24,7 +24,6 @@ import {
 } from '@/features/dashboard/components/DashboardSections';
 import { TRANSACTIONS_CHANGED_EVENT } from '@/lib/events';
 import {
-  sumSpentForCategory,
   summarizeBudgetUsage,
 } from '@/lib/budgetMath';
 import { queryKeys } from '@/lib/queries/keys';
@@ -96,26 +95,11 @@ export function DashboardPageContent() {
   const topWallets = wallets.slice(0, 3);
 
   const budgetSummary = summarizeBudgetUsage(budgets, monthlyExpenses);
-  const categoryBudgets = budgetSummary.categoryBudgets;
   const overallBudgetLimit = budgetSummary.overallLimit;
   const overallBudgetSpent = budgetSummary.overallSpent;
   const overallBudgetRatio = budgetSummary.ratio;
   const overallBudgetRemaining = budgetSummary.remaining;
   const budgetTone = budgetSummary.tone;
-  const categoryBudgetRows = categoryBudgets
-    .map((budget) => {
-      const spent = sumSpentForCategory(budget.category_id!, monthlyExpenses);
-      const limit = budget.amount_limit ?? 0;
-      const ratio = limit > 0 ? spent / limit : 0;
-
-      return {
-        ...budget,
-        spent,
-        ratio,
-      };
-    })
-    .sort((left, right) => right.ratio - left.ratio)
-    .slice(0, 2);
 
   const readyWishlistItems = wishlistItems.filter(
     (item) =>
@@ -245,7 +229,6 @@ export function DashboardPageContent() {
 
       <DashboardTopSection
         loading={loading}
-        monthKey={data?.monthKey}
         totalBalance={totalBalance}
         totalIncome={totalIncome}
         totalExpense={totalExpense}
@@ -257,7 +240,6 @@ export function DashboardPageContent() {
         overallBudgetLimit={overallBudgetLimit}
         overallBudgetSpent={overallBudgetSpent}
         overallBudgetRemaining={overallBudgetRemaining}
-        overallBudgetRatio={overallBudgetRatio}
         budgetTone={budgetTone}
         budgetStatusLabel={budgetStatusLabel}
         primaryWishlistItem={primaryWishlistItem}
@@ -304,16 +286,6 @@ export function DashboardPageContent() {
       <DashboardMobilePanelsSection
         insightView={insightView}
         onInsightViewChange={setInsightView}
-        overallBudgetLimit={overallBudgetLimit}
-        overallBudgetSpent={overallBudgetSpent}
-        overallBudgetRemaining={overallBudgetRemaining}
-        overallBudgetRatio={overallBudgetRatio}
-        budgetTone={budgetTone}
-        budgetStatusLabel={budgetStatusLabel}
-        categoryBudgetRows={categoryBudgetRows}
-        wishlistItems={wishlistItems}
-        wishlistHighlights={wishlistHighlights}
-        primaryWishlistItem={primaryWishlistItem}
         language={language}
         t={t}
         formatCurrency={formatCurrency}

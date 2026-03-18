@@ -12,7 +12,6 @@ import {
   useUpdateProjectStatusMutation,
 } from "@/features/projects/hooks";
 import type { ProjectRecord } from "@/features/projects/queries";
-import { EmptyStateWorkspace } from "@/components/shared/EmptyState";
 import {
   PageHeader,
   PageHeaderActions,
@@ -237,28 +236,41 @@ export default function ProjectsPage() {
               ))}
             </div>
           ) : projects.length === 0 ? (
-            <EmptyStateWorkspace
-              eyebrow={language === "id" ? "Workspace proyek" : "Project workspace"}
-              title={t("projects.emptyTitle")}
-              description={t("projects.emptyDescription")}
-              icon={<FolderKanban size={20} />}
-              action={
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => setIsFormOpen(true)}
-                >
-                  <FolderKanban size={16} />
-                  {t("projects.createProject")}
-                </Button>
-              }
-              supporting={
-                <ProjectTemplatesAside
-                  language={language}
-                  templates={emptyStateTemplates}
-                />
-              }
-            />
+            <div className="grid gap-3 rounded-[calc(var(--radius-card)-0.08rem)] bg-surface-2/40 px-3 py-3 sm:px-4 sm:py-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(14rem,0.88fr)] lg:items-start lg:gap-4">
+              <div className="grid gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[calc(var(--radius-control)-0.04rem)] bg-surface-1 text-text-2">
+                      <FolderKanban size={18} />
+                    </span>
+                    <div className="grid gap-1">
+                      <strong className="text-[1rem] font-semibold tracking-[-0.04em] text-text-1">
+                        {t("projects.emptyTitle")}
+                      </strong>
+                      <span className="text-[0.82rem] leading-5 text-text-2">
+                        {language === "id"
+                          ? "Mulai satu proyek untuk mengelompokkan anggaran penting."
+                          : "Start one project to organize a focused budget."}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => setIsFormOpen(true)}
+                    className="sm:min-w-[9.75rem]"
+                  >
+                    <FolderKanban size={16} />
+                    {t("projects.createProject")}
+                  </Button>
+                </div>
+              </div>
+
+              <ProjectTemplatesAside
+                language={language}
+                templates={emptyStateTemplates}
+              />
+            </div>
           ) : (
             <div className="grid gap-3 xl:grid-cols-2">
               {projects.map((project) => (
@@ -457,27 +469,25 @@ function ProjectTemplatesAside({
   }>;
 }) {
   return (
-    <>
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-text-3">
+    <div className="grid gap-2.5 border-t border-border-subtle/70 pt-2.5 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+      <span className="text-[0.74rem] font-medium tracking-[0.01em] text-text-2">
         {language === "id" ? "Template cepat" : "Quick templates"}
       </span>
-      <div className="grid gap-0 divide-y divide-border-subtle/80">
+      <div className="grid gap-0 divide-y divide-border-subtle/75">
         {templates.map((template) => (
           <div
             key={template.key}
-            className="grid gap-2 py-2.5 first:pt-0 last:pb-0"
+            className="grid gap-1 py-2.5 first:pt-0 last:pb-0"
           >
-            <strong className="text-sm font-semibold tracking-[-0.03em] text-text-1">
+            <strong className="text-[0.88rem] font-semibold tracking-[-0.03em] text-text-1">
               {template.title}
             </strong>
-            <div className="flex flex-wrap gap-1.5">
-              {template.categories.map((category) => (
-                <Badge key={category}>{category}</Badge>
-              ))}
-            </div>
+            <span className="text-[0.76rem] leading-5 text-text-2">
+              {template.categories.slice(0, 2).join(" / ")}
+            </span>
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
